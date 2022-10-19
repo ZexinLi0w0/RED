@@ -1,2 +1,28 @@
 # RED
-ATC’23 Robotic Environmental Dynamics
+ATC’23 Robotic Environmental Dynamics (RED)
+
+## Idea
+
+1. Identify an experimental robotic scenario that highlight potential environ-
+mental dynamics 
+
+2. Target three observations or challenges: 
+
+a. workload struc-
+ture change (mainly adding or sometimes reducing nodes into the graph, or even
+simply structural changes), coupled with the fact that end to end deadline should
+never change 
+
+b. potentially weak candidate: fundamental criticality changes at
+runtime; multi-tasking, mixed CPU/DNN workloads; MIMO, 
+
+c. memory issue
+due to hardware constraints
+
+If MIMO, then two long subsections in Sec. 2. first one due to workload
+strctural change (three pars-add, reduce, change), second one due to MIMO
+(mem challenge, optimization flexibility opportunities).
+
+## Plan
+
+TODO
