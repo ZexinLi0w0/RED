@@ -47,3 +47,35 @@ strctural change (three pars-add, reduce, change), second one due to MIMO
 3.1 Setup: DNN, embedded systems (AGX/TX2/Nano/Orin) / robotics testbed (build sth. or Jetbot).
 
 3.2 Experiments: (TODO)
+
+## Discussion
+MIMO的是系统本质的要求：（如果end2end当作黑盒来看）
+
+现有系统是多个独立的SISO/MISO/SIMO/small MIMO组成的 
+
+现有的2个问题：1. 由于独立模型之间存在sharable knowledge，所以memory usage suboptimal 2. 在现有MI/MO中都会存在async IO问题
+
+为了解决这2个问题
+
+我们引入了end2end MIMO model
+
+contribution: 1. miminize memory usage 2. support async IO
+
+怎么写故事线：是否加入dynamic workloads
+
+改一下ATC meeting时间 +16国内时间
+
+xiaoxi: 方法不novel；宏观上是否加入dynamic workloads，像是硬凹的；case study可能需要过度构造，不真实（但还OK）；implementation上，不加入PAM，理论上能够搞完
+
+From Cong意见：
+
+a: 方法不novel 🆗
+
+b: 要加入dynamic workload，因为另外两块在system-level不够
+
+c: case study主要强调是由于robotic specific environmental dynamics带来的几个challenge 我们提出一个ecosystem全面解决 效果好；突出强调一个environmental dynamics对于robotics在系统层面 调度 内存 的challenges
+
+d: 
+1. high-level: workload dynamic 有不同的model 而且有timing constraint。system-level上有resource reservation/scheduling问题
+
+2. low-level: 可能在某一节多个SISO yolo可能不够，比如天然地体现是多输入/多任务场景 induce MIMO idea就完美了
