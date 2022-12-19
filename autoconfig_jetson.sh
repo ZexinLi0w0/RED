@@ -16,3 +16,4 @@ gdown https://drive.google.com/uc?id=1BdvXkwUGGTTamM17Io4kkjIT6zgvf4BJ
 /experiment/miniforge3/envs/pytorch/bin/pip install torchvision-0.9.0a0+01dfa8e-cp36-cp36m-linux_aarch64.whl
 /experiment/miniforge3/envs/pytorch/bin/pip install opencv-python pandas scikit-image
 /experiment/miniforge3/envs/pytorch/bin/pip install ipython psutil pyyaml seaborn
+/experiment/miniforge3/envs/pytorch/bin/pip install h5py==2.10.0 scikit-learn
