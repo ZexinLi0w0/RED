@@ -6,6 +6,7 @@ cd ATC23/
 git clone git@github.com:ZexinLi0w0/lanenet-lane-detection-pytorch.git
 git clone git@github.com:ZexinLi0w0/Pytorch-UNet.git
 git clone git@github.com:ZexinLi0w0/yolov5.git
+git clone git@github.com:623059008/Autopilot2PytorchSteering.git
 cd Pytorch-UNet
 wget https://github.com/milesial/Pytorch-UNet/releases/download/v3.0/unet_carvana_scale0.5_epoch2.pth
 wget https://github.com/milesial/Pytorch-UNet/releases/download/v3.0/unet_carvana_scale1.0_epoch2.pth
