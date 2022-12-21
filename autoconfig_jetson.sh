@@ -1,6 +1,6 @@
 sudo nvpmodel -m 0
 sudo apt-get install libjpeg-dev zlib1g-dev libpython3-dev
-sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libopenblas-dev
 conda activate pytorch
 cd ATC23/
 git clone git@github.com:ZexinLi0w0/lanenet-lane-detection-pytorch.git
