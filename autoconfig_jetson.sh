@@ -17,3 +17,4 @@ gdown https://drive.google.com/uc?id=1BdvXkwUGGTTamM17Io4kkjIT6zgvf4BJ
 /experiment/miniforge3/envs/pytorch/bin/pip install opencv-python pandas scikit-image
 /experiment/miniforge3/envs/pytorch/bin/pip install ipython psutil pyyaml seaborn
 /experiment/miniforge3/envs/pytorch/bin/pip install h5py==2.10.0 scikit-learn
+/experiment/miniforge3/envs/pytorch/bin/pip install colorlog
