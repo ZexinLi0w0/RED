@@ -2,6 +2,26 @@
 
 import time
 import math
+from AbstractHandler import AbstractHandler
+
+class task3(AbstractHandler):
+    def run(self):
+        print("run")
+    
+    def stop(self):
+        print("stop")
+    
+    def load_data(self):
+        print("load_data")
+    
+    def ready(self):
+        print("ready")
+    
+    def exception(self):
+        print("exception")
+    
+    def exit(self):
+        print("exit")
 
 def is_prime(n):
     if n == 2:

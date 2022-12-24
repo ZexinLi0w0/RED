@@ -1,65 +1,106 @@
 import argparse
 import json
-from multiprocessing import Queue, freeze_support, set_start_method
+import os, sys
+import time, math
+import queue
+from multiprocessing import Process, Queue, freeze_support, set_start_method
 import importlib
 import asyncio
+from collections import defaultdict
+import logging
+from enum import Enum
 
+# self-defined moduls
+from validate_tasks import validate_tasks
+from logging_config import logging_basic_setting
+from control_signal import generate_signal, parse_signal, SignalCommand
 
-# required attributes in config file
-TaskAttributes = ["id", "name", "description", "priority", "dependencies", "run"]
+class TaskStatus(Enum):
+    Entry = 0
+    Load = 1
+    Ready = 2
+    Running = 3
+    Error = 4
+    Exit = 5
 
-def validate_tasks(tasks):
-    """
-    Function to validate the tasks in the task list.
-    """
-    # def check_dependencies(task_id, visited):
-    #     """
-    #     Recursive function to check if the task dependencies have a circular reference.
-    #     """
-    #     task = next((t for t in tasks if t["id"] == task_id), None)
-    #     if task is None:
-    #         return
-    #     if task["id"] in visited:
-    #         raise ValueError(f"Invalid task #{task['id']}: circular dependencies found")
-    #     visited.add(task["id"])
-    #     for dependency in task["dependencies"]:
-    #         check_dependencies(dependency, visited)
-    # Validate the task attributes
-    for i, task in enumerate(tasks):
-        # Check if the task has all required attributes
-        missing_attrs = []
-        for attr in TaskAttributes:
-            if attr not in task:
-                missing_attrs.append(attr)
-        if missing_attrs:
-            raise ValueError(f"Invalid task #{i+1}: missing required attribute(s): {', '.join(missing_attrs)}")
-
-        # Check if the dependencies attribute is a list
-        if not isinstance(task["dependencies"], list):
-            raise ValueError(f"Invalid task #{i+1}: dependencies must be a list")
-
-        # Check if the dependencies are valid task IDs
-        for dependency in task["dependencies"]:
-            if dependency not in [t["id"] for t in tasks]:
-                raise ValueError(f"Invalid task #{i+1}: invalid dependency ID: {dependency}")
-
-async def handle_signaling(control_queue):
+async def handle_signaling(control_queue, task_id, task_name, task_description, task_priority, task_dependencies):
     while True:
-        sig = control_queue.get()
-        print('receiving signal from sub process:', sig)
+        # 使用asyncio.sleep()挂起协程，让它不阻塞
+        await asyncio.sleep(0)
+        # 使用queue.get_nowait()检查queue是否有信号，如果有就立即返回，如果没有就抛出QueueEmpty异常
+        try:
+            signal_message = control_queue.get_nowait()
+            # logging.debug(f"Received signal: {signal_message}")
+            # only handle the signal with their taskid
+            signal_taskid, signal_command, *signal_args = parse_signal(signal_message)
+            if(signal_taskid != f"{task_id}"):
+                # put it back until the correct receiver handle it
+                control_queue.put(signal_message)
+                continue
+            logging.info(f"[{task_id}][{task_name}] Received signal: [{signal_command}]")
+            # depends on different signal to execute tasks
 
-def create_task(task_id, task_name, task_description, task_priority, task_dependencies, task_command):
+        except queue.Empty:
+            continue
+
+
+async def send_heart_ping(control_queue, task):
+    basetime = time.time()
+    while True:
+        for task in tasks:    
+            # Generate the PING signal
+            signal_heart = generate_signal(task["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
+            # Send the PING signal to the control queue
+            control_queue.put(signal_heart)
+
+
+        # Wait for 1 second
+        await asyncio.sleep(1)
+
+
+async def main_process_signaling(control_queue, tasks, name2process):
+    # controller signal handle
+    while True:
+        await asyncio.sleep(0)
+        try:
+            signal = control_queue.get_nowait()
+            if(not signal):
+                return
+            # 处理信号
+            print(f"Received signal: {signal}")
+        except queue.Empty:
+            continue
+
+def create_subprocess(task_id, task_name, task_description, task_priority, task_dependencies, task_command, control_queue):
     """
     Function to run a single task.
+    This function is in a new process.
     """
     print(f"Running task {task_id}: {task_name}")
     # Run the task command
     task_file_name = f"task{task_id}"
-    task_module = importlib.import_module(f'./tasks/{task_file_name}')
+    # task_file_path = os.path.join('./tasks', f'{task_file_name}.py') # generate dynamic path
+    current_file_path = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file_path)
+    tasks_dir = os.path.join(current_dir, 'tasks')
+    sys.path.append(tasks_dir)
+    task_module = importlib.import_module(f'{task_file_name}')
     TaskConcreteClass = getattr(task_module, task_file_name)
-    task = TaskConcreteClass(task_id, task_name,  task_description, task_priority, task_dependencies, task_command)
+    task = TaskConcreteClass(task_id, task_name, task_description, task_priority, task_dependencies, task_command, TaskStatus.Entry)
+    
+    # start a coroutine to handle signal from the queue
+    loop = asyncio.get_event_loop()
+    handle_signaling_task = loop.create_task(handle_signaling(control_queue, task_id, task_name, task_description, task_priority, task_dependencies))
+    try:
+        loop.run_until_complete(handle_signaling_task)
+    except KeyboardInterrupt:
+        print('[CLOSE] KeyboardInterrupt, close all tasks and loop')
+    finally:
+        loop.stop()
+        loop.close()
 
-    # handler.run()
+    
+    
 
 def run_tasks(tasks, control_queue):
     """
@@ -67,6 +108,7 @@ def run_tasks(tasks, control_queue):
     """
     # Create a list of processes
     processes = []
+    name2process = defaultdict(None)
     for task in tasks:
         task_id = task["id"]
         task_name = task["name"]
@@ -76,17 +118,20 @@ def run_tasks(tasks, control_queue):
         task_command = task["run"]
 
         # Create a process for each task
-        process = Process(target=create_task, args=(task_id, task_name, task_description, task_priority, task_dependencies, task_command))
+        process = Process(target=create_subprocess, name=task_name, args=(task_id, task_name, task_description, task_priority, task_dependencies, task_command, control_queue))
         processes.append(process)
-
+        name2process[f'{task_name}'] = process
     # Start all processes
     for process in processes:
         process.start()
 
     loop = asyncio.get_event_loop()
-    handle_signaling_task = loop.create_task(handle_signaling(control_queue))
+    daemon_signaling_handler = loop.create_task(main_process_signaling(control_queue, tasks, name2process))
+    # main process send heartbeat signal to every subprocess per second
+    hearping_task = loop.create_task(send_heart_ping(control_queue, tasks))
     try:
-        loop.run_until_complete(handle_signaling_task)
+        loop.run_until_complete(daemon_signaling_handler)
+        loop.run_until_complete(hearping_task)
     except KeyboardInterrupt:
         print('[CLOSE] KeyboardInterrupt, close all tasks and loop')
     finally:
@@ -94,29 +139,6 @@ def run_tasks(tasks, control_queue):
             process.terminate()
         loop.stop()
         loop.close()
-
-    # Continuously check the queue for control signals
-    # while True:
-    #     # Check if there is a control signal in the queue
-    #     try:
-    #         control_signal = queue.get_nowait()
-    #     except queue.Empty:
-    #         # No control signal, continue checking
-    #         continue
-    #     else:
-    #         if control_signal == "exception":
-    #             # Stop all processes
-    #             for process in processes:
-    #                 process.terminate()
-    #             break
-    #         elif control_signal == "pause":
-    #             # Pause all processes
-    #             for process in processes:
-    #                 process.suspend()
-    #         elif control_signal == "resume":
-    #             # Resume all processes
-    #             for process in processes:
-    #                 process.resume()
 
 def parserHandler():
     """
@@ -160,6 +182,7 @@ def parserHandler():
     
 
 if __name__ == "__main__":
+    logging_basic_setting()
     tasks = parserHandler()
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
