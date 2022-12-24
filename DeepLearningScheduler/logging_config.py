@@ -2,14 +2,14 @@ import logging, colorlog
 
 def logging_basic_setting():
     # create logger
-    logger = logging.getLogger('my_logger')
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
     # create formatter
     formatter = colorlog.ColoredFormatter(
         '%(log_color)s%(levelname)-8s%(reset)s %(white)s%(message)s',
         log_colors={
-            'DEBUG': 'cyan',
+            'DEBUG': 'blue',
             'INFO': 'green',
             'WARNING': 'yellow',
             'ERROR': 'red',
@@ -28,5 +28,16 @@ def logging_basic_setting():
     # add ch to logger
     logger.addHandler(ch)
     # set logging format
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO, filename='./log.txt')
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s", level=logging.WARNING)
+    logging.basicConfig(format="%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s", level=logging.ERROR)
+    logging.basicConfig(format="%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s", level=logging.CRITICAL)
+
+if __name__ == "__main__":
+    logging_basic_setting()
+    logging.debug('Debug level will be like this')
+    logging.info('Info level will be like this')
+    logging.warning('Warning level will be like this')
+    logging.error('Error level will be like this')
+    logging.critical('Critical level will be like this')

@@ -4,7 +4,7 @@ import time
 import math
 from AbstractHandler import AbstractHandler
 
-class task3(AbstractHandler):
+class handler3(AbstractHandler):
     def run(self):
         print("run")
     

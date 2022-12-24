@@ -11,7 +11,7 @@ import logging
 from enum import Enum
 
 # self-defined moduls
-from validate_tasks import validate_tasks
+from validate_handlers import validate_handlers
 from logging_config import logging_basic_setting
 from control_signal import generate_signal, parse_signal, SignalCommand
 
@@ -23,7 +23,13 @@ class TaskStatus(Enum):
     Error = 4
     Exit = 5
 
-async def handle_signaling(control_queue, task_id, task_name, task_description, task_priority, task_dependencies):
+async def handle_signaling(control_queue, base_time, config):
+    """
+    singaling response in child process
+    handler the signals from controller to move itself to different status
+    """
+    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, status = config
+    logging.debug(f'handler signaling processing debug:{handler_id}, {handler_name}, {handler_dependencies}, {status}')
     while True:
         # 使用asyncio.sleep()挂起协程，让它不阻塞
         await asyncio.sleep(0)
@@ -31,70 +37,87 @@ async def handle_signaling(control_queue, task_id, task_name, task_description, 
         try:
             signal_message = control_queue.get_nowait()
             # logging.debug(f"Received signal: {signal_message}")
-            # only handle the signal with their taskid
-            signal_taskid, signal_command, *signal_args = parse_signal(signal_message)
-            if(signal_taskid != f"{task_id}"):
+            # only handle the signal with their handlerid
+            signal_handlerid, signal_command, *signal_args = parse_signal(signal_message)
+            if(signal_handlerid != handler_id):
                 # put it back until the correct receiver handle it
                 control_queue.put(signal_message)
                 continue
-            logging.info(f"[{task_id}][{task_name}] Received signal: [{signal_command}]")
-            # depends on different signal to execute tasks
-
+            logging.info(f"[{handler_id}][{handler_name}] Received signal: [{signal_command}]")
+            # depends on different signal to execute handlers
+            if(SignalCommand[signal_command] == SignalCommand.PING):
+                # return a time
+                generate_signal(0, SignalCommand.PING, f"--time {time.time() - base_time}")
         except queue.Empty:
             continue
 
 
-async def send_heart_ping(control_queue, task):
-    basetime = time.time()
+async def send_heart_ping(control_queue, handlers, relative_start_time):
+    """
+    A heart beat ping task, excuted by controller process.
+    Send a ping with relative time to every handlers
+    """
+    basetime = relative_start_time
     while True:
-        for task in tasks:    
+        for handler in handlers:    
             # Generate the PING signal
-            signal_heart = generate_signal(task["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
+            signal_heart = generate_signal(handler["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
             # Send the PING signal to the control queue
             control_queue.put(signal_heart)
+            # logging.debug(f'Send heart signal to subprocess {signal_heart}')
 
 
         # Wait for 1 second
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
 
 
-async def main_process_signaling(control_queue, tasks, name2process):
+async def main_process_signaling(control_queue, handlers, name2process):
+    """
+    signaling repsonse in controller process
+    """
     # controller signal handle
     while True:
         await asyncio.sleep(0)
         try:
-            signal = control_queue.get_nowait()
-            if(not signal):
-                return
+            signal_message = control_queue.get_nowait()
+            # logging.debug(f"Received signal: {signal_message}")
+            # only handle the signal with their handlerid
+            signal_handlerid, signal_command, *signal_args = parse_signal(signal_message)
+            if(signal_handlerid != 0):
+                # put it back until the correct receiver handle it
+                control_queue.put(signal_message)
+                continue
             # 处理信号
-            print(f"Received signal: {signal}")
+            logging.debug(f"Received signal: {signal_message}")
         except queue.Empty:
             continue
 
-def create_subprocess(task_id, task_name, task_description, task_priority, task_dependencies, task_command, control_queue):
+def create_subprocess(handler_id, handler_name, handler_description, handler_priority, handler_dependencies, control_queue, base_time):
     """
-    Function to run a single task.
+    Function to run a single handler.
     This function is in a new process.
     """
-    print(f"Running task {task_id}: {task_name}")
-    # Run the task command
-    task_file_name = f"task{task_id}"
-    # task_file_path = os.path.join('./tasks', f'{task_file_name}.py') # generate dynamic path
+    print(f"Running handler {handler_id}: {handler_name}")
+    # import the handler module and init the class
+    handler_file_name = f"handler{handler_id}"
+    # handler_file_path = os.path.join('./handlers', f'{handler_file_name}.py') # generate dynamic path
     current_file_path = os.path.abspath(__file__)
     current_dir = os.path.dirname(current_file_path)
-    tasks_dir = os.path.join(current_dir, 'tasks')
-    sys.path.append(tasks_dir)
-    task_module = importlib.import_module(f'{task_file_name}')
-    TaskConcreteClass = getattr(task_module, task_file_name)
-    task = TaskConcreteClass(task_id, task_name, task_description, task_priority, task_dependencies, task_command, TaskStatus.Entry)
-    
+    handlers_dir = os.path.join(current_dir, 'handler')
+    sys.path.append(handlers_dir)
+    handler_module = importlib.import_module(f'{handler_file_name}')
+    TaskConcreteClass = getattr(handler_module, handler_file_name)
+    handler = TaskConcreteClass(handler_id, handler_name, handler_description, handler_priority, handler_dependencies)
+    # init handler status
+    status = TaskStatus.Entry
+    logging.debug(f'Finish to create handler: {handler_name}')
     # start a coroutine to handle signal from the queue
     loop = asyncio.get_event_loop()
-    handle_signaling_task = loop.create_task(handle_signaling(control_queue, task_id, task_name, task_description, task_priority, task_dependencies))
+    handle_signaling_handler = loop.create_task(handle_signaling(control_queue, base_time, (handler_id, handler_name, handler_description, handler_priority, handler_dependencies, status)))
     try:
-        loop.run_until_complete(handle_signaling_task)
+        loop.run_until_complete(handle_signaling_handler)
     except KeyboardInterrupt:
-        print('[CLOSE] KeyboardInterrupt, close all tasks and loop')
+        print('[CLOSE] KeyboardInterrupt, close all handlers and loop')
     finally:
         loop.stop()
         loop.close()
@@ -102,38 +125,40 @@ def create_subprocess(task_id, task_name, task_description, task_priority, task_
     
     
 
-def run_tasks(tasks, control_queue):
+def run_handlers(handlers, control_queue):
     """
-    Function to run tasks concurrently.
+    Function to run handlers concurrently.
     """
     # Create a list of processes
     processes = []
+    # base time for all handlers and tasks
+    base_time = time.time()
     name2process = defaultdict(None)
-    for task in tasks:
-        task_id = task["id"]
-        task_name = task["name"]
-        task_description = task["description"]
-        task_priority = task["priority"]
-        task_dependencies = task["dependencies"]
-        task_command = task["run"]
+    for handler in handlers:
+        handler_id = handler["id"]
+        handler_name = handler["name"]
+        handler_description = handler["description"]
+        handler_priority = handler["priority"]
+        handler_dependencies = handler["dependencies"]
 
-        # Create a process for each task
-        process = Process(target=create_subprocess, name=task_name, args=(task_id, task_name, task_description, task_priority, task_dependencies, task_command, control_queue))
+        # Create a process for each handler
+        process = Process(target=create_subprocess, name=handler_name, args=(handler_id, handler_name, handler_description, handler_priority, handler_dependencies, control_queue, base_time))
         processes.append(process)
-        name2process[f'{task_name}'] = process
+        name2process[f'{handler_name}'] = process
     # Start all processes
     for process in processes:
         process.start()
 
     loop = asyncio.get_event_loop()
-    daemon_signaling_handler = loop.create_task(main_process_signaling(control_queue, tasks, name2process))
+    daemon_signaling_handler = loop.create_task(main_process_signaling(control_queue, handlers, name2process))
     # main process send heartbeat signal to every subprocess per second
-    hearping_task = loop.create_task(send_heart_ping(control_queue, tasks))
+    hearping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time))
+    
     try:
         loop.run_until_complete(daemon_signaling_handler)
-        loop.run_until_complete(hearping_task)
+        loop.run_until_complete(hearping_handler)
     except KeyboardInterrupt:
-        print('[CLOSE] KeyboardInterrupt, close all tasks and loop')
+        print('[CLOSE] KeyboardInterrupt, close all handlers and loop')
     finally:
         for process in processes:
             process.terminate()
@@ -143,52 +168,53 @@ def run_tasks(tasks, control_queue):
 def parserHandler():
     """
     Function to parse the command line arguments.
-    Validate the task config file.
-    Run the tasks.
+    Validate the handler config file.
+    Run the handlers.
     """
      # Parse command line arguments
     parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument("--input", "-i", required=True, help="path of input task config file")
-    parser.add_argument("--generate", "-g", required=False, help="path of tasks folder to automatically infer the task config file")
+    parser.add_argument("--config", "-c", required=True, help="path of config file")
+    parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
     args = parser.parse_args()
 
-    # Load the tasks from the task config file
+    # Load the handlers from the handler config file
     try:
-        with open(args.input, "r") as f:
+        with open(args.config, "r") as f:
             config = json.load(f)
     except json.JSONDecodeError:
         print("Error: Invalid JSON file")
         return
     
-    # Check if the config file has a task list
-    if "tasklist" not in config:
-        print("Error: Missing `tasklist` in config file")
+    # Check if the config file has a handler list
+    if "handler_list" not in config:
+        print("Error: Missing `handler_list` in config file")
         return
     
-    # Check if the task list is a list
-    if not isinstance(config["tasklist"], list):
-        print("Error: `tasklist` must be a list")
+    # Check if the handler list is a list
+    if not isinstance(config["handler_list"], list):
+        print("Error: `handler_list` must be a list")
         return
     
-    tasks = config["tasklist"]
+    handlers = config["handler_list"]
     
-    # Validate the tasks
+    # Validate the handlers
     try:
-        validate_tasks(tasks)
+        validate_handlers(handlers)
     except ValueError as e:
         print(e)
     
-    return tasks
+    return handlers
     
 
 if __name__ == "__main__":
     logging_basic_setting()
-    tasks = parserHandler()
+    handlers = parserHandler()
+    # logging.debug(f'Parse config files to generate handlers: {handlers}')
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
     set_start_method('spawn')
     # Create a queue for control signals
     control_queue = Queue()
 
-    # Start the tasks concurrently
-    run_tasks(tasks, control_queue)
+    # Start the handlers concurrently
+    run_handlers(handlers, control_queue)

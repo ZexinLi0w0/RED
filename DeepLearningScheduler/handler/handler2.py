@@ -1,6 +1,6 @@
 from AbstractHandler import AbstractHandler
 
-class task2(AbstractHandler):
+class handler2(AbstractHandler):
     def run(self):
         print("run")
     
