@@ -5,9 +5,9 @@ AbstractHandlerModule = importlib.import_module("AbstractHandler")
 AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
 HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 
-AutoPilotModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../Autopilot/')
-sys.path.append(AutoPilotModuleDir)
-Py_autopilot2_module = importlib.import_module("Py_autopilot2_module")
+SegmentationModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../Pytorch-UNet/')
+sys.path.append(SegmentationModuleDir)
+SegmentationModule = importlib.import_module("unet")
 # if __name__ == "__main__":
 #     import sys
 #     sys.path.append('../')
@@ -60,16 +60,15 @@ class handler2(AbstractHandler):
         self.input_path = './Autopilot/img.jpg'
         self.width = 100
         self.height = 100
-        self.model_path = './Autopilot/model_10000.pkl'
+        self.model_path = '../Pytorch-UNet/unet_carvana_scale1.0_epoch2.pth'
         self.BATCH = 256
     
     # @time_it('[Metrics][TIME] Running: ')
     async def run(self):
         try:
             for i in range(self.BATCH):
-                net_out = self.test_net.forward(self.data_input).squeeze().float() 
-                steer_pred_angle = net_out.detach().cpu().numpy() / math.pi * 180
-            return steer_pred_angle
+                net_out = self.test_net(self.data_input)
+            return net_out.shape
         except MemoryError:
             return "Memory Error in running task"
         except SystemError:
@@ -87,22 +86,27 @@ class handler2(AbstractHandler):
     # @time_it('[Metrics][TIME] Load Data: ')
     async def load_data(self):
         transform = transforms.Compose([
-        transforms.ToTensor(),               ## shape:(31784, 100, 100, 3) -->(31784, 3,100, 100)
-        transforms.Normalize((0.43567735,0.49298695,0.5192303), (0.22272868,0.24110594,0.29045662))     
+            transforms.ToTensor(),
+            transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
+            transforms.Resize((self.width, self.height))
         ])
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        img = np.array(cv2.resize((cv2.cvtColor(plt.imread(self.input_path), cv2.COLOR_RGB2HSV)), (self.width, self.height)), dtype=np.float32)
-        data_input = transform(img).unsqueeze(0)
-        #load network
-        test_net = torch.load(self.model_path)
-        test_net.eval()
-        data_input = data_input.to(device)
-        test_net = test_net.to(device)
-        self.data_input = data_input
-        self.test_net = test_net
+
+        raw_img = cv2.imread(self.input_path)
+        img = transform(raw_img)
+        img = img.unsqueeze(0)
+        img = img.to(device)
+
+        net = SegmentationModule.UNet(n_channels=3, n_classes=2, bilinear=False)
+        net.load_state_dict(torch.load(self.model_path, map_location=device))
+        net.to(device=device)
+
+        self.data_input = img
+        self.test_net = net
+
         return {
-            "data_input": data_input,
-            "network": test_net,
+            "data_input": img,
+            "network": net,
         }
     
     def ready(self):
@@ -116,15 +120,15 @@ class handler2(AbstractHandler):
 
 async def test():
     # test
-    handler =  handler2(1, 'autopilot', 'description',  1, [])
+    handler =  handler2(1, 'segmentation', 'description',  1, [])
     loop = asyncio.get_event_loop()
     load_data_task = loop.create_task(handler.load_data())
     await load_data_task
     run_task = loop.create_task(handler.run())
     output = await run_task
     print(f'Task completed with result: {output}')
-    
+
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()    
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(loop.create_task(test()))
