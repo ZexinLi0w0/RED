@@ -1,61 +1,146 @@
-# run a task to find numbers which mod one of primes smaller than this number are prime number within 100000
+import importlib, os, sys
 
-import time
-import math
-from AbstractHandler import AbstractHandler
+AbstractDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')
+sys.path.append(AbstractDir)
+AbstractHandlerModule = importlib.import_module("AbstractHandler")
+AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
+HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
+
+LaneDetectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../lanenet-lane-detection-pytorch/')
+sys.path.append(LaneDetectionModuleDir)
+LaneDetectionModule = importlib.import_module("model.lanenet.LaneNet")
+# if __name__ == "__main__":
+#     import sys
+#     sys.path.append('../')
+#     from AbstractHandler import AbstractHandler
+# else:
+#     from AbstractHandler import AbstractHandler
+
+import torch
+import torchvision.transforms as transforms
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import math, time, asyncio
+
+avgtime = {}
+
+
+def time_avg(key='task'):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = func(*args, **kwargs)
+            end = time.time()
+            elapsed = end - start
+            if (key not in avgtime):
+                avgtime[key] = {"total": 0, "count": 0}
+            avgtime[key]["total"] += elapsed
+            avgtime[key]["count"] += 1
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def time_it(output=''):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = func(*args, **kwargs)
+            end = time.time()
+            elapsed = end - start
+            print(output, elapsed, 's')
+            return result
+
+        return wrapper
+
+    return decorator
+
 
 class handler3(AbstractHandler):
-    def run(self):
-        print("run")
-    
+    def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
+        super().__init__(task_id, task_name, task_description, task_priority, task_dependencies)
+        # 相对路径从根目录开始，因为handler的调用为根目录下的main.py
+        # 测试时也从根目录调用文件, 如 python handler/handler3.py
+        self.input_path = './Autopilot/img.jpg'
+        self.width = 100
+        self.height = 100
+        self.model_path = '../lanenet-lane-detection-pytorch/log/best_model.pth'
+        self.BATCH = 256
+
+    # @time_it('[Metrics][TIME] Running: ')
+    async def run(self):
+        try:
+            for i in range(self.BATCH):
+                net_out = self.test_net(self.data_input)
+            return {
+                "instance_seg_logits": net_out['instance_seg_logits'].shape,
+                "binary_seg_logits": net_out['binary_seg_logits'].shape,
+                "binary_seg_pred": net_out['binary_seg_pred'].shape,
+            }
+        except MemoryError:
+            return "Memory Error in running task"
+        except SystemError:
+            return "System Error in running task"
+        except ImportError as e:
+            return f"Import errror in running task: {e}"
+        except Exception as e:
+            return f"Unexcepted Error: {e}"
+
     def stop(self):
         print("stop")
-    
-    def load_data(self):
-        print("load_data")
-    
+
+    # @time_it('[Metrics][TIME] Load Data: ')
+    async def load_data(self):
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            transforms.Resize((self.width, self.height))
+        ])
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+        raw_img = cv2.imread(self.input_path)
+        img = transform(raw_img)
+        img = img.unsqueeze(0)
+        img = img.to(device)
+        import pdb; pdb.set_trace()
+
+
+        net = LaneDetectionModule.LaneNet(arch="ENet")
+        net.load_state_dict(torch.load(self.model_path, map_location=device))
+        net.to(device=device)
+
+        self.data_input = img
+        self.test_net = net
+
+        return {
+            "data_input": img,
+            "network": net,
+        }
+
     def ready(self):
-        print("ready")
-    
+        print('I\'m ready')
+
     def exception(self):
         print("exception")
-    
+
     def exit(self):
         print("exit")
 
-def is_prime(n):
-    if n == 2:
-        return True
-    if n % 2 == 0:
-        return False
-    for i in range(3, int(math.sqrt(n)) + 1, 2):
-        if n % i == 0:
-            return False
-    return True
 
-def find_primes(n):
-    primes = []
-    i = 2
-    while len(primes) < n:
-        if is_prime(i):
-            primes.append(i)
-        i += 1
-    return primes
+async def test():
+    # test
+    handler = handler3(1, 'lanedetection', 'description', 1, [])
+    loop = asyncio.get_event_loop()
+    load_data_task = loop.create_task(handler.load_data())
+    await load_data_task
+    run_task = loop.create_task(handler.run())
+    output = await run_task
+    print(f'Task completed with result: {output}')
 
-def main():
-    start = time.time()
-    primes = find_primes(100000)
-    end = time.time()
-    print("Found %d primes in %f seconds" % (len(primes), end - start))
-    start = time.time()
-    mod_primes = []
-    for i in range(1, 100000):
-        for j in primes:
-            if i % j == 0 and is_prime(i):
-                mod_primes.append(i)
-                break
-    end = time.time()
-    print("Found %d mod primes in %f seconds" % (len(mod_primes), end - start))
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(loop.create_task(test()))
