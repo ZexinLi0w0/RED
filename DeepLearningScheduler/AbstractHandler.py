@@ -1,4 +1,13 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+
+class HandlerStatus(Enum):
+    Entry = "Entry"
+    Load = "Load"
+    Ready = "Ready"
+    Running = "Running"
+    Error = "Error"
+    Exit = "Exit"
 
 class AbstractHandler(ABC):
     def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
@@ -75,19 +84,19 @@ class AbstractHandler(ABC):
 if __name__=="__main__":
     # test
     class task(AbstractHandler):
-        def run(self):
+        async def run(self):
             print("run")
+        async def load_data(self):
+            print("load_data")
         def stop(self):
             print("stop")
-        def load_data(self):
-            print("load_data")
         def ready(self):
             print("ready")
         def exception(self):
             print("exception")
         def exit(self):
             print("exit")
-    task1 = task(1, 'task1', 'task1', 1, [], 'l')
+    task1 = task(1, 'task1', 'task1', 1, [])
     task1.load_data()
     task1.ready()
     task1.run()

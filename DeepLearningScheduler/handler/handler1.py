@@ -3,6 +3,7 @@ AbstractDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../')
 sys.path.append(AbstractDir)
 AbstractHandlerModule = importlib.import_module("AbstractHandler")
 AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
+HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 
 AutoPilotModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../Autopilot/')
 sys.path.append(AutoPilotModuleDir)
@@ -19,38 +20,7 @@ import torchvision.transforms as transforms
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import math, time
-
-    
-
-avgtime = {}
-def time_avg(key='task'):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            start = time.time()
-            result = func(*args, **kwargs)
-            end = time.time()
-            elapsed = end - start
-            if(key not in avgtime):
-                avgtime[key] = {"total": 0, "count": 0}
-            avgtime[key]["total"] += elapsed
-            avgtime[key]["count"] += 1
-            return result
-        return wrapper
-    return decorator
-
-def time_it(output=''):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            start = time.time()
-            result = func(*args, **kwargs)
-            end = time.time()
-            elapsed = end - start
-            print(output, elapsed, 's')
-            return result
-        return wrapper
-    return decorator
-
+import math, asyncio
 class handler1(AbstractHandler):
     def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
         super().__init__(task_id, task_name, task_description, task_priority, task_dependencies)
@@ -60,12 +30,13 @@ class handler1(AbstractHandler):
         self.width = 100
         self.height = 100
         self.model_path = './Autopilot/model_10000.pkl'
+        self.BATCH = 256
     
-    @time_it('[Metrics][TIME] Running: ')  
-    def run(self):
+    async def run(self):
         try:
-            net_out = self.test_net.forward(self.data_input).squeeze().float() 
-            steer_pred_angle = net_out.detach().cpu().numpy() / math.pi * 180
+            for i in range(self.BATCH):
+                net_out = self.test_net.forward(self.data_input).squeeze().float() 
+                steer_pred_angle = net_out.detach().cpu().numpy() / math.pi * 180
             return steer_pred_angle
         except MemoryError:
             return "Memory Error in running task"
@@ -81,8 +52,8 @@ class handler1(AbstractHandler):
     def stop(self):
         print("stop")
     
-    @time_it('[Metrics][TIME] Load Data: ')
-    def load_data(self):
+
+    async def load_data(self):
         transform = transforms.Compose([
         transforms.ToTensor(),               ## shape:(31784, 100, 100, 3) -->(31784, 3,100, 100)
         transforms.Normalize((0.43567735,0.49298695,0.5192303), (0.22272868,0.24110594,0.29045662))     
@@ -111,9 +82,17 @@ class handler1(AbstractHandler):
     def exit(self):
         print("exit")
 
-if __name__ == "__main__":
+async def test():
     # test
     handler =  handler1(1, 'autopilot', 'description',  1, [])
-    handler.load_data()
-    output = handler.run()
-    print(output)
+    loop = asyncio.get_event_loop()
+    load_data_task = loop.create_task(handler.load_data())
+    await load_data_task
+    run_task = loop.create_task(handler.run())
+    output = await run_task
+    print(f'Task completed with result: {output}')
+    
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()    
+    loop.run_until_complete(loop.create_task(test()))

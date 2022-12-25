@@ -3,6 +3,7 @@ from enum import Enum
 class SignalCommand(Enum):
     PING = "PING"
     LOADDATA = "LOADDATA"
+    READY = "READY"
     RUN = "RUN"
     STOP = "STOP"
     EXIT = "EXIT"
@@ -34,10 +35,17 @@ def parse_signal(signal_str):
     args = parts[2:]
     return (taskid, signal, *args)
 
+
+def convert_args_to_dict(args_list):
+  result = {}
+  for i in range(0, len(args_list), 2):
+      result[args_list[i][2:]] = args_list[i + 1]
+  return result
+
 if __name__ == "__main__":
     # test
     signal1 = generate_signal(1, SignalCommand.LOADDATA)
-    signal2 = generate_signal(2, SignalCommand.RUN, "--width 100 --height 100")
+    signal2 = generate_signal(2, SignalCommand.RUN, "--width 100", "--height 100")
     # print(signal1)
     # print(signal2)
     # parse a signal string
@@ -49,3 +57,5 @@ if __name__ == "__main__":
     assert(taskid == 2)
     assert(SignalCommand[signal] == SignalCommand.RUN)
     assert(args == ['--width', '100', '--height', '100'])
+    formatted_dict = convert_args_to_dict(args)
+    assert(formatted_dict['width'] == '100' and formatted_dict['height'] == '100')
