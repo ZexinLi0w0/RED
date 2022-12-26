@@ -1,20 +1,12 @@
 import asyncio
 import queue
 import logging
-from enum import Enum
 
 # self-defined modules
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
+from AbstractHandler import HandlerStatus
 
-class HandlerStatus(Enum):
-    Entry = "Entry"
-    Load = "Load"
-    Ready = "Ready"
-    Running = "Running"
-    Error = "Error"
-    Exit = "Exit"
-
-async def main_process_signaling(control_queue, logger=logging):
+async def controller_signaling(control_queue, logger=logging):
     """
     signaling repsonse in controller process
     """
@@ -30,9 +22,8 @@ async def main_process_signaling(control_queue, logger=logging):
                 # put it back until the correct receiver handle it
                 control_queue.put(signal_message)
                 continue
-            # 处理信号
-            # logger.info(f"[CTRL] Received signal: {signal_message}")
-            args_dict = convert_args_to_dict(signal_command)
+            args_dict = convert_args_to_dict(signal_args)
+            # logger.debug(f"[CTRL] Received signal: {signal_message},\n Parse args_dict: {args_dict}")
             if(SignalCommand[signal_command] == SignalCommand.PING):
                 if(HandlerStatus[args_dict["status"]] == HandlerStatus.Entry):
                     # send a signal to subprocess to load data
@@ -48,6 +39,12 @@ async def main_process_signaling(control_queue, logger=logging):
                     # send a signal to subprocess to run
                     # for different subprocess, we can pass constrain as arguments
                     signal_message = generate_signal(args_dict["source"], SignalCommand.RUN)
+                    control_queue.put(signal_message)
+                    continue
+                elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Running):
+                    # send a signal to subprocess to ready
+                    logger.info(f'[CTRL] Received task[{args_dict["source"]}] running output: {signal_message}')
+                    signal_message = generate_signal(args_dict["source"], SignalCommand.READY)
                     control_queue.put(signal_message)
                     continue
 

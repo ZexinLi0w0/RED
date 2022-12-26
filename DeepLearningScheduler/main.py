@@ -116,7 +116,7 @@ async def send_heart_ping(control_queue, handlers, relative_start_time, logger=l
             signal_heart = generate_signal(handler["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
             # Send the PING signal to the control queue
             control_queue.put(signal_heart)
-            # logger.debug(f'Send heart signal to subprocess {signal_heart}')
+            logger.debug(f'Send heart signal to subprocess {signal_heart}')
 
         # 6ms overhead
 

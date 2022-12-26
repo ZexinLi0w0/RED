@@ -46,8 +46,8 @@ if __name__ == "__main__":
     # test
     signal1 = generate_signal(1, SignalCommand.LOADDATA)
     signal2 = generate_signal(2, SignalCommand.RUN, "--width 100", "--height 100")
-    # print(signal1)
-    # print(signal2)
+    print(signal1)
+    print(signal2)
     # parse a signal string
     taskid, signal, *args = parse_signal(signal1)
     assert(taskid == 1)

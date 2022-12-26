@@ -34,10 +34,12 @@ class handler1(AbstractHandler):
     
     async def run(self):
         try:
+            output_list = []
             for i in range(self.BATCH):
                 net_out = self.test_net.forward(self.data_input).squeeze().float() 
                 steer_pred_angle = net_out.detach().cpu().numpy() / math.pi * 180
-            return steer_pred_angle
+                output_list.append(steer_pred_angle)
+            return output_list
         except MemoryError:
             return "Memory Error in running task"
         except SystemError:
