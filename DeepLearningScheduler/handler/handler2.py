@@ -5,7 +5,7 @@ AbstractHandlerModule = importlib.import_module("AbstractHandler")
 AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
 HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 
-SegmentationModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../Pytorch-UNet/')
+SegmentationModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../Pytorch-UNet/')
 sys.path.append(SegmentationModuleDir)
 SegmentationModule = importlib.import_module("unet")
 # if __name__ == "__main__":
@@ -60,7 +60,7 @@ class handler2(AbstractHandler):
         self.input_path = './Autopilot/img.jpg'
         self.width = 100
         self.height = 100
-        self.model_path = '../Pytorch-UNet/unet_carvana_scale1.0_epoch2.pth'
+        self.model_path = './Pytorch-UNet/unet_carvana_scale1.0_epoch2.pth'
         self.BATCH = 256
     
     # @time_it('[Metrics][TIME] Running: ')

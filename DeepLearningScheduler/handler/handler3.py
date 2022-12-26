@@ -6,7 +6,7 @@ AbstractHandlerModule = importlib.import_module("AbstractHandler")
 AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
 HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 
-LaneDetectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../lanenet-lane-detection-pytorch/')
+LaneDetectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../lanenet-lane-detection-pytorch/')
 sys.path.append(LaneDetectionModuleDir)
 LaneDetectionModule = importlib.import_module("model.lanenet.LaneNet")
 # if __name__ == "__main__":
@@ -67,7 +67,7 @@ class handler3(AbstractHandler):
         self.input_path = './Autopilot/img.jpg'
         self.width = 100
         self.height = 100
-        self.model_path = '../lanenet-lane-detection-pytorch/log/best_model.pth'
+        self.model_path = './lanenet-lane-detection-pytorch/log/best_model.pth'
         self.BATCH = 256
 
     # @time_it('[Metrics][TIME] Running: ')
@@ -105,8 +105,6 @@ class handler3(AbstractHandler):
         img = transform(raw_img)
         img = img.unsqueeze(0)
         img = img.to(device)
-        import pdb; pdb.set_trace()
-
 
         net = LaneDetectionModule.LaneNet(arch="ENet")
         net.load_state_dict(torch.load(self.model_path, map_location=device))

@@ -6,7 +6,7 @@ AbstractHandlerModule = importlib.import_module("AbstractHandler")
 AbstractHandler = getattr(AbstractHandlerModule, 'AbstractHandler')
 HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 
-ObjectDectectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../yolov5/')
+ObjectDectectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../yolov5/')
 sys.path.append(ObjectDectectionModuleDir)
 ObjectDectectionModule = importlib.import_module("models.common")
 # if __name__ == "__main__":
@@ -67,7 +67,7 @@ class handler4(AbstractHandler):
         self.input_path = './Autopilot/img.jpg'
         self.width = 100
         self.height = 100
-        self.model_path = '../yolov5/yolov5l-cls.pt'
+        self.model_path = './yolov5/yolov5l-cls.pt'
         self.BATCH = 256
 
     # @time_it('[Metrics][TIME] Running: ')
