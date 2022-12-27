@@ -9,12 +9,6 @@ HandlerStatus = getattr(AbstractHandlerModule, 'HandlerStatus')
 LaneDetectionModuleDir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../lanenet-lane-detection-pytorch/')
 sys.path.append(LaneDetectionModuleDir)
 LaneDetectionModule = importlib.import_module("model.lanenet.LaneNet")
-# if __name__ == "__main__":
-#     import sys
-#     sys.path.append('../')
-#     from AbstractHandler import AbstractHandler
-# else:
-#     from AbstractHandler import AbstractHandler
 
 import torch
 import torchvision.transforms as transforms
@@ -22,42 +16,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import math, time, asyncio
-
-avgtime = {}
-
-
-def time_avg(key='task'):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            start = time.time()
-            result = func(*args, **kwargs)
-            end = time.time()
-            elapsed = end - start
-            if (key not in avgtime):
-                avgtime[key] = {"total": 0, "count": 0}
-            avgtime[key]["total"] += elapsed
-            avgtime[key]["count"] += 1
-            return result
-
-        return wrapper
-
-    return decorator
-
-
-def time_it(output=''):
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            start = time.time()
-            result = func(*args, **kwargs)
-            end = time.time()
-            elapsed = end - start
-            print(output, elapsed, 's')
-            return result
-
-        return wrapper
-
-    return decorator
-
 
 class handler3(AbstractHandler):
     def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
@@ -69,8 +27,7 @@ class handler3(AbstractHandler):
         self.height = 100
         self.model_path = './lanenet-lane-detection-pytorch/log/best_model.pth'
         self.BATCH = 256
-
-    # @time_it('[Metrics][TIME] Running: ')
+    
     async def run(self):
         try:
             for i in range(self.BATCH):
@@ -92,7 +49,6 @@ class handler3(AbstractHandler):
     def stop(self):
         print("stop")
 
-    # @time_it('[Metrics][TIME] Load Data: ')
     async def load_data(self):
         transform = transforms.Compose([
             transforms.ToTensor(),

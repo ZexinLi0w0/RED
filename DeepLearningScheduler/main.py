@@ -15,17 +15,17 @@ from logging_config import logging_basic_setting
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from AbstractHandler import HandlerStatus
 
-async def handle_signaling(control_queue, base_time, config, logger=logging, instance=None):
+async def handle_signaling(control_queue, base_time, config=(), logger=logging, instance=None):
     """
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
-    handler_id, handler_name, handler_description, handler_priority, handler_dependencies = config
+    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
         return
     STATUS = HandlerStatus.Entry
-    logger.debug(f'handler signaling processing debug:{handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
+    # logger.debug(f'handler signaling processing: {handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
     while True:
         # 使用asyncio.sleep()挂起协程，让它不阻塞
         # await asyncio.sleep(0)
@@ -97,7 +97,8 @@ async def handle_signaling(control_queue, base_time, config, logger=logging, ins
                 reply_end_time = f"--end_time {time.time() - base_time}"
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
-                reply_output = f"--output {output}"
+                reply_output = f"--output success" # only return sucess, write output to log
+                logger.info(f"Task in [{handler_id}]{handler_name} finished, output: {output}, {reply_start_time}, {reply_end_time}")
                 signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)
                 continue
@@ -111,26 +112,33 @@ async def send_heart_ping(control_queue, handlers, relative_start_time, logger=l
     """
     basetime = relative_start_time
     while True:
-        for handler in handlers:    
-            # Generate the PING signal
-            signal_heart = generate_signal(handler["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
-            # Send the PING signal to the control queue
-            control_queue.put(signal_heart)
-            logger.debug(f'Send heart signal to subprocess {signal_heart}')
+        try:
+            for handler in handlers:    
+                # Generate the PING signal
+                signal_heart = generate_signal(handler["id"], SignalCommand.PING, f"--time {math.floor(time.time()-basetime)}")
+                # Send the PING signal to the control queue
+                control_queue.put(signal_heart)
+                # logger.debug(f'Send heart signal to subprocess {signal_heart}')
 
-        # 6ms overhead
+            # 6ms overhead
 
-        # Wait for 1 second
-        await asyncio.sleep(0.1)
-
-
-async def main_process_signaling(control_queue, handlers, name2process, id2process, logger=logging):
+            # Wait for 1 second
+            await asyncio.sleep(1/60)
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            logger.error(f"Error in heart ping: {e}")
+            continue
+            
+async def main_process_signaling(control_queue, handlers, name2process, id2process, id2config, logger=logging, base_time = 0):
     """
     signaling repsonse in controller process
     """
+    TaskQueue = []
+    logger.debug(f"recevied id2config: {id2config}")
     # controller signal handle
     while True:
-        await asyncio.sleep(0)
+        # await asyncio.sleep(0)
         try:
             signal_message = control_queue.get_nowait()
             # logger.debug(f"Received signal: {signal_message}")
@@ -162,6 +170,12 @@ async def main_process_signaling(control_queue, handlers, name2process, id2proce
                     continue
                 elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Running):
                     # send a signal to subprocess to ready
+                    config = id2config[int(args_dict["source"])]
+                    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
+                    if("release-time" in runargs):
+                        # wait until delay to release time
+                        if(float(runargs["release-time"]) > time.time() - base_time):
+                            continue
                     logger.info(f'[CTRL] Received task[{args_dict["source"]}] running output: {signal_message}')
                     signal_message = generate_signal(args_dict["source"], SignalCommand.READY)
                     control_queue.put(signal_message)
@@ -170,13 +184,14 @@ async def main_process_signaling(control_queue, handlers, name2process, id2proce
         except queue.Empty:
             continue
 
-def create_subprocess(handler_id, handler_name, handler_description, handler_priority, handler_dependencies, control_queue, base_time):
+def create_subprocess(control_queue, base_time, config=()):
     """
     Function to run a single handler.
     This function is in a new process.
     """
+    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
     logger = logging_basic_setting(handler_name)
-    logger.debug(f"Running handler {handler_id}: {handler_name}")
+    # logger.debug(f"Running handler {handler_id}: {handler_name}")
     # import the handler module and init the class
     handler_file_name = f"handler{handler_id}"
     # handler_file_path = os.path.join('./handlers', f'{handler_file_name}.py') # generate dynamic path
@@ -188,13 +203,12 @@ def create_subprocess(handler_id, handler_name, handler_description, handler_pri
     TaskConcreteClass = getattr(handler_module, handler_file_name)
     instance = TaskConcreteClass(handler_id, handler_name, handler_description, handler_priority, handler_dependencies)
     
-    logger.debug(f'Already create handler class: {handler_name}, {instance.task_id}, {instance.task_priority}')
+    # logger.debug(f'Already create handler class: {handler_name}, {instance.task_id}, {instance.task_priority}')
     
     # start a coroutine to handle signal from the queue
     loop = asyncio.get_event_loop()
     # config tuple
-    config = (handler_id, handler_name, handler_description, handler_priority, handler_dependencies)
-    main_task = loop.create_task(handle_signaling(control_queue, base_time, config, logger=logger, instance=instance))
+    main_task = loop.create_task(handle_signaling(control_queue, base_time, config=config, logger=logger, instance=instance))
     try:
         loop.run_until_complete(main_task)
     except KeyboardInterrupt:
@@ -213,15 +227,19 @@ def run_handlers(handlers, control_queue, logger):
     base_time = time.time()
     name2process = defaultdict(None)
     id2process = defaultdict(None)
+    id2config = defaultdict(None)
     for handler in handlers:
-        handler_id = handler["id"]
+        handler_id = int(handler["id"])
         handler_name = handler["name"]
         handler_description = handler["description"]
         handler_priority = handler["priority"]
         handler_dependencies = handler["dependencies"]
+        run_args = convert_args_to_dict(handler["run_args"] if "run_args" in handler else None)
 
         # Create a process for each handler
-        process = Process(target=create_subprocess, name=handler_name, args=(handler_id, handler_name, handler_description, handler_priority, handler_dependencies, control_queue, base_time))
+        config = (handler_id, handler_name, handler_description, handler_priority, handler_dependencies, run_args)
+        id2config[handler_id] = config
+        process = Process(target=create_subprocess, name=handler_name, args=(control_queue, base_time, config))
         processes.append(process)
         name2process[handler_name] = process
         id2process[handler_id] = process
@@ -230,13 +248,14 @@ def run_handlers(handlers, control_queue, logger):
         process.start()
     logger.info('[CTRL] All subprocesses started.')
     loop = asyncio.get_event_loop()
-    daemon_signaling_handler = loop.create_task(main_process_signaling(control_queue, handlers, name2process, id2process, logger=logger))
     # main process send heartbeat signal to every subprocess per second
-    hearping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time, logger=logger))
+    heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time, logger=logger))
+    
+    daemon_signaling_handler = loop.create_task(main_process_signaling(control_queue, handlers, name2process, id2process, id2config, logger=logger, base_time = base_time))
     
     try:
+        loop.run_until_complete(heartping_handler)
         loop.run_until_complete(daemon_signaling_handler)
-        loop.run_until_complete(hearping_handler)
     except KeyboardInterrupt:
         logger.info(f'[CLOSE] Controller Process KeyboardInterrupt, close all tasks and loop')
     finally:

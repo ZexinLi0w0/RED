@@ -36,18 +36,30 @@ def parse_signal(signal_str):
     return (taskid, signal, *args)
 
 
-def convert_args_to_dict(args_list):
-  result = {}
-  for i in range(0, len(args_list), 2):
-      result[args_list[i][2:]] = args_list[i + 1]
-  return result
+def convert_args_to_dict(args_data):
+    """
+    convert a list/string of arguments to a dictionary
+    e.g. ["--width", "100", "--height", "100"] -> {"width": "100", "height": "100"}
+    e.g. "--width 100 --height 100" -> {"width": "100", "height": "100"}
+    """
+    if(isinstance(args_data, str)):
+        args_data = args_data.split()
+    if(not isinstance(args_data, list)):
+        return {}
+    result = {}
+    for i in range(0, len(args_data), 2):
+        result[args_data[i][2:]] = args_data[i + 1]
+    return result
+
+
+
 
 if __name__ == "__main__":
     # test
     signal1 = generate_signal(1, SignalCommand.LOADDATA)
     signal2 = generate_signal(2, SignalCommand.RUN, "--width 100", "--height 100")
-    print(signal1)
-    print(signal2)
+    # print(signal1)
+    # print(signal2)
     # parse a signal string
     taskid, signal, *args = parse_signal(signal1)
     assert(taskid == 1)
@@ -59,3 +71,5 @@ if __name__ == "__main__":
     assert(args == ['--width', '100', '--height', '100'])
     formatted_dict = convert_args_to_dict(args)
     assert(formatted_dict['width'] == '100' and formatted_dict['height'] == '100')
+    formatted_dict = convert_args_to_dict("--release_time 10 --height 100")
+    assert(formatted_dict['release_time'] == '10' and formatted_dict['height'] == '100')
