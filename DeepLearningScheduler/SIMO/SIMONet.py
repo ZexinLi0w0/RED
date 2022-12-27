@@ -11,6 +11,7 @@ from loss import DiscriminativeLoss
 # from backbone.UNet import UNet_Encoder, UNet_Decoder
 from backbone.ENet import ENet_Encoder, ENet_Decoder
 from backbone.MLP import MLP_Decoder
+from backbone.Segmentation import Segmentation_Decoder
 # from backbone.deeplabv3_plus.deeplabv3plus import Deeplabv3plus_Encoder, Deeplabv3plus_Decoder
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -31,6 +32,8 @@ class SIMONet(nn.Module):
 
             self._decoder_steering = MLP_Decoder()
             self._decoder_steering.to(DEVICE)
+            self._decoder_segmetation = Segmentation_Decoder(out_ch=2)
+            # self._decoder_segmetation = ..
         else:
             raise NotImplementedError
 
@@ -39,11 +42,12 @@ class SIMONet(nn.Module):
 
     def forward(self, input_tensor):
         if self._arch == 'ENet':
-            c0, c1, c2 = self._encoder(input_tensor)
-            lanedet_binary = self._decoder_binary(c2)
-            lanedet_instance = self._decoder_instance(c2)
-            steering_regression = self._decoder_steering(c2)
-            # TODO: add segmentation decoder
+            c1, c2, c3 = self._encoder(input_tensor)
+            lanedet_binary = self._decoder_binary(c3)
+            lanedet_instance = self._decoder_instance(c3)
+            steering_regression = self._decoder_steering(c3)
+
+            segmentation = self._decoder_segmetation(c1, c2, c3)
             # TODO: add object detection decoder
 
         else:
@@ -57,9 +61,11 @@ class SIMONet(nn.Module):
             'binary_seg_pred': binary_seg_ret,
             'binary_seg_logits': lanedet_binary,
             'steering_regression': steering_regression,
+            'segmentation': segmentation,
         }
 
 if __name__ == "__main__":
+    # !!!: can only accept (1, 3, 224, 224) as input for now
     model = SIMONet().to(DEVICE)
     print(model)
     input = torch.randn(1, 3, 224, 224).to(DEVICE)
