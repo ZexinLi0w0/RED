@@ -51,19 +51,43 @@ class SIMONet(nn.Module):
             self._encoder = ENet_Encoder(in_ch)
             self._encoder.to(DEVICE)
 
+            '''
+                binary lane detection: use ENet decoder
+                ENet: https://arxiv.org/pdf/1606.02147.pdf
+            '''
             self._decoder_binary = ENet_Decoder(2)
+            '''
+                instance lane detection: use ENet decoder
+                ENet: https://arxiv.org/pdf/1606.02147.pdf
+            '''
             self._decoder_instance = ENet_Decoder(self.no_of_instances)
-            self._decoder_binary.to(DEVICE)
-            self._decoder_instance.to(DEVICE)
+            '''
+                steering regression: use MLP followed by AveragePooling
+                AutoPilot: https://arxiv.org/pdf/1604.07316.pdf
+            '''
             self._decoder_steering = MLP_Decoder()
-            self._decoder_steering.to(DEVICE)
+            '''
+                segmentation: adapt UNet decoder in this case
+                UNet: https://arxiv.org/pdf/1505.04597.pdf
+            '''
             self._decoder_segmetation = Segmentation_Decoder(out_ch=2)
+
+
             io_params = {
                     "num_cls": 1,
                     "anchors": [[[12, 18], [37, 49], [52, 132]],
                         [[115, 73], [119, 199], [242, 238]]]}
+            '''
+                object detection: adapt YOLO-Fastest decoder in this case
+                YOLO: https://arxiv.org/abs/1506.02640
+            '''
             self._decoder_objdet = ObjectDetection_Decoder(io_params=io_params)
-            # self._decoder_segmetation = ..
+
+            self._decoder_binary.to(DEVICE)
+            self._decoder_instance.to(DEVICE)
+            self._decoder_steering.to(DEVICE)
+            self._decoder_steering.to(DEVICE)
+            self._decoder_objdet.to(DEVICE)
         else:
             raise NotImplementedError
 
@@ -76,7 +100,6 @@ class SIMONet(nn.Module):
             lanedet_binary = self._decoder_binary(c3)
             lanedet_instance = self._decoder_instance(c3)
             steering_regression = self._decoder_steering(c3)
-
             segmentation = self._decoder_segmetation(c1, c2, c3)
             objdetdetection = self._decoder_objdet(c3)
 
