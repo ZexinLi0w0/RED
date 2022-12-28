@@ -34,7 +34,11 @@ class SIMONet(nn.Module):
             self._decoder_steering = MLP_Decoder()
             self._decoder_steering.to(DEVICE)
             self._decoder_segmetation = Segmentation_Decoder(out_ch=2)
-            self._decoder_objdet = ObjectDetection_Decoder(out_ch=2)
+            io_params = {
+                    "num_cls": 1,
+                    "anchors": [[[12, 18], [37, 49], [52, 132]],
+                        [[115, 73], [119, 199], [242, 238]]]}
+            self._decoder_objdet = ObjectDetection_Decoder(io_params=io_params)
             # self._decoder_segmetation = ..
         else:
             raise NotImplementedError

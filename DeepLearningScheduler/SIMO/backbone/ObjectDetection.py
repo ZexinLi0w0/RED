@@ -178,7 +178,7 @@ class ObjectDetection_Decoder(nn.Module):
 
         self.head_4 = nn.Conv2d(96, self.num_out, kernel_size=1, stride=1)
 
-        self.conv_fit1 = conv_norm_relu(16, 96, kernel_size=1, stride=1)
+        self.conv_fit1 = conv_norm_relu(128, 96, kernel_size=1, stride=1)
         self.conv_fit2 = conv_norm_relu(96, 96, kernel_size=3, stride=2)
 
     def forward(self, x):
@@ -270,7 +270,8 @@ class ObjectDetection_Decoder(nn.Module):
 
 
 if __name__ == "__main__":
-    input = torch.randn(1, 3, 224, 224).cuda()
+    # input = torch.randn(1, 3, 224, 224).cuda()
+    input = torch.randn(1, 128, 28, 28).cuda()
 
     io_params = {
         "num_cls": 1,
