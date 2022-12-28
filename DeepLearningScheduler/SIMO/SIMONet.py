@@ -71,6 +71,17 @@ class SIMONet(nn.Module):
             'objdet_detection': objdetdetection,
         }
 
+def check(input, output):
+    assert input.shape == (1, 3, 224, 224), "[input error] input shape is wrong"
+
+    assert output['instance_seg_logits'].shape == (1, 3, 224, 224), "[output error] instance_seg_logits shape is wrong"
+    assert output['binary_seg_pred'].shape == (1, 1, 224, 224), "[output error] binary_seg_pred shape is wrong"
+    assert output['binary_seg_logits'].shape == (1, 2, 224, 224), "[output error] binary_seg_logits shape is wrong"
+    assert output['steering_regression'].shape == (1, 1), "[output error] steering_regression shape is wrong"
+    assert output['segmentation'].shape == (1, 2, 224, 224), "[output error] segmentation shape is wrong"
+    assert output['objdet_detection'][0].shape == (1, 18, 14, 14), "[output error] objdet_detection shape is wrong"
+    assert output['objdet_detection'][1].shape == (1, 18, 7, 7), "[output error] objdet_detection shape is wrong"
+
 if __name__ == "__main__":
     # !!!: can only accept (1, 3, 224, 224) as input for now
     model = SIMONet().to(DEVICE)
@@ -82,4 +93,7 @@ if __name__ == "__main__":
     flops, params = profile(model, inputs=(input, ))
     flops, params = clever_format([flops, params], "%.3f")
     print(flops, params)
+
+    import pdb; pdb.set_trace()
+    check(input, output)
     # print(output)
