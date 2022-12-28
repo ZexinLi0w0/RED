@@ -12,6 +12,7 @@ from loss import DiscriminativeLoss
 from backbone.ENet import ENet_Encoder, ENet_Decoder
 from backbone.MLP import MLP_Decoder
 from backbone.Segmentation import Segmentation_Decoder
+from backbone.ObjectDetection import ObjectDetection_Decoder
 # from backbone.deeplabv3_plus.deeplabv3plus import Deeplabv3plus_Encoder, Deeplabv3plus_Decoder
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -20,19 +21,20 @@ class SIMONet(nn.Module):
     def __init__(self, in_ch = 3, arch="ENet"):
         super(SIMONet, self).__init__()
         self.no_of_instances = 3  # if you want to output RGB instance map, it should be 3.
-        print("Use {} as shared encoder".format(arch))
+        print("Use {} as shared feature extractor (encoder)".format(arch))
         self._arch = arch
         if self._arch == 'ENet':
             self._encoder = ENet_Encoder(in_ch)
             self._encoder.to(DEVICE)
+
             self._decoder_binary = ENet_Decoder(2)
             self._decoder_instance = ENet_Decoder(self.no_of_instances)
             self._decoder_binary.to(DEVICE)
             self._decoder_instance.to(DEVICE)
-
             self._decoder_steering = MLP_Decoder()
             self._decoder_steering.to(DEVICE)
             self._decoder_segmetation = Segmentation_Decoder(out_ch=2)
+            self._decoder_objdet = ObjectDetection_Decoder(out_ch=2)
             # self._decoder_segmetation = ..
         else:
             raise NotImplementedError
@@ -48,7 +50,7 @@ class SIMONet(nn.Module):
             steering_regression = self._decoder_steering(c3)
 
             segmentation = self._decoder_segmetation(c1, c2, c3)
-            # TODO: add object detection decoder
+            objdetdetection = self._decoder_objdet(c3)
 
         else:
             raise NotImplementedError
@@ -62,6 +64,7 @@ class SIMONet(nn.Module):
             'binary_seg_logits': lanedet_binary,
             'steering_regression': steering_regression,
             'segmentation': segmentation,
+            'objdet_detection': objdetdetection,
         }
 
 if __name__ == "__main__":
