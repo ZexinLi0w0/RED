@@ -132,9 +132,9 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
 
     net.to(device=device)
-    state_dict = torch.load(args.model, map_location=device)
+    # state_dict = torch.load(args.model, map_location=device)
     # mask_values = state_dict.pop('mask_values')
-    net.load_state_dict(state_dict)
+    # net.load_state_dict(state_dict)
 
     logging.info('Model loaded!')
 
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         # FLOPS
         macs, params = profile(net, inputs=(img,))
         macs, params = clever_format([macs, params], "%.3f")
-        print('FLOPS: ', macs)
+        print('FLOPS: {}, Params: {}'.format(macs, params))
 
         # forward
         begin = time.time()
