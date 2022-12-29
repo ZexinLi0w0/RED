@@ -8,7 +8,7 @@ import numpy as np
 import math, time
 
 import sys
-sys.path.append('./autopilotTask/')
+sys.path.append('./Autopilot/')
 # self-defined module
 import Py_autopilot2_module
 
@@ -79,24 +79,28 @@ def main():
     parser.add_argument('--input_data_path', '-input', required=True, help='input data path')
     parser.add_argument('--input_height', '-height', required=True, type=int, help='input image height')
     parser.add_argument('--input_width', '-width', required=True, type=int, help='input image width')
+    parser.add_argument('--batch', '-b', required=True, type=int, help='batch size')
     parser.add_argument('--debug', required=False, type=bool, help='set debug mode')
     
     # 解析命令行参数
     args = parser.parse_args()
 
     # 获取命令行参数的值
-    model_path = './autopilotTask/model_10000.pkl'
+    model_path = './Autopilot/model_10000.pkl'
     input_path = args.input_data_path
     height = args.input_height
     width = args.input_width
+    batch = args.batch or 1
     debug = args.debug
+
 
     # load data
     loadres = load(model_path, input_path, height, width)
     dataloader = loadres["data_input"]
     network = loadres["network"]
     # run model test
-    res = test(dataloader, network)
+    for i in range(batch):
+        res = test(dataloader, network)
     
     debug and print("Predicted steering angle: ", res)
     return res
