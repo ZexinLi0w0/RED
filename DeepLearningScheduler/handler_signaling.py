@@ -11,12 +11,12 @@ async def handle_signaling(control_queue, base_time, config, logger=logging, ins
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
-    handler_id, handler_name, handler_description, handler_priority, handler_dependencies = config
+    handler_id, handler_name, handler_description = config
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
         return
     STATUS = HandlerStatus.Entry
-    logger.debug(f'handler signaling processing debug:{handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
+    logger.debug(f'handler signaling processing debug:{handler_id}, {handler_name}, {handler_description}, {STATUS}')
     while True:
         # 使用asyncio.sleep()挂起协程，让它不阻塞
         # await asyncio.sleep(0)
