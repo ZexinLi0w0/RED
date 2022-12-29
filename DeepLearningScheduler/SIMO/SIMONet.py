@@ -12,6 +12,7 @@ import sys
 import glob
 import cv2
 import numpy as np
+import time
 
 from loss import DiscriminativeLoss
 # from backbone.UNet import UNet_Encoder, UNet_Decoder
@@ -24,6 +25,19 @@ from backbone.ObjectDetection import ObjectDetection_Decoder
 from utils.general import non_max_suppression, scale_coords
 
 DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+debug = True
+def time_it(output=''):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = func(*args, **kwargs)
+            end = time.time()
+            elapsed = end - start
+            debug and print(output + '{:.6f}s'.format(elapsed))
+            return result
+        return wrapper
+    return decorator
 
 def resize_img(img0, new_shape=(736, 1280), color=(114, 114, 114)):
     shape = img0.shape[:2]
@@ -216,10 +230,14 @@ def check(input, output):
     assert output['objdet_detection'][0].shape == (1, 18, 14, 14), "[output error] objdet_detection shape is wrong"
     assert output['objdet_detection'][1].shape == (1, 18, 7, 7), "[output error] objdet_detection shape is wrong"
 
+@time_it('[Metrics][TIME] Running: ')
+def inference(model, input):
+    output = model(input)
+    return output
+
 if __name__ == "__main__":
     # !!!: can only accept (1, 3, 224, 224) as input for now
     model = SIMONet().to(DEVICE)
-    print(model)
     input = torch.randn(1, 3, 224, 224).to(DEVICE)
     output = model(input)
     from thop import profile
@@ -228,6 +246,8 @@ if __name__ == "__main__":
     flops, params = clever_format([flops, params], "%.3f")
     print(flops, params)
 
-    import pdb; pdb.set_trace()
     check(input, output)
+
+    for i in range(1000):
+        output = inference(model, input)
     # print(output)
