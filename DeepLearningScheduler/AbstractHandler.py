@@ -10,12 +10,10 @@ class HandlerStatus(Enum):
     Exit = "Exit"
 
 class AbstractHandler(ABC):
-    def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
+    def __init__(self, task_id, task_name, task_description):
         self._task_id = task_id
         self._task_name = task_name
         self._task_description = task_description
-        self._task_priority = task_priority
-        self._task_dependencies = task_dependencies
     
     @property
     def task_id(self):
@@ -40,22 +38,6 @@ class AbstractHandler(ABC):
     @task_description.setter
     def task_description(self, task_description):
         self._task_description = task_description
-    
-    @property
-    def task_priority(self):
-        return self._task_priority
-    
-    @task_priority.setter
-    def task_priority(self, task_priority):
-        self._task_priority = task_priority
-    
-    @property
-    def task_dependencies(self):
-        return self._task_dependencies
-    
-    @task_dependencies.setter
-    def task_dependencies(self, task_dependencies):
-        self._task_dependencies = task_dependencies
 
     @abstractmethod
     def run(self):

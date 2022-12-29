@@ -53,8 +53,8 @@ def time_it(output=''):
     return decorator
 
 class handler2(AbstractHandler):
-    def __init__(self, task_id, task_name, task_description, task_priority, task_dependencies):
-        super().__init__(task_id, task_name, task_description, task_priority, task_dependencies)
+    def __init__(self, task_id, task_name, task_description):
+        super().__init__(task_id, task_name, task_description)
         # 相对路径从根目录开始，因为handler的调用为根目录下的main.py
         # 测试时也从根目录调用文件, 如 python handler/handler2.py
         self.input_path = './Autopilot/img.jpg'

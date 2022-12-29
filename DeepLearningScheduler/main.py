@@ -20,7 +20,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
-    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
+    handler_id, handler_name, handler_description, runargs = config
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
         return
@@ -98,7 +98,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
                 reply_output = f"--output success" # only return sucess, write output to log
-                logger.info(f"Task in [{handler_id}]{handler_name} finished, output: {output}, {reply_start_time}, {reply_end_time}")
+                logger.info(f"Task in [{handler_id}]{handler_name} finished, {reply_start_time}, {reply_end_time}")
                 signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)
                 continue
@@ -171,7 +171,7 @@ async def main_process_signaling(control_queue, handlers, name2process, id2proce
                 elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Running):
                     # send a signal to subprocess to ready
                     config = id2config[int(args_dict["source"])]
-                    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
+                    handler_id, handler_name, handler_description, runargs = config
                     if("release-time" in runargs):
                         # wait until delay to release time
                         if(float(runargs["release-time"]) > time.time() - base_time):
@@ -189,7 +189,7 @@ def create_subprocess(control_queue, base_time, config=()):
     Function to run a single handler.
     This function is in a new process.
     """
-    handler_id, handler_name, handler_description, handler_priority, handler_dependencies, runargs = config
+    handler_id, handler_name, handler_description, runargs = config
     logger = logging_basic_setting(handler_name)
     # logger.debug(f"Running handler {handler_id}: {handler_name}")
     # import the handler module and init the class
@@ -201,7 +201,7 @@ def create_subprocess(control_queue, base_time, config=()):
     sys.path.append(handlers_dir)
     handler_module = importlib.import_module(f'{handler_file_name}')
     TaskConcreteClass = getattr(handler_module, handler_file_name)
-    instance = TaskConcreteClass(handler_id, handler_name, handler_description, handler_priority, handler_dependencies)
+    instance = TaskConcreteClass(handler_id, handler_name, handler_description)
     
     # logger.debug(f'Already create handler class: {handler_name}, {instance.task_id}, {instance.task_priority}')
     
@@ -232,12 +232,10 @@ def run_handlers(handlers, control_queue, logger):
         handler_id = int(handler["id"])
         handler_name = handler["name"]
         handler_description = handler["description"]
-        handler_priority = handler["priority"]
-        handler_dependencies = handler["dependencies"]
         run_args = convert_args_to_dict(handler["run_args"] if "run_args" in handler else None)
 
         # Create a process for each handler
-        config = (handler_id, handler_name, handler_description, handler_priority, handler_dependencies, run_args)
+        config = (handler_id, handler_name, handler_description, run_args)
         id2config[handler_id] = config
         process = Process(target=create_subprocess, name=handler_name, args=(control_queue, base_time, config))
         processes.append(process)
