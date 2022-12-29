@@ -99,7 +99,7 @@ def main():
     dataloader = loadres["data_input"]
     network = loadres["network"]
     # run model test
-    for i in range(batch):  
+    for i in range(batch):
         res = test(dataloader, network)
     
     # debug and print("Predicted steering angle: ", res)
@@ -108,3 +108,4 @@ def main():
 
 if __name__ == '__main__':
     res = main()
+
