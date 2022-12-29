@@ -22,10 +22,10 @@ class handler4(AbstractHandler):
         # 相对路径从根目录开始，因为handler的调用为根目录下的main.py
         # 测试时也从根目录调用文件, 如 python handler/handler4.py
         self.input_path = './Autopilot/img.jpg'
-        self.width = 100
-        self.height = 100
-        self.model_path = './yolov5/yolov5l-cls.pt'
-        self.BATCH = 256
+        self.width = 224
+        self.height = 224
+        self.model_path = './yolov5/yolov5n-cls.pt'
+        self.BATCH = 1
 
     async def run(self):
         try:

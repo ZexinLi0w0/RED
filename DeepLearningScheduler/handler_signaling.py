@@ -6,17 +6,17 @@ import logging, time
 from control_signal import generate_signal, parse_signal, SignalCommand
 from AbstractHandler import HandlerStatus
 
-async def handle_signaling(control_queue, base_time, config, logger=logging, instance=None):
+async def handle_signaling(control_queue, base_time, config=(), logger=logging, instance=None):
     """
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
-    handler_id, handler_name, handler_description = config
+    handler_id, handler_name, handler_description, runargs = config
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
         return
     STATUS = HandlerStatus.Entry
-    logger.debug(f'handler signaling processing debug:{handler_id}, {handler_name}, {handler_description}, {STATUS}')
+    # logger.debug(f'handler signaling processing: {handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
     while True:
         # 使用asyncio.sleep()挂起协程，让它不阻塞
         # await asyncio.sleep(0)
@@ -88,7 +88,8 @@ async def handle_signaling(control_queue, base_time, config, logger=logging, ins
                 reply_end_time = f"--end_time {time.time() - base_time}"
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
-                reply_output = f"--output {output}"
+                reply_output = f"--output success" # only return sucess, write output to log
+                logger.info(f"Task in [{handler_id}]{handler_name} finished, {reply_start_time}, {reply_end_time}")
                 signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)
                 continue

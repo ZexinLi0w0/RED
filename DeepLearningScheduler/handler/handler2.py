@@ -58,10 +58,10 @@ class handler2(AbstractHandler):
         # 相对路径从根目录开始，因为handler的调用为根目录下的main.py
         # 测试时也从根目录调用文件, 如 python handler/handler2.py
         self.input_path = './Autopilot/img.jpg'
-        self.width = 100
-        self.height = 100
+        self.width = 224
+        self.height = 224
         self.model_path = './Pytorch-UNet/unet_carvana_scale1.0_epoch2.pth'
-        self.BATCH = 256
+        self.BATCH = 1
     
     # @time_it('[Metrics][TIME] Running: ')
     async def run(self):
@@ -98,7 +98,7 @@ class handler2(AbstractHandler):
         img = img.to(device)
 
         net = SegmentationModule.UNet(n_channels=3, n_classes=2, bilinear=False)
-        net.load_state_dict(torch.load(self.model_path, map_location=device))
+        # net.load_state_dict(torch.load(self.model_path, map_location=device))
         net.to(device=device)
 
         self.data_input = img

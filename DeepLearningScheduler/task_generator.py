@@ -45,7 +45,7 @@ def load_task_config(task_config_path):
     TaskConfigObject Attributes:
 
     HandlerId: the handler id of tasks
-    Period: the amount of each task per 1 second, e.g. 30(fps) mean 30 tasks per 2 seconds
+    Period: the amount of each task per 1 second, e.g. 30(fps) mean 30 tasks per 1 seconds
     Deadline: the relative deadline of each task (second)
     ReleaseTimeDelay: the delay of first release time (second)
     RunningTime: the running time of tasks (second), 1s is a period.
