@@ -87,7 +87,7 @@ def generate_tasks(task_config):
     Task Attributes:
 
     ReleaseTime: The relative release time of task, depends on Period, ReleaseTimeDelay
-    Deadline: The relative deadline of taks, depends on Deadline, ReleaseTime and ReleaseTimeDelay
+    Deadline: The relative deadline of task, depends on Deadline, ReleaseTime and ReleaseTimeDelay
     Priority: task priority
     Dependencies: task dependencies, contains the handler id of tasks
     """

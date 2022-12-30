@@ -3,7 +3,7 @@ import queue
 import logging, time
 
 # self-defined modules
-from control_signal import generate_signal, parse_signal, SignalCommand
+from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from AbstractHandler import HandlerStatus
 
 async def handle_signaling(control_queue, base_time, config=(), logger=logging, instance=None):
@@ -32,6 +32,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                 continue
             # logger.info(f"[{handler_id}][{handler_name}] Received signal: [{signal_command}]")
             # depends on different signal to execute handlers
+            args_dict = convert_args_to_dict(signal_args)
             if(SignalCommand[signal_command] == SignalCommand.PING):
                 # return a time
                 reply_time = f"--time {time.time() - base_time}"
@@ -79,18 +80,41 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                 # skip repeat signal while already in execution
                 if(STATUS == HandlerStatus.Running):
                     continue
+                relative_time = args_dict['relative_time']
+                taskid = args_dict['taskid']
+                start_time = time.time() - relative_time
+                # if this task is out of deadline, return failure
+                if(args_dict['deadline'] <= time.time() - relative_time):
+                    reply_task_id = f"--taskid {taskid}"
+                    reply_start_time = f"--start_time {start_time}"
+                    reply_end_time = f"--end_time {start_time}"
+                    reply_source = f"--source {handler_id}" # use this handler_id as unique identity
+                    reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
+                    reply_output = f"--output failure" # only return sucess, write output to log
+                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {start_time}")
+                    signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time)
+                    control_queue.put(signal_message)
+                    continue
+
                 loop = asyncio.get_event_loop()
-                start_time = time.time() - base_time
+                STATUS = HandlerStatus.Running
                 # load data until finished
                 output = await loop.create_task(instance.run())
-                STATUS = HandlerStatus.Running
+                STATUS = HandlerStatus.Ready
+                end_time = time.time() - relative_time
+                reply_task_id = f"--taskid {taskid}"
                 reply_start_time = f"--start_time {start_time}"
-                reply_end_time = f"--end_time {time.time() - base_time}"
+                reply_end_time = f"--end_time {end_time}"
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
-                reply_output = f"--output success" # only return sucess, write output to log
-                logger.info(f"Task in [{handler_id}]{handler_name} finished, {reply_start_time}, {reply_end_time}")
-                signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_output, reply_start_time, reply_end_time)
+                if(end_time > args_dict['deadline']):
+                    reply_output = f"--output failure"
+                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {args_dict['deadline']}")
+                else:
+                    reply_output = f"--output success"
+                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {args_dict['deadline']}")
+                
+                signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)
                 continue
         except queue.Empty:

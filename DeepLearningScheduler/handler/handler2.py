@@ -110,7 +110,7 @@ class handler2(AbstractHandler):
         }
     
     def ready(self):
-        print('I\'m ready')
+        print(f'I\'m ready {self.task_name}')
     
     def exception(self):
         print("exception")

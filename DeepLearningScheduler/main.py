@@ -78,12 +78,11 @@ def run_handlers(handlers, tasks_list, control_queue, logger):
     logger.info('[CTRL] All subprocesses started.')
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
-    heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time, logger=logger))
-    
-    daemon_signaling_handler = loop.create_task(controller_signaling(control_queue, handlers, tasks_list, id2process, id2config, logger=logger, base_time = base_time))
+    # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
+    daemon_signaling_handler = loop.create_task(controller_signaling(control_queue, handlers, tasks_list, id2process, id2config, logger=logger, base_time=base_time))
     
     try:
-        loop.run_until_complete(heartping_handler)
+        # loop.run_until_complete(heartping_handler)
         loop.run_until_complete(daemon_signaling_handler)
     except KeyboardInterrupt:
         logger.info(f'[CLOSE] Controller Process KeyboardInterrupt, close all tasks and loop')

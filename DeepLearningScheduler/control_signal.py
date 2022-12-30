@@ -5,6 +5,7 @@ class SignalCommand(Enum):
     LOADDATA = "LOADDATA"
     READY = "READY"
     RUN = "RUN"
+    DELIVERY = "DELIVERY"
     STOP = "STOP"
     EXIT = "EXIT"
 
