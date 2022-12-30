@@ -13,6 +13,7 @@ import glob
 import cv2
 import numpy as np
 import time
+import asyncio
 
 from loss import DiscriminativeLoss
 # from backbone.UNet import UNet_Encoder, UNet_Decoder
@@ -107,6 +108,65 @@ class SIMONet(nn.Module):
 
         self.relu = nn.ReLU().to(DEVICE)
         self.sigmoid = nn.Sigmoid().to(DEVICE)
+
+    async def run_decoder1(self, c3):
+        lanedet_binary = self._decoder_binary(c3)
+        return lanedet_binary
+
+    async def run_decoder2(self, c3):
+        lanedet_instance = self._decoder_instance(c3)
+        return lanedet_instance
+
+    async def run_decoder3(self, c3):
+        steering_regression = self._decoder_steering(c3)
+        return steering_regression
+
+    async def run_decoder4(self, c1, c2, c3):
+        segmentation = self._decoder_segmetation(c1, c2, c3)
+        return segmentation
+
+    async def run_decoder5(self, c3):
+        objdetdetection = self._decoder_objdet(c3)
+        return objdetdetection
+
+    async def async_forward(self, input_tensor):
+        loop = asyncio.get_event_loop()
+        if self._arch == 'ENet':
+            c1, c2, c3 = self._encoder(input_tensor)
+
+            lanedet_binary_task = loop.create_task(self.run_decoder1(c3))
+            lanedet_instance_binary = loop.create_task(self.run_decoder2(c3))
+            steering_regression_task = loop.create_task(self.run_decoder3(c3))
+            segmentation_task = loop.create_task(self.run_decoder4(c1, c2, c3))
+            objdetdetection_task = loop.create_task(self.run_decoder5(c3))
+
+            # loop run until all tasks are complete
+            res = await asyncio.wait([lanedet_binary_task,
+                                      lanedet_instance_binary,
+                                      steering_regression_task,
+                                      segmentation_task,
+                                      objdetdetection_task])
+
+            # get result from res
+            lanedet_binary = lanedet_binary_task.result()
+            lanedet_instance = lanedet_instance_binary.result()
+            steering_regression = steering_regression_task.result()
+            segmentation = segmentation_task.result()
+            objdetdetection = objdetdetection_task.result()
+        else:
+            raise NotImplementedError
+
+        binary_seg_ret = torch.argmax(F.softmax(lanedet_binary, dim=1), dim=1, keepdim=True)
+        pix_embedding = self.sigmoid(lanedet_instance)
+
+        return {
+            'instance_seg_logits': pix_embedding,
+            'binary_seg_pred': binary_seg_ret,
+            'binary_seg_logits': lanedet_binary,
+            'steering_regression': steering_regression,
+            'segmentation': segmentation,
+            'objdet_detection': objdetdetection,
+        }
 
     def forward(self, input_tensor):
         if self._arch == 'ENet':
@@ -235,10 +295,24 @@ def inference(model, input):
     output = model(input)
     return output
 
+async def test():
+    loop = asyncio.get_event_loop()
+
+    print("start async inference test")
+
+    begin = time.time()
+    for i in range(1000):
+        output = await loop.create_task(model.async_forward(input))
+        # output = inference(model, input)
+    end = time.time()
+    print("FPS: ", 1000 / (end - begin))
+
 if __name__ == "__main__":
     # !!!: can only accept (1, 3, 224, 224) as input for now
     model = SIMONet().to(DEVICE)
     input = torch.randn(1, 3, 224, 224).to(DEVICE)
+    model.eval()
+
     output = model(input)
     from thop import profile
     from thop import clever_format
@@ -248,6 +322,8 @@ if __name__ == "__main__":
 
     check(input, output)
 
-    for i in range(1000):
-        output = inference(model, input)
-    # print(output)
+    # warm-up
+    _ = model(input)
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(loop.create_task(test()))
