@@ -11,6 +11,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
+    loop = asyncio.get_event_loop()
     handler_id, handler_name, handler_description, runargs = config
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
@@ -19,7 +20,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
     # logger.debug(f'handler signaling processing: {handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
     while True:
         # 使用asyncio.sleep()挂起协程，让它不阻塞
-        # await asyncio.sleep(0)
+        await asyncio.sleep(0)
         # 使用queue.get_nowait()检查queue是否有信号，如果有就立即返回，如果没有就抛出queue.Empty异常
         try:
             signal_message = control_queue.get_nowait()
@@ -79,12 +80,29 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
             elif(SignalCommand[signal_command] == SignalCommand.RUN):
                 # skip repeat signal while already in execution
                 if(STATUS == HandlerStatus.Running):
+                    logger.error(f'Handler already in running status, wrong scheduling, {signal_command}')
                     continue
-                relative_time = args_dict['relative_time']
                 taskid = args_dict['taskid']
+                # for warmup task, only return ping status 
+                if(taskid == 'warmup'):
+                    STATUS = HandlerStatus.Running
+                    # run until finished
+                    output = await loop.create_task(instance.run())
+                    STATUS = HandlerStatus.Ready
+                    reply_source = f"--source {handler_id}"
+                    reply_status = f"--status {STATUS.value}"
+                    signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, "--warmup true")
+                    control_queue.put(signal_message)
+                    continue
+                
+                relative_time = float(args_dict['relative_time'])
+                deadline = float(args_dict['deadline'])
+
+                logger.debug(f'[{handler_id}][{handler_name}] Received signal: {signal_message} on {time.time() - relative_time}')
+
                 start_time = time.time() - relative_time
                 # if this task is out of deadline, return failure
-                if(args_dict['deadline'] <= time.time() - relative_time):
+                if(deadline <= time.time() - relative_time):
                     reply_task_id = f"--taskid {taskid}"
                     reply_start_time = f"--start_time {start_time}"
                     reply_end_time = f"--end_time {start_time}"
@@ -96,9 +114,8 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                     control_queue.put(signal_message)
                     continue
 
-                loop = asyncio.get_event_loop()
                 STATUS = HandlerStatus.Running
-                # load data until finished
+                # run until finished
                 output = await loop.create_task(instance.run())
                 STATUS = HandlerStatus.Ready
                 end_time = time.time() - relative_time
@@ -107,12 +124,12 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                 reply_end_time = f"--end_time {end_time}"
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
-                if(end_time > args_dict['deadline']):
+                if(end_time > deadline):
                     reply_output = f"--output failure"
-                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {args_dict['deadline']}")
+                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
                 else:
                     reply_output = f"--output success"
-                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {args_dict['deadline']}")
+                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
                 
                 signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)

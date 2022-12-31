@@ -1,5 +1,5 @@
 # required attributes in config file
-HandlerAttributes = ["id", "name", "description", "priority", "dependencies"]
+HandlerAttributes = ["id", "name", "description"]
 
 def validate_handlers(handlers):
     """
@@ -37,17 +37,7 @@ def validate_handlers(handlers):
             raise ValueError(f"Handler id must be unique in handler id[{handler['id']}]")
         unique_handler_name.add(handler["name"])
         unique_handler_id.add(handler["id"])
-        
-        # Check if the dependencies attribute is a list
-        if not isinstance(handler["dependencies"], list):
-            raise ValueError(f"Invalid handler #{i+1}: dependencies must be a list in handler id[{handler['id']}]")
-    
-    # check dependencies of handlers are valid
-    for i, handler in enumerate(handlers):
-        # Check if the dependencies are valid handler IDs
-        for dependency in handler["dependencies"]:
-            if dependency not in unique_handler_id:
-                raise ValueError(f"Invalid handler #{i+1}: invalid dependency ID: {dependency} in handler id[{handler['id']}]")
+
 
 if __name__ == "__main__":
     # add test cases
