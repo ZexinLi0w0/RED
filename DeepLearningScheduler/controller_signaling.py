@@ -2,6 +2,8 @@ import asyncio, math, time
 import queue
 from collections import defaultdict
 import logging
+import datetime
+import pickle
 
 # self-defined modules
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
@@ -47,6 +49,10 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
     handler_status = defaultdict(None)
     # statistics map of tasks Map<TaskId, TaskFinishedObject>
     task_statistics = defaultdict(dict)
+
+    # dependency map of tasks Map<TaskId, Number of TaskOutput>
+    task_dependency = defaultdict(int)
+
     # send signal to handlers to start
     for handler in handlers:
         signal_message = generate_signal(handler["id"], SignalCommand.LOADDATA)
@@ -94,8 +100,11 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                 release_time = task["ReleaseTime"]
                 handler_id = int(task["HandlerId"])
                 # check if the task is ready to release, and the handler is ready to receive
-                if(now - TaskStartTime >= release_time and handler_status[handler_id] == HandlerStatus.Ready):
+                if(now - TaskStartTime >= release_time and handler_status[handler_id] == HandlerStatus.Ready and all(task_dependency[i] >= 1 for i in task["Dependencies"])):
                     # send the signal to the handler
+                    # cosume the dependency output
+                    for i in task["Dependencies"]:
+                        task_dependency[i] -= 1
                     control_queue.put(signal_message)
                     logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime} s")
                 else:
@@ -122,6 +131,12 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                     missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
                     logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
                     logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
+                    # use pickle to save the taks_statistics
+                    # get now time format like 2021-04-01-12-00-00
+                    now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+                    with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
+                        pickle.dump(task_statistics, f)
                     task_scatter(task_statistics)
                     # break the outer loop and exit
                     break
@@ -169,6 +184,9 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                 # set the handler status to ready
                 handler_status[handler_id] = HandlerStatus.Ready
                 taskid = args_dict["taskid"]
+                if(args_dict["output"] == "success"):
+                    # add output for dependency consuming
+                    task_dependency[handler_id] += 1
                 task_statistics[taskid]["res"] = args_dict["output"]
                 task_statistics[taskid]["start_time"] = args_dict["start_time"]
                 task_statistics[taskid]["end_time"] = args_dict["end_time"]

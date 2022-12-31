@@ -1,4 +1,6 @@
 import visdom
+import argparse
+import pickle
 import numpy as np
 from collections import defaultdict
 from matplotlib import pyplot as plt
@@ -91,7 +93,8 @@ def task_scatter(task_statistics):
     
     # Show the plot
     plt.show()
-    
+
+
 
 def visual_task_blocks(tasks):    
     vis = visdom.Visdom(env=WindowName)
@@ -148,7 +151,12 @@ def visual_task_blocks(tasks):
 
 if __name__ == "__main__":
     # test
-    from task_generator import generate_tasks, load_task_config
-    task_config = load_task_config("task-config.json")
-    tasks = generate_tasks(task_config)
-    visual_task_blocks(tasks)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(add_help=True)
+    parser.add_argument("--data", "-d", required=True, help="path of data file")
+    # use pickle to load data
+    args = parser.parse_args()
+    data = pickle.load(open(args.data, "rb"))
+    print(data)
+    task_scatter(data)
+
