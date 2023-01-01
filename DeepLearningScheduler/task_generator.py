@@ -101,7 +101,7 @@ def generate_tasks(task_config):
                     "TaskId": f"Period[{each_period}]_#{i}_Id[{config['HandlerId']}]",
                     "HandlerId": config["HandlerId"],
                     "ReleaseTime": start_time + i * gap,
-                    "Deadline": config["Deadline"] + i * gap + each_period, # deadline won't extend for ReleaseTimeDelay
+                    "Deadline": start_time + i * gap + config["Deadline"], # deadline won't extend for ReleaseTimeDelay
                     "Priority": config["Priority"],
                     "Dependencies": config["Dependencies"]
                 }

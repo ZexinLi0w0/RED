@@ -12,7 +12,26 @@ Here is the finite state machine of a handler
 ### Run a scheduler to start some tasks
 
 ```shell
-python "./main.py" -c handler-config.json
+python "./main.py" -c handler-config.json -t task-config.json
+```
+
+### Task Config
+
+Task Configuration:
+```
+{
+    "task_list": List<TaskConfigObject>
+}
+```
+TaskConfigObject Attributes:
+```
+HandlerId: the handler id of tasks
+Period: the amount of each task per 1 second, e.g. 30(fps) mean 30 tasks per 1 seconds
+Deadline: the relative deadline of each task (second)
+ReleaseTimeDelay: the delay of first release time (second)
+RunningTime: the running time of tasks (second), 1s is a period.
+Dependencies: the dependencies of tasks
+Priority: the priority of tasks
 ```
 
 ### Test a handler

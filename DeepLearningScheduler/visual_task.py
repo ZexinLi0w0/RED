@@ -3,7 +3,7 @@ import argparse
 import pickle
 import numpy as np
 from collections import defaultdict
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import math
 import numpy as np
 
@@ -40,59 +40,70 @@ def statistics_compution(task_statistics):
     missing_deadline_rate /= len(task_statistics)
     return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info
     
-def task_scatter(task_statistics):
+def task_scatter(task_statistics, datafile='taskdata.pkl'):
     """
     Use matlibplot to draw a scatter plot of the finished time of each task, X-axis is the timeline, Y-axis is the finished time.
     Finished task is marked as blue circle, missing deadline task is marked as red x.
     task_statistics: defaultdict(TaskFinishedObject), each dict contains the information of a task
     dict_values([{'taskid': 'Period[0]_#39_Id[1]', 'release_time': 0.9750000000000001, 'deadline': 0.9850000000000001, 'priority': 1, 'dependency': [], 'res': 'success', 'start_time': '0.9760010242462158', 'end_time': '0.9840006828308105'}])
     """
-    # Create an empty list for the X and Y values of the finished tasks
-    finished_x = []
-    finished_y = []
-    
-    # Create an empty list for the X and Y values of the missed deadline tasks
-    missed_x = []
-    missed_y = []
-    handlerid2color = defaultdict(float)
-    points = defaultdict(list)
+    handlerid2color = ["_","blue","red","orange","purple","black","cyan","magenta"]
+    handler2points = defaultdict(dict)
+    for handler_id in range(1,5):
+        handler2points[handler_id] = {
+            'finished_x': [],
+            'finished_y': [],
+            'missing_x': [],
+            'missing_y': [],
+            'skip_x': [],
+            'skip_y': []
+        }
 
     # Iterate over the task statistics dictionary
     for task, task_info in task_statistics.items():
-        # color = np.random.rand(3)
-        # if(task_info["handler_id"] in handlerid2color):
-        #     color = handlerid2color[task_info["handler_id"]]
-        # else:
-        #     handlerid2color[task_info["handler_id"]] = color
-        
+        handler_id = task_info["handler_id"]
         # If the task was finished on time, add its start time and end time to the finished lists
         if task_info['res'] == 'success':
             end_time = float(task_info['end_time'])
-            start_time = float(task_info['start_time'])
-            finished_x.append(end_time)
-            finished_y.append(end_time - start_time)
+            release_time = float(task_info['release_time'])
+            handler2points[handler_id]["finished_x"].append(end_time)
+            handler2points[handler_id]["finished_y"].append(end_time - release_time)
         # If the task missed its deadline, add its release time and deadline to the missed lists
-        else:
+        elif task_info['res'] == 'failure':
             end_time = float(task_info['end_time'])
-            start_time = float(task_info['start_time'])
-            missed_x.append(end_time)
-            missed_y.append(end_time - start_time)
+            release_time = float(task_info['release_time'])
+            handler2points[handler_id]["missing_x"].append(end_time)
+            handler2points[handler_id]["missing_y"].append(end_time - release_time)
+        elif task_info["res"] == "skip":
+            release_time = float(task_info['release_time'])
+            handler2points[handler_id]["skip_x"].append(release_time)
+            handler2points[handler_id]["skip_y"].append(0)
     
     # Create a figure and axis object using Matplotlib
     fig, ax = plt.subplots()
-    
-    # Plot the finished tasks as blue circles
-    ax.scatter(finished_x, finished_y, color='blue', marker='o', s = 2)
-    
-    # Plot the missed deadline tasks as red x's
-    ax.scatter(missed_x, missed_y, color='red', marker='x', s = 2)
-    
+    handles = []
+    for handler_id in [1,2,3,4]:
+        if(len(handler2points[handler_id]["finished_x"]) == 0 and len(handler2points[handler_id]["missing_x"]) == 0 and len(handler2points[handler_id]["skip_x"]) == 0):
+            continue
+        # Plot the finished tasks as blue circles
+        finished_scatter = ax.scatter(handler2points[handler_id]["finished_x"], handler2points[handler_id]["finished_y"], c = handlerid2color[handler_id], marker='o', s = 15, label= f"{handler_id}")
+        ax.scatter(handler2points[handler_id]["missing_x"], handler2points[handler_id]["missing_y"], c = handlerid2color[handler_id], marker='x', s = 15)
+        ax.scatter(handler2points[handler_id]["skip_x"], handler2points[handler_id]["skip_y"], c = handlerid2color[handler_id], marker='+', s = 15) 
+        missing_deadline_rate = len(handler2points[handler_id]["missing_x"]) / (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]))
+        finished_rate = len(handler2points[handler_id]["finished_x"]) / (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]))
+        handles.append(finished_scatter)
+    ax.legend(loc="upper right", title="Handler ID")
+    # ax.legend(['o', 'x', '+'], ['Finished', 'Missed', 'Skip'], loc="upper right", title="Task Status")
     # Set the X and Y axis labels
     ax.set_xlabel('Timeline')
-    ax.set_ylabel('Finished Time')
+    ax.set_ylabel('Task Finished Time')
+    ax.set_ylim(0, 0.05)
+    plt.title("Dynamic Workloads Tasks Pipeline")
     
     # Show the plot
     plt.show()
+
+    # plt.savefig(f'./taskdata_figure/{datafile}.pdf') 
 
 
 
@@ -157,6 +168,5 @@ if __name__ == "__main__":
     # use pickle to load data
     args = parser.parse_args()
     data = pickle.load(open(args.data, "rb"))
-    print(data)
-    task_scatter(data)
+    task_scatter(data, datafile=args.data)
 

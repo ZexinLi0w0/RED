@@ -108,7 +108,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                     reply_end_time = f"--end_time {start_time}"
                     reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                     reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
-                    reply_output = f"--output failure" # only return sucess, write output to log
+                    reply_output = f"--output skip" # only return sucess, write output to log
                     logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {start_time}")
                     signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time)
                     control_queue.put(signal_message)

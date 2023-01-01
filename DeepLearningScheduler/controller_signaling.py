@@ -108,6 +108,10 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                     control_queue.put(signal_message)
                     logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime} s")
                 else:
+                    if((now - TaskStartTime) >= task["Deadline"] and handler_status[handler_id] == HandlerStatus.Ready):
+                        # directly send this task
+                        control_queue.put(signal_message)
+                        continue
                     # logger.debug(f"[CTRL] Put task back {signal_message} on {now-TaskStartTime} s")
                     # put it back
                     putback.append(item)
@@ -137,7 +141,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
 
                     with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
                         pickle.dump(task_statistics, f)
-                    task_scatter(task_statistics)
+                    task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
                     # break the outer loop and exit
                     break
                         
