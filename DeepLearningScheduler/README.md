@@ -15,7 +15,32 @@ Here is the finite state machine of a handler
 python "./main.py" -c handler-config.json -t task-config.json
 ```
 
+### Handler Config
+
+> Each handler can be assigned several tasks by the controller.
+> 
+> Each handler should implement `AbstractHandler` with `run`, `load_data`, `ready`, `exception`, `exit` methods.
+
+```
+{
+    "handler_list": List<HandlerConfigObject>
+    "handler_dir": string, // the custom handlers directory, default "handler"
+}
+```
+
+HandlerConfigObject
+
+```
+id: handler_id, the default path of handler module will be './handler/handler{id}.py'
+name: handler name
+description: handler description
+```
+
 ### Task Config
+
+> This config file is to describe the tasks you want to run on handlers.
+> 
+> Like how many seconds of the total running time, how many fps you want for a task.
 
 Task Configuration:
 ```
@@ -25,7 +50,7 @@ Task Configuration:
 ```
 TaskConfigObject Attributes:
 ```
-HandlerId: the handler id of tasks
+HandlerId: the handler id of tasks to be assigned.
 Period: the amount of each task per 1 second, e.g. 30(fps) mean 30 tasks per 1 seconds
 Deadline: the relative deadline of each task (second)
 ReleaseTimeDelay: the delay of first release time (second)
@@ -33,6 +58,7 @@ RunningTime: the running time of tasks (second), 1s is a period.
 Dependencies: the dependencies of tasks
 Priority: the priority of tasks
 ```
+
 
 ### Test a handler
 
