@@ -1,4 +1,5 @@
 import json
+from nanoid import generate
 
 # Required Attributes for TaskConfigObject
 TaskConfigAttributes = ["HandlerId", "Period", "Deadline", "RunningTime", "Priority", "Dependencies"]
@@ -98,7 +99,7 @@ def generate_tasks(task_config):
             start_time = config["ReleaseTimeDelay"] + each_period
             for i in range(config["Period"]):
                 task = {
-                    "TaskId": f"Period[{each_period}]_#{i}_Id[{config['HandlerId']}]",
+                    "TaskId": f"Period[{each_period}]_#{i}_Id[{config['HandlerId']}]_[{config['ReleaseTimeDelay']}]_{generate(size=7)}",
                     "HandlerId": config["HandlerId"],
                     "ReleaseTime": start_time + i * gap,
                     "Deadline": start_time + i * gap + config["Deadline"], # deadline won't extend for ReleaseTimeDelay
@@ -110,6 +111,7 @@ def generate_tasks(task_config):
 
 
 if __name__ == "__main__":
-    task_config = load_task_config("task-config.json")
+    task_config = load_task_config("TaskConfigs/dynamic-addtask-task-config.json")
     tasks = generate_tasks(task_config)
-    assert(len(tasks) == 300)
+    print(tasks)
+    # assert(len(tasks) == 300)
