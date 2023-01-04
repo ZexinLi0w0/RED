@@ -169,7 +169,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                     if(not all(allReady.values())):
                         if("warmup" in args_dict):
                             warmup[handler_id] += 1
-                            if(warmup[handler_id] >= 5):
+                            if(warmup[handler_id] >= 20):
                                 allReady[handler_id] = True
                             else:
                                 # send a signal to warmup
