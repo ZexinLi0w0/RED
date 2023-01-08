@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import time
 import asyncio
+import profile
 
 from loss import DiscriminativeLoss
 # from backbone.UNet import UNet_Encoder, UNet_Decoder
@@ -21,6 +22,7 @@ from backbone.ENet import ENet_Encoder, ENet_Decoder
 from backbone.MLP import MLP_Decoder
 from backbone.Segmentation import Segmentation_Decoder
 from backbone.ObjectDetection import ObjectDetection_Decoder
+
 # from backbone.deeplabv3_plus.deeplabv3plus import Deeplabv3plus_Encoder, Deeplabv3plus_Decoder
 
 from utils.general import non_max_suppression, scale_coords
@@ -129,68 +131,80 @@ class SIMONet(nn.Module):
         objdetdetection = self._decoder_objdet(c3)
         return objdetdetection
 
-    async def async_forward(self, input_tensor):
-        loop = asyncio.get_event_loop()
+    # async def async_forward(self, input_tensor):
+    #     loop = asyncio.get_event_loop()
+    #     if self._arch == 'ENet':
+    #         c1, c2, c3 = self._encoder(input_tensor)
+
+    #         lanedet_binary_task = loop.create_task(self.run_decoder1(c3))
+    #         lanedet_instance_binary = loop.create_task(self.run_decoder2(c3))
+    #         steering_regression_task = loop.create_task(self.run_decoder3(c3))
+    #         segmentation_task = loop.create_task(self.run_decoder4(c1, c2, c3))
+    #         objdetdetection_task = loop.create_task(self.run_decoder5(c3))
+
+    #         # loop run until all tasks are complete
+    #         res = await asyncio.wait([lanedet_binary_task,
+    #                                   lanedet_instance_binary,
+    #                                   steering_regression_task,
+    #                                   segmentation_task,
+    #                                   objdetdetection_task])
+
+    #         # get result from res
+    #         lanedet_binary = lanedet_binary_task.result()
+    #         lanedet_instance = lanedet_instance_binary.result()
+    #         steering_regression = steering_regression_task.result()
+    #         segmentation = segmentation_task.result()
+    #         objdetdetection = objdetdetection_task.result()
+    #     else:
+    #         raise NotImplementedError
+
+    #     binary_seg_ret = torch.argmax(F.softmax(lanedet_binary, dim=1), dim=1, keepdim=True)
+    #     pix_embedding = self.sigmoid(lanedet_instance)
+
+    #     return {
+    #         'instance_seg_logits': pix_embedding,
+    #         'binary_seg_pred': binary_seg_ret,
+    #         'binary_seg_logits': lanedet_binary,
+    #         'steering_regression': steering_regression,
+    #         'segmentation': segmentation,
+    #         'objdet_detection': objdetdetection,
+    #     }
+
+    async def forward(self, input_tensor, decoder_list):
+        assert type(decoder_list) == list
+        assert len(decoder_list) > 0 and len(decoder_list) <= 5
+
         if self._arch == 'ENet':
             c1, c2, c3 = self._encoder(input_tensor)
 
-            lanedet_binary_task = loop.create_task(self.run_decoder1(c3))
-            lanedet_instance_binary = loop.create_task(self.run_decoder2(c3))
-            steering_regression_task = loop.create_task(self.run_decoder3(c3))
-            segmentation_task = loop.create_task(self.run_decoder4(c1, c2, c3))
-            objdetdetection_task = loop.create_task(self.run_decoder5(c3))
+            # only apply instance decoder is sufficient
+            # lanedet_binary = self._decoder_binary(c3)
 
-            # loop run until all tasks are complete
-            res = await asyncio.wait([lanedet_binary_task,
-                                      lanedet_instance_binary,
-                                      steering_regression_task,
-                                      segmentation_task,
-                                      objdetdetection_task])
-
-            # get result from res
-            lanedet_binary = lanedet_binary_task.result()
-            lanedet_instance = lanedet_instance_binary.result()
-            steering_regression = steering_regression_task.result()
-            segmentation = segmentation_task.result()
-            objdetdetection = objdetdetection_task.result()
-        else:
-            raise NotImplementedError
-
-        binary_seg_ret = torch.argmax(F.softmax(lanedet_binary, dim=1), dim=1, keepdim=True)
-        pix_embedding = self.sigmoid(lanedet_instance)
-
-        return {
-            'instance_seg_logits': pix_embedding,
-            'binary_seg_pred': binary_seg_ret,
-            'binary_seg_logits': lanedet_binary,
-            'steering_regression': steering_regression,
-            'segmentation': segmentation,
-            'objdet_detection': objdetdetection,
-        }
-
-    def forward(self, input_tensor):
-        if self._arch == 'ENet':
-            c1, c2, c3 = self._encoder(input_tensor)
-            lanedet_binary = self._decoder_binary(c3)
-            lanedet_instance = self._decoder_instance(c3)
-            steering_regression = self._decoder_steering(c3)
-            segmentation = self._decoder_segmetation(c1, c2, c3)
-            objdetdetection = self._decoder_objdet(c3)
+            if 1 in decoder_list:
+                lanedet_instance = self._decoder_instance(c3)
+            if 2 in decoder_list:
+                steering_regression = self._decoder_steering(c3)
+            if 3 in decoder_list:
+                segmentation = self._decoder_segmetation(c1, c2, c3)
+            if 4 in decoder_list:
+                objdetdetection = self._decoder_objdet(c3)
 
         else:
             raise NotImplementedError
 
-        binary_seg_ret = torch.argmax(F.softmax(lanedet_binary, dim=1), dim=1, keepdim=True)
-        pix_embedding = self.sigmoid(lanedet_instance)
+        return "Success"
 
-        return {
-            'instance_seg_logits': pix_embedding,
-            'binary_seg_pred': binary_seg_ret,
-            'binary_seg_logits': lanedet_binary,
-            'steering_regression': steering_regression,
-            'segmentation': segmentation,
-            'objdet_detection': objdetdetection,
-        }
+        # binary_seg_ret = torch.argmax(F.softmax(lanedet_binary, dim=1), dim=1, keepdim=True)
+        # pix_embedding = self.sigmoid(lanedet_instance)
+        #
+        # return {
+        #     'instance_seg_logits': pix_embedding,
+        #     'binary_seg_pred': binary_seg_ret,
+        #     'binary_seg_logits': lanedet_binary,
+        #     'steering_regression': steering_regression,
+        #     'segmentation': segmentation,
+        #     'objdet_detection': objdetdetection,
+        # }
 
     # adapt from YOLO-Fastest
     def detect(self, args):
@@ -299,31 +313,51 @@ async def test():
     loop = asyncio.get_event_loop()
 
     print("start async inference test")
-
+    decoder_list = [1]
     begin = time.time()
     for i in range(1000):
-        output = await loop.create_task(model.async_forward(input))
+        output = await loop.create_task(model.forward(input, decoder_list))
         # output = inference(model, input)
     end = time.time()
     print("FPS: ", 1000 / (end - begin))
 
+
+async def wcet_test(model, input_img):
+    loop = asyncio.get_event_loop()
+
+    print("start async wcet test")
+    decoder_list = [1]
+    latency_list = []
+    # test four task WCET separately
+    for i in range(100):   
+        begin = time.time()
+        output = await loop.create_task(model.forward(input_img, decoder_list))
+        end = time.time()
+        latency = end-begin
+        latency_list.append(latency)
+    latency_list.sort(reverse = True)
+    # print 11th max latency
+    print("wcet: ", latency_list[1:20])
+
 if __name__ == "__main__":
     # !!!: can only accept (1, 3, 224, 224) as input for now
     model = SIMONet().to(DEVICE)
-    input = torch.randn(1, 3, 224, 224).to(DEVICE)
+    input_img = torch.randn(1, 3, 224, 224).to(DEVICE)
     model.eval()
 
-    output = model(input)
-    from thop import profile
-    from thop import clever_format
-    flops, params = profile(model, inputs=(input, ))
-    flops, params = clever_format([flops, params], "%.3f")
-    print(flops, params)
+    # output = model(input)
+    # from thop import profile
+    # from thop import clever_format
+    # flops, params = profile(model, inputs=(input, ))
+    # flops, params = clever_format([flops, params], "%.3f")
+    # print(flops, params)
 
-    check(input, output)
+    # check(input, output)
 
-    # warm-up
-    _ = model(input)
+    # # warm-up
+    # _ = model(input)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(loop.create_task(test()))
+    # loop.run_until_complete(loop.create_task(test()))
+    # 0.02100
+    loop.run_until_complete(loop.create_task(wcet_test(model, input_img)))

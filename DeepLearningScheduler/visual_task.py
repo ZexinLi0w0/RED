@@ -21,6 +21,17 @@ Pay attension to you 8097 port, it needs to be occupied by visdom.
 """
 WindowName = 'TaskProgress'
 
+def ticks_merge(obj, item, tick, merge_tick = 1):
+    """
+    merge release_time within this tick like 1 second, 0.1 second
+    """
+    if(merge_tick == 1):
+        obj[math.floor(tick)].append(item)
+    elif(merge_tick in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]):
+        obj[tick * 10 // (merge_tick*10)].append(item)
+    else:
+        obj[tick // merge_tick].append(item)
+
 # data visulization, use scatter to show missing deadline rate and finished time of each tasks
 def statistics_compution(task_statistics):
     """
@@ -67,6 +78,7 @@ def task_scatter(task_statistics, datafile='taskdata.pkl'):
 
     # Iterate over the task statistics dictionary
     for task, task_info in task_statistics.items():
+        print('[debug][visual]',task_info)
         handler_id = task_info["handler_id"]
         release_time = float(task_info['release_time'])
         end_time = float(task_info['end_time'])
@@ -224,6 +236,7 @@ def task_scatter2(task_statistics, datafile='taskdata.pkl'):
     dict_values([{'taskid': 'Period[0]_#39_Id[1]', 'release_time': 0.9750000000000001, 'deadline': 0.9850000000000001, 'priority': 1, 'dependency': [], 'res': 'success', 'start_time': '0.9760010242462158', 'end_time': '0.9840006828308105'}])
     """
     handlerid2color = ["_","blue","red","orange","green","black","purple","magenta"]
+    merge_tick = 0.2
     handler2points = defaultdict(dict)
     for handler_id in range(1,5):
         handler2points[handler_id] = {
@@ -234,26 +247,43 @@ def task_scatter2(task_statistics, datafile='taskdata.pkl'):
             'skip_x': [],
             'skip_y': []
         }
-
+    missing_and_drop_step1 = []
+    missing_and_drop_step2 = []
+    missing_and_drop_step3 = []
+    missing_and_drop_persecond = defaultdict(list)
+    success_persecond = defaultdict(list)
+    for handler_id in range(1,5):
+        missing_and_drop_persecond[handler_id] = defaultdict(list)
+        success_persecond[handler_id] = defaultdict(list)
     # Iterate over the task statistics dictionary
     for task, task_info in task_statistics.items():
         handler_id = task_info["handler_id"]
         release_time = float(task_info['release_time'])
         end_time = float(task_info['end_time'])
-        # if(release_time<=1):
-        #     continue
+
         # If the task was finished on time, add its start time and end time to the finished lists
         if task_info['res'] == 'success':
             handler2points[handler_id]["finished_x"].append(end_time)
             handler2points[handler_id]["finished_y"].append(1000*(end_time - release_time))
+            ticks_merge(success_persecond[handler_id], 1, release_time, merge_tick=merge_tick)
+            # success_persecond[handler_id][math.floor(release_time)].append(1)
         # If the task missed its deadline, add its release time and deadline to the missed lists
         elif task_info['res'] == 'failure':
             handler2points[handler_id]["missing_x"].append(end_time)
             handler2points[handler_id]["missing_y"].append(1000*(end_time - release_time))
+            ticks_merge(missing_and_drop_persecond[handler_id], 1, release_time, merge_tick=merge_tick)
         elif task_info["res"] == "skip":
             handler2points[handler_id]["skip_x"].append(release_time)
             handler2points[handler_id]["skip_y"].append(end_time - release_time)
+            ticks_merge(missing_and_drop_persecond[handler_id], 1, release_time, merge_tick=merge_tick)
     
+    for handler_id in range(1,5):
+        print(f'missing and drop rate per sercond handler[{handler_id}]:')
+        for tick in success_persecond[handler_id].keys():
+            if(len(success_persecond[handler_id][tick]) + len(missing_and_drop_persecond[handler_id][tick]) == 0):
+                print(f'no task on running on {tick*merge_tick} second')
+                continue
+            print(f'missing rate on {round(tick*merge_tick, 4)} second: {round(len(missing_and_drop_persecond[handler_id][tick])/(len(success_persecond[handler_id][tick]) + len(missing_and_drop_persecond[handler_id][tick])), 4)}')
     
     # Create a figure and axis object using Matplotlib
     fig, ax = plt.subplots()
@@ -290,7 +320,7 @@ def task_scatter2(task_statistics, datafile='taskdata.pkl'):
     # ax.legend(['Finished', 'Missed', 'Dropped'], loc="upper right", title="Task Status")
     # ax.legend(['o', 'x', '+'], ['Finished', 'Missed', 'Skip'], loc="upper right", title="Task Status")
     ax.set_ylim(0, 50)
-    ax.set_xlim(0,1)
+    ax.set_xlim(0, 1)
     # ax.set_xticks(np.arange(0, 10, 1))
     # Set the X and Y axis labels
     ax.set_xlabel('Timeline [s]')
@@ -662,5 +692,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = pickle.load(open(args.data, "rb"))
     # task_scatter2(data, datafile=args.data)
-    task_boxplot_seaborn(data, datafile=args.data)
+    task_scatter2(data, datafile=args.data)
 

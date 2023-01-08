@@ -9,6 +9,7 @@ import pickle
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from visual_task import statistics_compution, task_scatter
 from AbstractHandler import HandlerStatus
+from task_scheduler import TaskSchedule
 
 
 async def send_heart_ping(control_queue, handlers, logger=logging, base_time = 0):
@@ -41,17 +42,8 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
     allReady = defaultdict(bool)
     warmup = defaultdict(int)
     tasksGeneratedReady = False
-    # the task queue, sorted by release time and priority
-    TaskQueue = []
-    # the start time of all tasks, all release time and deadline are relative to this time
-    TaskStartTime = base_time
     # controller maintain a handler status dict
     handler_status = defaultdict(None)
-    # statistics map of tasks Map<TaskId, TaskFinishedObject>
-    task_statistics = defaultdict(dict)
-
-    # dependency map of tasks Map<TaskId, Number of TaskOutput>
-    task_dependency = defaultdict(int)
 
     # send signal to handlers to start
     for handler in handlers:
@@ -60,92 +52,24 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
         handler_status[handler["id"]] = HandlerStatus.Load
         allReady[handler["id"]] = False
         warmup[handler["id"]] = 0
+    
+    # register task scheduler with edf scheduler
+    task_scheduler = TaskSchedule(tasks_list, handler_status=handler_status, control_queue=control_queue, scheduler='edf', logger=logger)
     # controller signal response loop
     while True: 
         # avoid to busy loop
         await asyncio.sleep(0)
         # when all handlers are ready and tasks are not generated, generate tasks
         if(not tasksGeneratedReady and all(allReady.values())):
-            TaskStartTime = time.time()
-            for task in tasks_list:
-                handler_id = task["HandlerId"]
-                taskid = f"--taskid {task['TaskId']}"
-                release_time = f"--release_time {task['ReleaseTime']}"
-                deadline = f"--deadline {task['Deadline']}"
-                relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid)
-                delay_signal = (signal_message, task)
-                TaskQueue.append(delay_signal)
-                # record the task object for statistics
-                task_statistics[task["TaskId"]] = {
-                    "handler_id":  task["HandlerId"],
-                    "taskid": task["TaskId"],
-                    "release_time": task["ReleaseTime"],
-                    "deadline": task["Deadline"],
-                    "priority": task["Priority"],
-                    "dependency": task["Dependencies"]
-                }
-            # sort the tasks by release time and priority
-            TaskQueue.sort(key=lambda x: (x[1]["ReleaseTime"], -x[1]["Priority"]))
+            task_scheduler.generate_task_list()
             tasksGeneratedReady = True
-            logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
+            logger.info(f"[CTRL] Tasks generated, offline scheduler: {task_scheduler.scheduler_name}, start time: {task_scheduler.TaskStartTime}, finished time: {time.time()}")
         # Distribute the tasks in TaskQueue
         elif(tasksGeneratedReady):
-            putback = []
-            while(len(TaskQueue) > 0):
-                item = TaskQueue.pop(0)
-                # distribute tasks
-                signal_message, task = item
-                now = time.time()
-                release_time = task["ReleaseTime"]
-                handler_id = int(task["HandlerId"])
-                # check if the task is ready to release, and the handler is ready to receive
-                if(now - TaskStartTime >= release_time and handler_status[handler_id] == HandlerStatus.Ready and all(task_dependency[i] >= 1 for i in task["Dependencies"])):
-                    # send the signal to the handler
-                    # cosume the dependency output
-                    for i in task["Dependencies"]:
-                        task_dependency[i] -= 1
-                    control_queue.put(signal_message)
-                    logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime} s")
-                else:
-                    if((now - TaskStartTime) >= task["Deadline"] and handler_status[handler_id] == HandlerStatus.Ready):
-                        # directly send this task
-                        control_queue.put(signal_message)
-                        continue
-                    # logger.debug(f"[CTRL] Put task back {signal_message} on {now-TaskStartTime} s")
-                    # put it back
-                    putback.append(item)
-                # the following tasks are not ready to release
-                if(now - TaskStartTime < task["ReleaseTime"]):                    
-                    break
-            if(len(putback) > 0):
-                TaskQueue = putback + TaskQueue
-            if(len(TaskQueue) == 0):
-                # all tasks are distributed
-                # check if all tasks are finished
-                allTaskFinished = True
-                for task in task_statistics.values():
-                    if("res" not in task):
-                        # logger.debug(f"[CTRL] Task[{task['taskid']}] not finished, deadline: {task['deadline']}")
-                        allTaskFinished = False
-                        break
-                if(allTaskFinished):
-                    logger.info(f"[CTRL] All tasks finished")
-                    logger.info(f"{task_statistics.values()}")
-                    missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
-                    logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
-                    logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
-                    # use pickle to save the taks_statistics
-                    # get now time format like 2021-04-01-12-00-00
-                    now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
-                    with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
-                        pickle.dump(task_statistics, f)
-                    task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
-                    # break the outer loop and exit
-                    break
-                        
-        # await asyncio.sleep(0)
+            continue_distribution = task_scheduler.distribute_tasks()
+            if(not continue_distribution):
+                break
+        # read signals from queue and handle it
         try:
             signal_message = control_queue.get_nowait()
             # logger.debug(f"Received signal: {signal_message}")
@@ -190,15 +114,12 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
                 taskid = args_dict["taskid"]
                 if(args_dict["output"] == "success"):
                     # add output for dependency consuming
-                    task_dependency[handler_id] += 1
-                task_statistics[taskid]["res"] = args_dict["output"]
-                task_statistics[taskid]["start_time"] = args_dict["start_time"]
-                task_statistics[taskid]["end_time"] = args_dict["end_time"]
-                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, start time: {args_dict['start_time']}, end time: {args_dict['end_time']}")
+                    task_scheduler.add_task_output(handler_id)
+                task_scheduler.add_task_statistics(taskid, args_dict["output"], args_dict["start_time"], args_dict["end_time"])
+                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, end time: {args_dict['end_time']}")
             
         except queue.Empty:
             continue
-
 
 
 
