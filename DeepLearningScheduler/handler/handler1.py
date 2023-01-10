@@ -86,7 +86,7 @@ class handler1(AbstractHandler):
 
 async def test():
     # test
-    handler =  handler1(1, 'autopilot', 'description',  1, [])
+    handler =  handler1(1, 'autopilot', 'description')
     loop = asyncio.get_event_loop()
     load_data_task = loop.create_task(handler.load_data())
     await load_data_task

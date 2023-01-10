@@ -170,7 +170,7 @@ class SIMONet(nn.Module):
     #         'objdet_detection': objdetdetection,
     #     }
 
-    async def forward(self, input_tensor, decoder_list):
+    def forward(self, input_tensor, decoder_list):
         assert type(decoder_list) == list
         assert len(decoder_list) > 0 and len(decoder_list) <= 5
 

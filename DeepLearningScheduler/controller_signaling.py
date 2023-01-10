@@ -121,33 +121,3 @@ async def controller_signaling(control_queue, handlers, tasks_list, id2process, 
         except queue.Empty:
             continue
 
-
-
-def circle_status(control_queue, signal_command, signal_args, id2config, base_time=0, logger=logging):
-    args_dict = convert_args_to_dict(signal_args)
-    # logger.debug(f"[CTRL] Received signal: {signal_message},\n Parse args_dict: {args_dict}")
-    if(SignalCommand[signal_command] == SignalCommand.PING):
-        if(HandlerStatus[args_dict["status"]] == HandlerStatus.Entry):
-            # send a signal to subprocess to load data
-            signal_message = generate_signal(args_dict["source"], SignalCommand.LOADDATA)
-            control_queue.put(signal_message)
-        elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Load):
-            # send a signal to subprocess to ready(ready to run)
-            signal_message = generate_signal(args_dict["source"], SignalCommand.READY)
-            control_queue.put(signal_message)
-        elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Ready):
-            # send a signal to subprocess to run
-            # for different subprocess, we can pass constrain as arguments
-            signal_message = generate_signal(args_dict["source"], SignalCommand.RUN)
-            control_queue.put(signal_message)
-        elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Running):
-            # send a signal to subprocess to ready
-            config = id2config[int(args_dict["source"])]
-            handler_id, handler_name, handler_description, runargs = config
-            if("release-time" in runargs):
-                # wait until delay to release time
-                if(float(runargs["release-time"]) > time.time() - base_time):
-                    return
-            logger.info(f'[CTRL] Received task[{args_dict["source"]}] running output: {signal_message}')
-            signal_message = generate_signal(args_dict["source"], SignalCommand.READY)
-            control_queue.put(signal_message)

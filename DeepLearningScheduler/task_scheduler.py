@@ -103,8 +103,6 @@ class TaskSchedule:
                 return False
         return True
         
-
-
     def after_finsihed_task_distribution(self):
         logger = self.logger
         task_statistics = self.task_statistics
@@ -119,7 +117,7 @@ class TaskSchedule:
 
         with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
-        task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
+        # task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
         return
 
@@ -231,6 +229,7 @@ if __name__ == "__main__":
     task_scheduler.generate_task_list()
     prev = None
     for sign, task in task_scheduler.TaskQueue:
+        print(task)
         if(prev is None):
             prev = task["Deadline"]
             continue
