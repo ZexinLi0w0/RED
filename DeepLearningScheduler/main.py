@@ -13,9 +13,9 @@ import logging
 from validate_handlers import validate_handlers
 from logging_config import logging_basic_setting
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from controller_signaling import send_heart_ping, controller_signaling
-from handler_signaling import handle_signaling
-from task_generator import generate_tasks, load_task_config
+from controller_signaling import send_heart_ping, controller_signaling, controller_signaling_SIMO
+from handler_signaling import handle_signaling, handle_signaling_SIMO
+from task_generator import generate_tasks, load_task_config, load_dag_config, generate_tasks_from_dag
 
 def create_subprocess(control_queue, base_time, config=()):
     """
@@ -41,7 +41,7 @@ def create_subprocess(control_queue, base_time, config=()):
     # start a coroutine to handle signal from the queue
     loop = asyncio.get_event_loop()
     # config tuple
-    main_task = loop.create_task(handle_signaling(control_queue, base_time, config=config, logger=logger, instance=instance))
+    main_task = loop.create_task(handle_signaling_SIMO(control_queue, base_time, config=config, logger=logger, instance=instance))
     try:
         loop.run_until_complete(main_task)
     except KeyboardInterrupt:
@@ -79,7 +79,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger):
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling(control_queue, handlers, tasks_list, id2process, id2config, logger=logger, base_time=base_time))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, id2process, id2config, logger=logger, base_time=base_time))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -130,9 +130,12 @@ def parseArguments():
         validate_handlers(handlers)
     except ValueError as e:
         print(e)
+    # for dag config
+    task_config = load_dag_config(args.task)
+    tasks_list = generate_tasks_from_dag(task_config)
 
-    task_config = load_task_config(args.task)
-    tasks_list = generate_tasks(task_config)
+    # task_config = load_task_config(args.task)
+    # tasks_list = generate_tasks(task_config)
     
     return handlers, tasks_list
     

@@ -66,7 +66,7 @@ def task_scatter(task_statistics, datafile='taskdata.pkl'):
     """
     handlerid2color = ["_","blue","red","orange","green","black","purple","magenta"]
     handler2points = defaultdict(dict)
-    for handler_id in range(1,5):
+    for handler_id in range(1,6):
         handler2points[handler_id] = {
             'finished_x': [],
             'finished_y': [],
@@ -78,7 +78,6 @@ def task_scatter(task_statistics, datafile='taskdata.pkl'):
 
     # Iterate over the task statistics dictionary
     for task, task_info in task_statistics.items():
-        print('[debug][visual]',task_info)
         handler_id = task_info["handler_id"]
         release_time = float(task_info['release_time'])
         end_time = float(task_info['end_time'])
@@ -107,10 +106,11 @@ def task_scatter(task_statistics, datafile='taskdata.pkl'):
         1: "A",
         2: "B",
         3: "D",
-        4: "C"
+        4: "C",
+        5: "E"
     }
 
-    for handler_id in [1,2,3,4]:
+    for handler_id in [1,2,3,4,5]:
         if(len(handler2points[handler_id]["finished_x"]) == 0 and len(handler2points[handler_id]["missing_x"]) == 0 and len(handler2points[handler_id]["skip_x"]) == 0):
             continue
         # Plot the finished tasks as blue circles

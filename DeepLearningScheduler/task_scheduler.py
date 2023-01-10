@@ -21,6 +21,9 @@ class TaskSchedule:
         self.task_statistics = defaultdict(dict)
         # dependency map of tasks Map<TaskId, Number of TaskOutput>
         self.task_dependency = defaultdict(int)
+        # init dag_period of task_dependency
+        for dag_period in range(10):
+            self.task_dependency[dag_period] = defaultdict(int)
 
         # handler status to decide how to schedule
         self.handler_status = handler_status
@@ -53,9 +56,13 @@ class TaskSchedule:
             release_time = f"--release_time {task['ReleaseTime']}"
             deadline = f"--deadline {task['Deadline']}"
             relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-            signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid)
-            delay_signal = (signal_message, task)
-            TaskQueue.append(delay_signal)
+            # only for simo
+            simo_args = f"--simo_args {task['RunArgs']}"
+            dag_period = f"--dag_period {task['DagPeriod']}"
+            # create signal message and save it to task
+            signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+            task['SignalMsg'] = signal_message
+            TaskQueue.append(task)
             self.init_task_statistics(task)
             
         
@@ -66,16 +73,14 @@ class TaskSchedule:
     def distribute_tasks(self):
         TaskQueue = self.TaskQueue
         TaskStartTime = self.TaskStartTime
-        handler_status = self.handler_status
-        task_dependency = self.task_dependency
-        control_queue = self.control_queue
+        handler_status = self.handler_status        
         logger = self.logger
 
         putback = []
         while(len(TaskQueue) > 0):
-            item = TaskQueue.pop(0)
+            task = TaskQueue.pop(0)
             # distribute tasks
-            signal_message, task = item
+            signal_message = task['SignalMsg']
             now = time.time()
             
             # check if the task is ready to release, and the handler is ready to receive
@@ -90,7 +95,7 @@ class TaskSchedule:
             else:
                 # logger.debug(f"[CTRL] Put task back {signal_message} on {now-TaskStartTime} s")
                 # put it back
-                putback.append(item)
+                putback.append(task)
         if(len(putback) > 0):
             # put back the tasks with the same orders
             self.TaskQueue = putback + TaskQueue
@@ -107,7 +112,6 @@ class TaskSchedule:
         logger = self.logger
         task_statistics = self.task_statistics
         logger.info(f"[CTRL] All tasks finished")
-        logger.info(f"Statistics Data: \n{task_statistics}")
         # missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
         # logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
         # logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
@@ -115,17 +119,22 @@ class TaskSchedule:
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
+        relative_end2end_runtime = time.time() - self.TaskStartTime
+        self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
+
         with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
-        # task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
+        task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
         return
 
     def dependencies_met(self, task):
         task_dependency = self.task_dependency
-        if(all(task_dependency[i] >= 1 for i in task["Dependencies"])):
+        # only consume the dep within the same dag period
+        dag_period = int(task["DagPeriod"]) or 1
+        if(all(task_dependency[dag_period][i] >= 1 for i in task["Dependencies"])):
             for i in task["Dependencies"]:
-                task_dependency[i] -= 1            
+                task_dependency[dag_period][i] -= 1            
             return True
         return False
     
@@ -145,7 +154,6 @@ class TaskSchedule:
         return True
     
     def missing_deadline_met(self, handlers, task=None, now_time=time.time()):
-        release_time = task["ReleaseTime"]
         handler_id = int(task["HandlerId"])
         TaskStartTime = self.TaskStartTime
         status = handlers[handler_id]
@@ -173,8 +181,8 @@ class TaskSchedule:
         self.task_statistics[taskid]["end_time"] = end_time
         self.logger.debug(f'[CTRL] [TASKSCHEDULER] Add Task Statistics data: {self.task_statistics[taskid]}')
     
-    def add_task_output(self, handlerid):
-        self.task_dependency[handlerid] += 1
+    def add_task_output(self, dag_period, task_type):
+        self.task_dependency[dag_period][task_type] += 1
 
     def rr(self):
         # round robin
@@ -182,7 +190,7 @@ class TaskSchedule:
 
     def fcfs(self):
         # first come first serve
-        self.TaskQueue.sort(key=lambda x: (x[1]["ReleaseTime"]))
+        self.TaskQueue.sort(key=lambda x: (x["ReleaseTime"]))
     
     def fcls(self):
         # first come last serve
@@ -190,12 +198,12 @@ class TaskSchedule:
 
     def priority(self):
         # priority
-        self.TaskQueue.sort(key=lambda x: (x[1]["Priority"]), reverse=True)
+        self.TaskQueue.sort(key=lambda x: (x["Priority"]), reverse=True)
 
     def edf(self):
         
         # earliest deadline first
-        self.TaskQueue.sort(key=lambda x: (x[1]["Deadline"]))
+        self.TaskQueue.sort(key=lambda x: (x["Deadline"]))
 
 if __name__ == "__main__":
     # test the task scheduler

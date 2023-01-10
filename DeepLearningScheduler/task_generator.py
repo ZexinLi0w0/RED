@@ -82,11 +82,55 @@ def load_task_config(task_config_path):
     
     return task_config
 
+def load_dag_config(dag_config_path):
+    """
+    Load a dag config from a JSON file.
+    Task Configuration:
+    {
+        "dag_list": List<List<TaskConfigObject>>
+    }
+
+    TaskConfigObject Attributes:
+    
+    
+    HandlerId: the handler id of tasks
+    RunningTime: the running time of tasks (ms)
+    Dependencies: the dependencies of tasks
+    Priority: the priority of tasks
+    RunArgs: SIMO run arguments
+    WorstRunningTime: Wrost running time for this task (ms)
+
+    """
+     # Load the handlers from the handler config file
+    try:
+        with open(dag_config_path, "r") as f:
+            config = json.load(f)
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON file")
+        return
+    
+    # Check if the config file has a handler list
+    if "dag_list" not in config:
+        print("Error: Missing `task_list` in config file")
+        return
+    
+    # Check if the handler list is a list
+    if not isinstance(config["dag_list"], list):
+        print("Error: `task_list` must be a list")
+        return
+    
+    dag_config = config["dag_list"]
+
+    
+    return dag_config
+
 def generate_tasks(task_config):
     """
     Generate tasks queue from the task config.
     Task Attributes:
 
+    TaskId: task id
+    HandlerId: handler id
     ReleaseTime: The relative release time of task, depends on Period, ReleaseTimeDelay
     Deadline: The relative deadline of task, depends on Deadline, ReleaseTime and ReleaseTimeDelay
     Priority: task priority
@@ -109,9 +153,43 @@ def generate_tasks(task_config):
                 tasks.append(task)
     return tasks
 
+def generate_tasks_from_dag(dag_config):
+    """
+    Generate tasks queue from the task config.
+    Task Attributes:
+
+    TaskId: task id
+    DagPeriod: the period time of DAG
+    HandlerId: handler id
+    ReleaseTime: The relative release time of task, depends on Period, ReleaseTimeDelay
+    Deadline: The relative deadline of task, depends on Deadline, ReleaseTime and ReleaseTimeDelay
+    Priority: task priority
+    Dependencies: task dependencies, contains the handler id of tasks
+    RunArgs: SIMO run arguments
+    """
+    tasks = []
+    DagRepeatedTimes = 10
+    start_time = 0
+    for dag in dag_config:
+        for i in range(DagRepeatedTimes):
+            for config in dag:
+                task = {
+                    "TaskId": f"{config['TaskName']}_[{i}]_{generate(size=7)}",
+                    "DagPeriod": f"{i}",
+                    "HandlerId": config["HandlerId"], # always 5
+                    "ReleaseTime": start_time / 1000,
+                    "Deadline": (start_time + config["WorstRunningTime"]) / 1000, # deadline won't extend for ReleaseTimeDelay
+                    "Priority": config["Priority"],
+                    "Dependencies": config["Dependencies"],
+                    "RunArgs": ",".join([str(c) for c in config["RunArgs"]]),
+                }
+                tasks.append(task)
+                start_time += config["WorstRunningTime"]
+    return tasks
+
 
 if __name__ == "__main__":
-    task_config = load_task_config("TaskConfigs/dynamic-addtask-task-config.json")
-    tasks = generate_tasks(task_config)
-    print(tasks)
-    # assert(len(tasks) == 300)
+    dag_config = load_dag_config("TaskConfigs/obstacle-free-cruising-nano.json")
+    tasks = generate_tasks_from_dag(dag_config)
+    # print(tasks)
+    assert(len(tasks) == 70)

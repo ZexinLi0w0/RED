@@ -71,3 +71,11 @@ python "./handler/handler1.py"
 ```shell
 python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg" --debug=True
 ```
+
+
+## SIMO Experiement
+
+### Baseline
+```
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json"
+```
