@@ -326,18 +326,21 @@ async def wcet_test(model, input_img):
     loop = asyncio.get_event_loop()
 
     print("start async wcet test")
-    decoder_list = [1]
-    latency_list = []
-    # test four task WCET separately
-    for i in range(100):   
-        begin = time.time()
-        output = await loop.create_task(model.forward(input_img, decoder_list))
-        end = time.time()
-        latency = end-begin
-        latency_list.append(latency)
-    latency_list.sort(reverse = True)
-    # print 11th max latency
-    print("wcet: ", latency_list[1:20])
+
+    for j in [1,2,3,4]:
+
+        decoder_list = [j]
+        latency_list = []
+        # test four task WCET separately
+        for i in range(100):
+            begin = time.time()
+            output = await loop.create_task(model.forward(input_img, decoder_list))
+            end = time.time()
+            latency = end-begin
+            latency_list.append(latency)
+        latency_list.sort(reverse = True)
+        # print 11th max latency
+        print("task {} wcet: {}s".format(j, latency_list[10]))
 
 if __name__ == "__main__":
     # !!!: can only accept (1, 3, 224, 224) as input for now
