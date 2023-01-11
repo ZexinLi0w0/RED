@@ -173,13 +173,13 @@ def generate_tasks_from_dag(dag_config):
     def generate_task_obj(config, start_time, period):
         task = {
             "TaskId": f"{config['TaskName']}_[{period}]_{generate(size=7)}",
-            "DagPeriod": f"{i}",
+            "DagPeriod": i,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
             "Deadline": (start_time + config["WorstRunningTime"]) / 1000, # deadline won't extend for ReleaseTimeDelay
             "Priority": config["Priority"],
             "Dependencies": config["Dependencies"],
-            "RunArgs": ",".join([str(c) for c in config["RunArgs"]]),
+            "RunArgs": str(config["RunArgs"]),
         }
         return task, config["WorstRunningTime"]
     for dag in dag_config:
@@ -204,5 +204,5 @@ def generate_tasks_from_dag(dag_config):
 if __name__ == "__main__":
     dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
     tasks = generate_tasks_from_dag(dag_config)
-    # print(tasks)
+    print(tasks)
     assert(len(tasks) == 70)

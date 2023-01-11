@@ -35,7 +35,7 @@ async def send_heart_ping(control_queue, handlers, logger=logging, base_time = 0
             logger.error(f"[CTRL] Error in heart ping: {e}")
             continue
 
-async def controller_signaling(control_queue, handlers, tasks_list, logger=logging, base_time=0, apporach_module='baseline'):
+async def controller_signaling(control_queue, handlers, tasks_list, logger=logging, base_time=0, approach_module='baseline'):
     """
     signaling repsonse in controller process
     """
@@ -85,7 +85,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
             if(SignalCommand[signal_command] == SignalCommand.PING):
                 if(HandlerStatus[args_dict["status"]] == HandlerStatus.Load):
                     # send a signal to subprocess to ready(ready to run)
-                    handler_status[handler_id] = HandlerStatus.Ready
+                    task_scheduler.handler_status[handler_id] = HandlerStatus.Ready
                     signal_message = generate_signal(handler_id, SignalCommand.READY)
                     control_queue.put(signal_message)
                 elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Ready):
@@ -110,7 +110,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
             elif(SignalCommand[signal_command] == SignalCommand.DELIVERY):
                 # logger.debug(f"Received delivery signal: {signal_message}")
                 # set the handler status to ready
-                handler_status[handler_id] = HandlerStatus.Ready
+                task_scheduler.handler_status[handler_id] = HandlerStatus.Ready
                 taskid = args_dict["taskid"]
                 if(args_dict["output"] == "success"):
                     # add output for dependency consuming
@@ -121,7 +121,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, apporach_module='baseline', logger=logging, base_time=0):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0):
     """
     SIMO Baseline handler
     """
@@ -140,7 +140,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, apporac
         warmup[handler["id"]] = 0
     
     # register task scheduler with edf scheduler
-    task_scheduler = TaskSchedule(tasks_list, handler_status=handler_status, control_queue=control_queue, scheduler='edf', logger=logger, apporach_module=apporach_module)
+    task_scheduler = TaskSchedule(tasks_list, handler_status=handler_status, control_queue=control_queue, scheduler='edf', logger=logger, approach_module=approach_module)
     # controller signal response loop
     while True: 
         # avoid to busy loop
@@ -171,7 +171,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, apporac
             if(SignalCommand[signal_command] == SignalCommand.PING):
                 if(HandlerStatus[args_dict["status"]] == HandlerStatus.Load):
                     # send a signal to subprocess to ready(ready to run)
-                    handler_status[handler_id] = HandlerStatus.Ready
+                    task_scheduler.handler_status[handler_id] = HandlerStatus.Ready
                     signal_message = generate_signal(handler_id, SignalCommand.READY)
                     control_queue.put(signal_message)
                 elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Ready):
@@ -196,13 +196,13 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, apporac
             elif(SignalCommand[signal_command] == SignalCommand.DELIVERY):
                 # logger.debug(f"Received delivery signal: {signal_message}")
                 # set the handler status to ready
-                handler_status[handler_id] = HandlerStatus.Ready
+                task_scheduler.handler_status[handler_id] = HandlerStatus.Ready                
                 taskid = args_dict["taskid"]
                 end_time = float(args_dict["end_time"])
                 dag_period = int(args_dict["dag_period"])
                 # convert string simo args '[1,2]' to list
                 task_types = [int(i) for i in args_dict["simo_args"].strip('[').strip(']').split(',')]
-                if(apporach_module == 'feedback'):
+                if(approach_module == 'feedback'):
                     # adjust the release time of next task immediately
                     task_scheduler.feedback_adjust(end_time)
                 if(args_dict["output"] == "success"):

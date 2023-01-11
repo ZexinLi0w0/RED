@@ -13,13 +13,13 @@ def liststr2list(s):
 def list2str(l):
     return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, apporach_module='base_line'):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline'):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
         # feedback(according to the feedback of task execution to adjust next release time),
         # fine-grained(reconstruct dag in task generation)  
-        self.approach_module = apporach_module
+        self.approach_module = approach_module
         # control queue of signaling
         self.control_queue = control_queue
         # start time of generating tasks
@@ -30,9 +30,6 @@ class TaskSchedule:
         self.task_statistics = defaultdict(dict)
         # dependency map of tasks Map<TaskId, Number of TaskOutput>
         self.task_dependency = defaultdict(int)
-        # init dag_period of task_dependency
-        for dag_period in range(10):
-            self.task_dependency[dag_period] = defaultdict(int)
 
         # handler status to decide how to schedule
         self.handler_status = handler_status
@@ -74,9 +71,12 @@ class TaskSchedule:
             TaskQueue.append(task)
             self.init_task_statistics(task)
             
-        
+        if(self.approach_module == 'fine-grained'):
+            # reconstruct dag_period
+            self.fine_grained_adjust()
         # offline Task schedule agorithm
         self.scheduler()
+        # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
 
     def distribute_tasks(self):
@@ -91,18 +91,23 @@ class TaskSchedule:
             # distribute tasks
             signal_message = task['SignalMsg']
             now = time.time()
-            
+
             # check if the task is ready to release, and the handler is ready to receive
             if(self.release_met(handler_status, task=task, now_time = now)):
+                
+                # TODO: for now dag, it won't reduce the previous output when use it
+                # consume dependencies
+                # for dep in task["Dependencies"]:
+                #     self.consume_task_output(task["DagPeriod"], dep)
+
                 # send the signal to the handler
                 self.send_signal(signal_message)
-                logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime} s")
+                # logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime}")
             elif(self.missing_deadline_met(handler_status, task=task, now_time = now)):
                     # directly send this task
                     self.send_signal(signal_message)
                     continue
             else:
-                # logger.debug(f"[CTRL] Put task back {signal_message} on {now-TaskStartTime} s")
                 # put it back
                 putback.append(task)
         if(len(putback) > 0):
@@ -142,24 +147,52 @@ class TaskSchedule:
         return
 
     def dependencies_met(self, task):
+        """
+        check if the dependencies of the task are met
+        """
         task_dependency = self.task_dependency
         # only consume the dep within the same dag period
-        dag_period = int(task["DagPeriod"]) or 1
+        dag_period = int(task["DagPeriod"]) if task["DagPeriod"] is not None else 0
+        # no dependency needs
+        if(len(task["Dependencies"]) == 0):
+            return True
+        # no output provided
+        if(dag_period not in task_dependency):
+            return False
+        # check if every dependency is met
         if(all(task_dependency[dag_period][i] >= 1 for i in task["Dependencies"])):
-            for i in task["Dependencies"]:
-                task_dependency[dag_period][i] -= 1            
             return True
         return False
     
     def release_met(self, handlers, task=None, now_time = time.time()):
+        """
+        check if the release conditions are met
+        """
         release_time = task["ReleaseTime"]
         handler_id = int(task["HandlerId"])
         TaskStartTime = self.TaskStartTime
         status = handlers[handler_id]
 
         return now_time - TaskStartTime >= release_time and status == HandlerStatus.Ready and self.dependencies_met(task)
+
+    def consume_task_output(self, dag_period, task_type):
+        dag_period = int(dag_period)
+        task_type = int(task_type)
+        if(dag_period not in self.task_dependency):
+            self.task_dependency[dag_period] = defaultdict(int)
+        self.task_dependency[dag_period][task_type] -= 1
+
+    def add_task_output(self, dag_period, task_type):
+        dag_period = int(dag_period)
+        task_type = int(task_type)
+        if(dag_period not in self.task_dependency):
+            self.task_dependency[dag_period] = defaultdict(int)
+        self.task_dependency[dag_period][task_type] += 1
     
     def all_task_finished(self):
+        """
+        check if all tasks are finished
+        """
         task_statistics = self.task_statistics
         for taskid in task_statistics:
             if("res" not in task_statistics[taskid]):
@@ -167,6 +200,9 @@ class TaskSchedule:
         return True
     
     def missing_deadline_met(self, handlers, task=None, now_time=time.time()):
+        """
+        check if the task is missing deadline
+        """
         handler_id = int(task["HandlerId"])
         TaskStartTime = self.TaskStartTime
         status = handlers[handler_id]
@@ -174,18 +210,42 @@ class TaskSchedule:
         return (now_time - TaskStartTime) >= task["Deadline"] and status == HandlerStatus.Ready
     
     def send_signal(self, signal_message):
+        """
+        push signal to control queue
+        """
         # send the signal to the handler
         self.control_queue.put(signal_message)
     
     # dag adjustment approaches
     def feedback_adjust(self, end_time):
+        """
+        adjust the release time of the next task according to the feedback of the previous task execution
+        """
+        TaskStartTime = self.TaskStartTime
         # feedback(according to the feedback of task execution to adjust next release time)
-        self.logger.debug(f'[CTRL] Feedback adjust endtime: {end_time} , {type(end_time)}')
         TaskQueue = self.TaskQueue
+        # self.logger.debug(f'[CTRL] adjust next task release time, tasknum: {len(TaskQueue)}')
         if(len(TaskQueue)>0):
             task = TaskQueue.pop(0)
-            task["ReleaseTime"] = end_time
-            TaskQueue.append(task)
+            # self.logger.debug(f'[CTRL] Feedback adjust endtime, before {task["ReleaseTime"]}, after: {end_time}')
+            if(end_time < task["ReleaseTime"]):
+                task["ReleaseTime"] = end_time
+                # adjust the data in task statistics
+                self.task_statistics[task["TaskId"]]["release_time"] = end_time
+                
+                # generate new signal message
+                handler_id = task["HandlerId"]
+                taskid = f"--taskid {task['TaskId']}"
+                release_time = f"--release_time {task['ReleaseTime']}"
+                deadline = f"--deadline {task['Deadline']}"
+                relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
+                # only for simo
+                simo_args = f"--simo_args {task['RunArgs']}"
+                dag_period = f"--dag_period {task['DagPeriod']}"
+                # create signal message and save it to task
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                task['SignalMsg'] = signal_message
+            TaskQueue.insert(0, task)
         self.TaskQueue = TaskQueue
     
     def fine_grained_adjust(self, merge_tick=0.02, merge_handler=[5]):
@@ -256,17 +316,16 @@ class TaskSchedule:
             "release_time": task["ReleaseTime"],
             "deadline": task["Deadline"],
             "priority": task["Priority"],
-            "dependency": task["Dependencies"]
+            "dependency": task["Dependencies"],
+            "dag_period": task["DagPeriod"],
+            "simo_args": task["RunArgs"],
         }
 
     def add_task_statistics(self, taskid, result, start_time, end_time):
         self.task_statistics[taskid]["res"] = result
         self.task_statistics[taskid]["start_time"] = start_time
         self.task_statistics[taskid]["end_time"] = end_time
-        self.logger.debug(f'[CTRL] [TASKSCHEDULER] Add Task Statistics data: {self.task_statistics[taskid]}')
-    
-    def add_task_output(self, dag_period, task_type):
-        self.task_dependency[dag_period][task_type] += 1
+
 
     def rr(self):
         # round robin

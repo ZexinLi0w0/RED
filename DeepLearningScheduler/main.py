@@ -50,7 +50,7 @@ def create_subprocess(control_queue, base_time, config=()):
         loop.stop()
         loop.close()
 
-def run_handlers(handlers, tasks_list, control_queue, logger, apporach_module='baseline'):
+def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline'):
     """
     Function to run handlers concurrently.
     """
@@ -75,7 +75,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger, apporach_module='b
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, apporach_module=apporach_module, logger=logger, base_time=base_time))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -108,23 +108,21 @@ def parseArguments():
         with open(args.config, "r") as f:
             config = json.load(f)
     except json.JSONDecodeError:
-        print("Error: Invalid JSON file")
-        return
+        raise Exception("Error: Invalid JSON file")
     
     # Check if the config file has a handler list
     if "handler_list" not in config:
-        print("Error: Missing `handler_list` in config file")
-        return
+        raise Exception("Error: Missing `handler_list` in config file")        
     
     # Check if the handler list is a list
     if not isinstance(config["handler_list"], list):
-        print("Error: `handler_list` must be a list")
-        return
+        raise Exception("Error: `handler_list` must be a list")
+
     approach_module = args.approach
     # check if the approach is valid
     if approach_module not in ["baseline", "feedback", "fine-grained"]:
-        print("Error: `approach` must be one of the following: baseline, feedback, fine-grained")
-        return
+        raise Exception("Error: `approach` must be one of the following: baseline, feedback, fine-grained")
+    
     handlers = config["handler_list"]
     
     # Validate the handlers
@@ -153,4 +151,4 @@ if __name__ == "__main__":
     control_queue = Queue()
 
     # Start the handlers concurrently
-    run_handlers(handlers, tasks_list, control_queue, logger, apporach_module=approach_module)
+    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module)

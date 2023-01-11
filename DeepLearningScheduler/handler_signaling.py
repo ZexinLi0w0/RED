@@ -129,7 +129,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                     logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
                 else:
                     reply_output = f"--output success"
-                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
+                    # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
                 
                 signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time)
                 control_queue.put(signal_message)
@@ -231,9 +231,8 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 simo_args = args_dict['simo_args']
                 dag_period = args_dict['dag_period']
 
-                logger.debug(f'[{handler_id}][{handler_name}] Received signal: {signal_message} on {time.time() - relative_time}')
-
                 start_time = time.time() - relative_time
+                logger.debug(f'Task: {taskid}, Start Time:{start_time}, ReleaseTime: {args_dict["release_time"]}, Simo: {simo_args} on {time.time() - relative_time}. Signal: {signal_message} ')
                 # skip repeat signal while already in execution
                 if("skipmode" in args_dict):
                     # if this task is out of deadline, return failure
@@ -252,7 +251,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                         continue
                 
                 decoder_list = [int(i) for i in simo_args.strip('[').strip(']').split(',')]
-                logger.debug(f'[debug] handler decode_list: {decoder_list}')
+                # logger.debug(f'[debug] handler decode_list: {decoder_list}')
                 STATUS = HandlerStatus.Running
                 # run until finished
                 output = await loop.create_task(instance.run(decoder_list=decoder_list))
@@ -270,7 +269,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                     logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
                 else:
                     reply_output = f"--output success"
-                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
+                    # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
                 
                 signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time, reply_simo, reply_dagperiod)
                 control_queue.put(signal_message)
