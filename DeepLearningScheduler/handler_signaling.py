@@ -245,7 +245,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                         reply_output = f"--output skip" # only return sucess, write output to log
                         reply_simo = f"--simo_args {simo_args}"
                         reply_dagperiod = f"--dag_period {dag_period}"
-                        logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {start_time}")
+                        # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {start_time}")
                         signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time, reply_simo, reply_dagperiod)
                         control_queue.put(signal_message)
                         continue
@@ -254,7 +254,6 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 # logger.debug(f'[debug] handler decode_list: {decoder_list}')
                 STATUS = HandlerStatus.Running
                 # run until finished
-                logger.debug(f'[Fine-grained] decode list {decoder_list}')
                 output = await loop.create_task(instance.run(decoder_list=decoder_list))
                 STATUS = HandlerStatus.Ready
                 end_time = time.time() - relative_time
@@ -267,7 +266,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 reply_dagperiod = f"--dag_period {dag_period}"
                 if(end_time > deadline):
                     reply_output = f"--output failure"
-                    logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
+                    # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
                 else:
                     reply_output = f"--output success"
                     # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
