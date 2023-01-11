@@ -141,9 +141,9 @@ class TaskSchedule:
         logger = self.logger
         task_statistics = self.task_statistics
         logger.info(f"[CTRL] All tasks finished")
-        # missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
-        # logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
-        # logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
+        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
+        logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
+        logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
