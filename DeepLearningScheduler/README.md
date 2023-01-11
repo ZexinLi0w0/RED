@@ -79,3 +79,13 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 ```
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "baseline"
 ```
+
+### Task Progress Tracker(Execution Feedback to adjust release time)
+```
+python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "feedback"
+```
+
+### Fine Grained
+```
+python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "fine-grained"
+```
