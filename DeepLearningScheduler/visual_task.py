@@ -51,8 +51,16 @@ def statistics_compution(task_statistics):
         else:
             finished_info[task['taskid']] = float(task['end_time']) - float(task['start_time'])
             avg_finished_time += finished_info[task['taskid']]
-    avg_finished_time /= (len(task_statistics)-missing_deadline_rate)
-    missing_deadline_rate /= len(task_statistics)
+    if((len(task_statistics)-missing_deadline_rate)!=0):
+        avg_finished_time = avg_finished_time/(len(task_statistics)-missing_deadline_rate)
+    else:
+        avg_finished_time = 0
+    
+    if(len(task_statistics) != 0):
+        missing_deadline_rate /= len(task_statistics)
+    else:
+        missing_deadline_rate = 0
+
     return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info
     
 
