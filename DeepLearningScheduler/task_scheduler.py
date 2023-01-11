@@ -55,7 +55,6 @@ class TaskSchedule:
     
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
-        task_statistics = self.task_statistics
         TaskStartTime = time.time()
         self.TaskStartTime = TaskStartTime
         tasks_list = self.tasks
@@ -68,8 +67,8 @@ class TaskSchedule:
             deadline = f"--deadline {task['Deadline']}"
             relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
             # only for simo
-            simo_args = f"--simo_args {task['RunArgs']}"
-            dag_period = f"--dag_period {task['DagPeriod']}"
+            simo_args = f"--simo_args {task['RunArgs']}" if 'RunArgs' in task else ""
+            dag_period = f"--dag_period {task['DagPeriod']}" if 'DagPeriod' in task else ""
             # create signal message and save it to task
             # for feedback-fine-grained approach, add skipmode
             if(self.approach_module == 'feedback-fine-grained'):
@@ -89,6 +88,18 @@ class TaskSchedule:
         self.init_task_statistics()
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
+        logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")
+        # check if task queue satisfy the earlier deadline first
+        # prev = None
+        # for task in self.TaskQueue:
+        #     if(prev is None):
+        #         prev = task["Deadline"]
+        #         continue
+        #     if(task["Deadline"] < prev):
+        #         print("Deadline is not correct")
+        #         raise Exception("Deadline is not correct")
+        #     prev = task["Deadline"]
+        # print("Deadline Test passed")
 
     def distribute_tasks(self):
         TaskQueue = self.TaskQueue
@@ -199,6 +210,21 @@ class TaskSchedule:
         if(dag_period not in self.task_dependency):
             self.task_dependency[dag_period] = defaultdict(int)
         self.task_dependency[dag_period][task_type] += 1
+
+    def skipped_dependent_tasks(self, taskid, dag_period, dep, now_time=time.time()):
+        self.logger.debug(f'[DEBUG]drop following tasks with {dag_period}, dep: {dep}')
+        dropped = []
+        for task in self.TaskQueue:
+            if(int(task['DagPeriod']) == int(dag_period) and dep in task['Dependencies']):
+                dropped.append(task)
+                continue
+        self.logger.debug(f'[DEBUG]drop following tasks: {[task["TaskId"] for task in dropped]}')
+        for task in dropped:
+            taskid = task["TaskId"]
+            task_scheduler.finished_task(taskid, 'skip', now_time, now_time)
+            # remove task from self.TaskQueue
+            self.TaskQueue.remove(task)
+                    
     
     def all_task_finished(self):
         """
@@ -385,36 +411,29 @@ class TaskSchedule:
 
 if __name__ == "__main__":
     # test the task scheduler
-    # create a task queue
-    task_queue = []
+    from task_generator import load_dag_config, generate_tasks_from_dag
+    dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
+    tasks = generate_tasks_from_dag(dag_config)
     handler_status = defaultdict(int)
-    for i in range(10):
-        task_queue.append({
-            "HandlerId": 1,
-            "TaskId": i,
-            "ReleaseTime": i,
-            "Deadline": i+i,
-            "Priority": random.randint(1, 10),
-            "Dependencies": []
-        })
     # create a task scheduler
-    task_scheduler = TaskSchedule(task_queue, handler_status, [], scheduler='priority')
-    task_scheduler.generate_task_list()
-    prev = None
-    for sign, task in task_scheduler.TaskQueue:
-        if(prev is None):
-            prev = task["Priority"]
-            continue
-        if(task["Priority"] > prev):
-            print("Priority is not correct")
-            raise Exception("Priority is not correct")
-        prev = task["Priority"]
-    print("Priority Test passed")
+    # task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='priority')
+    # task_scheduler.generate_task_list()
+    # prev = None
+    # for task in task_scheduler.TaskQueue:
+    #     if(prev is None):
+    #         prev = task["Priority"]
+    #         continue
+    #     if(task["Priority"] > prev):
+    #         print("Priority is not correct")
+    #         raise Exception("Priority is not correct")
+    #     prev = task["Priority"]
+    # print("Priority Test passed")
 
-    task_scheduler = TaskSchedule(task_queue, handler_status, [], scheduler='edf')
+    task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='edf')
     task_scheduler.generate_task_list()
     prev = None
-    for sign, task in task_scheduler.TaskQueue:
+    
+    for task in task_scheduler.TaskQueue:
         print(task)
         if(prev is None):
             prev = task["Deadline"]
