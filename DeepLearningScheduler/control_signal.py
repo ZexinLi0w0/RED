@@ -48,6 +48,8 @@ def convert_args_to_dict(args_data):
     if(not isinstance(args_data, list)):
         return {}
     result = {}
+    # enable skipmode, uncomment this line
+    # result = {'skipmode': True}
     for i in range(0, len(args_data), 2):
         result[args_data[i][2:]] = args_data[i + 1]
     return result
@@ -74,3 +76,8 @@ if __name__ == "__main__":
     assert(formatted_dict['width'] == '100' and formatted_dict['height'] == '100')
     formatted_dict = convert_args_to_dict("--release_time 10 --height 100")
     assert(formatted_dict['release_time'] == '10' and formatted_dict['height'] == '100')
+
+    signal = '5 RUN --release_time 3.15 --deadline 3.26 --relative_time 1673441098.8403454 --taskid S2_Stage1_LaneDetection_[0]_siQQ4TT --simo_args [1] --dag_period 0'
+    taskid, signal_command, *args = parse_signal(signal)
+    args_dict = convert_args_to_dict(args)
+    assert(args_dict['simo_args'] == '[1]')

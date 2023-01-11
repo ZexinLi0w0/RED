@@ -254,6 +254,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 # logger.debug(f'[debug] handler decode_list: {decoder_list}')
                 STATUS = HandlerStatus.Running
                 # run until finished
+                logger.debug(f'[Fine-grained] decode list {decoder_list}')
                 output = await loop.create_task(instance.run(decoder_list=decoder_list))
                 STATUS = HandlerStatus.Ready
                 end_time = time.time() - relative_time

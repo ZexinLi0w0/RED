@@ -98,7 +98,7 @@ def parseArguments():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument("--config", "-c", required=True, help="path of config file")
     parser.add_argument("--task", "-t", required=True, help="path of task config file")
-    parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: baseline(do nothing), feedback(according to the feedback of task execution to adjust next release time), fine-grained(reconstruct dag in task generation)")
+    parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: \n 1. baseline(do nothing), \n 2. feedback(according to the feedback of task execution to adjust next release time), \n 3. fine-grained(reconstruct dag in task generation), \n 4. feedback-fine-grained")
     parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
 
     args = parser.parse_args()
@@ -120,8 +120,8 @@ def parseArguments():
 
     approach_module = args.approach
     # check if the approach is valid
-    if approach_module not in ["baseline", "feedback", "fine-grained"]:
-        raise Exception("Error: `approach` must be one of the following: baseline, feedback, fine-grained")
+    if approach_module not in ["baseline", "feedback", "fine-grained", "feedback-fine-grained"]:
+        raise Exception("Error: `approach` must be one of the following: baseline, feedback, fine-grained, feedback-fine-grained")
     
     handlers = config["handler_list"]
     

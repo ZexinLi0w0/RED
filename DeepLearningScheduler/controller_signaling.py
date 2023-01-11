@@ -202,14 +202,15 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                 dag_period = int(args_dict["dag_period"])
                 # convert string simo args '[1,2]' to list
                 task_types = [int(i) for i in args_dict["simo_args"].strip('[').strip(']').split(',')]
-                if(approach_module == 'feedback'):
+                if(approach_module == 'feedback' or approach_module == 'feedback-fine-grained'):
                     # adjust the release time of next task immediately
                     task_scheduler.feedback_adjust(end_time)
                 if(args_dict["output"] == "success"):
                     # add output for dependency consuming
                     for task_type in task_types:
                         task_scheduler.add_task_output(dag_period, task_type)
-                task_scheduler.add_task_statistics(taskid, args_dict["output"], args_dict["start_time"], args_dict["end_time"])
+                # report finsihed task to task scheduler
+                task_scheduler.finished_task(taskid, args_dict["output"], args_dict["start_time"], args_dict["end_time"])
                 logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, end time: {args_dict['end_time']}")
             
         except queue.Empty:

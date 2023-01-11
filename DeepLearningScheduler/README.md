@@ -89,3 +89,14 @@ python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.j
 ```
 python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "fine-grained"
 ```
+
+### Progress Tracker + Fine Grained Combination
+```
+python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "feedback-fine-grained"
+```
+
+### Enable Skip Mode
+
+Add --skipmode for signal_message in `control_signal.py`
+
+Comment line 50 and uncomment <b>the 52nd line</b>

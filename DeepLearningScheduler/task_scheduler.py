@@ -6,6 +6,7 @@ from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from visual_task import statistics_compution, task_scatter3
 import logging
+from copy import deepcopy
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -26,6 +27,10 @@ class TaskSchedule:
         self.TaskStartTime = time.time()
         # Task Queue
         self.TaskQueue = []
+        # The number of tasks
+        self.task_num = 0
+        # The number of finished tasks
+        self.finished_task_num = 0
         # statistics map of tasks Map<TaskId, TaskFinishedObject>
         self.task_statistics = defaultdict(dict)
         # dependency map of tasks Map<TaskId, Number of TaskOutput>
@@ -69,13 +74,15 @@ class TaskSchedule:
             signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
             task['SignalMsg'] = signal_message
             TaskQueue.append(task)
-            self.init_task_statistics(task)
             
-        if(self.approach_module == 'fine-grained'):
+        
+        if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
             self.fine_grained_adjust()
         # offline Task schedule agorithm
         self.scheduler()
+        self.task_num = len(self.TaskQueue)
+        self.init_task_statistics()
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
 
@@ -193,12 +200,15 @@ class TaskSchedule:
         """
         check if all tasks are finished
         """
-        task_statistics = self.task_statistics
-        for taskid in task_statistics:
-            if("res" not in task_statistics[taskid]):
-                return False
-        return True
-    
+        return self.task_num == self.finished_task_num
+
+    def finished_task(self, taskid, output, start_time, end_time):
+        """
+        finished one task and record the status
+        """
+        self.finished_task_num += 1
+        self.add_task_statistics(taskid, output, start_time, end_time)
+
     def missing_deadline_met(self, handlers, task=None, now_time=time.time()):
         """
         check if the task is missing deadline
@@ -256,17 +266,23 @@ class TaskSchedule:
         """
         logger = self.logger
         TaskQueue = self.TaskQueue
+        logger.debug(f'[CTRL] fine-grained adjust, tasknum: {len(TaskQueue)}')
         TaskStartTime = self.TaskStartTime
         putback = []
-        prev = None
+        merged_task = []
         # release time sorting to merge
         TaskQueue.sort(key=lambda x: x["ReleaseTime"])
         while(len(TaskQueue)):
             task = TaskQueue.pop(0)
-            # try to merge if two tasks has close release time
-            if(prev is not None):
-                if(task["HandlerId"] in merge_handler and abs(prev["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and prev["DagPeriod"] == task["DagPeriod"]):
-                    # merge the two tasks into one
+            if(task["HandlerId"] not in merge_handler):
+                putback.append(task)
+                continue
+            # compare to all remained tasks to merge
+            putback = []
+            while(len(TaskQueue)):
+                other_task = TaskQueue.pop(0)
+                if(abs(other_task["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and other_task["DagPeriod"] == task["DagPeriod"]):
+                    # merge the two tasks
                     """
                     TODO: merge rules
                     1. pick smaller release_time
@@ -274,57 +290,65 @@ class TaskSchedule:
                     3. fullfill the dependencies without repeated values
                     4. pick higher priority
                     5. fullfill the RunArgs without repeated values
-                    6. merge the taskid as f'{taskid}_{prev_taskid}'
+                    6. merge the taskid as f'{taskid}_{other_taskid}'
                     """
-                    releaseTime = min(prev["ReleaseTime"], task["ReleaseTime"])
-                    deadline = max(prev["Deadline"], task["Deadline"])
-                    dependencies = list(set(prev["Dependencies"] + task["Dependencies"]))
-                    priority = max(prev["Priority"], task["Priority"])
-                    runArgs = list2str(list(set(liststr2list(prev["RunArgs"]) + liststr2list(task["RunArgs"]))))
-                    taskId = f"{task['TaskId']}_{prev['TaskId']}"
-
-                    # generate a new task and signal message as merging result
-                    handler_id = task["HandlerId"]
-                    taskid = f"--taskid {taskId}"
-                    release_time = f"--release_time {releaseTime}"
-                    deadline = f"--deadline {deadline}"
+                    # merge the two tasks
+                    new_task = {
+                        "TaskId": f"{task['TaskId']}_{other_task['TaskId']}",
+                        "DagPeriod": task["DagPeriod"],
+                        "HandlerId": task["HandlerId"], # always 5
+                        "ReleaseTime": min(other_task["ReleaseTime"], task["ReleaseTime"]),
+                        "Deadline": max(other_task["Deadline"], task["Deadline"]), # deadline won't extend for ReleaseTimeDelay
+                        "Priority": max(other_task["Priority"], task["Priority"]),
+                        "Dependencies": list(set(other_task["Dependencies"] + task["Dependencies"])),
+                        "RunArgs": list2str(list(set(liststr2list(other_task["RunArgs"]) + liststr2list(task["RunArgs"])))),
+                    }
+                    handler_id = new_task["HandlerId"]
+                    taskid = f"--taskid {new_task['TaskId']}"
+                    release_time = f"--release_time {new_task['ReleaseTime']}"
+                    deadline = f"--deadline {new_task['Deadline']}"
                     relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-                    simo_args = f"--simo_args {runArgs}"
-                    dag_period = f"--dag_period {task['DagPeriod']}"
+                    # only for simo
+                    simo_args = f"--simo_args {new_task['RunArgs']}"
+                    dag_period = f"--dag_period {new_task['DagPeriod']}"
                     # create signal message and save it to task
                     signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                    
                     logger.debug(f'[CTRL] fine-grained merge two task: {signal_message}')
+                    
+                    task = new_task
                     task['SignalMsg'] = signal_message
-                    prev = task
                 else:
-                    putback.append(prev)
-                    prev = task
-            else:
-                prev = task
-        logger.debug(f'[CTRL] fine-grained merge result: {putback}')
-        self.TaskQueue = putback
+                    putback.append(other_task)
+            TaskQueue = putback
+            merged_task.append(task)
+        
+        logger.debug(f'[CTRL] fine-grained merge result: {len(merged_task)}')
+        self.TaskQueue = merged_task
 
-
-
-
-
-    def init_task_statistics(self, task):
+    def init_task_statistics(self):
+        """
+        generate a task statistics dict for drawing and analysis
+        """
         # record the task object for statistics
-        self.task_statistics[task["TaskId"]] = {
-            "handler_id":  task["HandlerId"],
-            "taskid": task["TaskId"],
-            "release_time": task["ReleaseTime"],
-            "deadline": task["Deadline"],
-            "priority": task["Priority"],
-            "dependency": task["Dependencies"],
-            "dag_period": task["DagPeriod"],
-            "simo_args": task["RunArgs"],
-        }
+        task_statistics = defaultdict(dict)
+        for task in self.TaskQueue:
+            task_statistics[task["TaskId"]] = {
+                "handler_id":  task["HandlerId"],
+                "taskid": task["TaskId"],
+                "release_time": task["ReleaseTime"],
+                "deadline": task["Deadline"],
+                "priority": task["Priority"],
+                "dependency": task["Dependencies"],
+                "dag_period": task["DagPeriod"],
+                "simo_args": task["RunArgs"],
+            }
+        self.task_statistics = task_statistics
 
     def add_task_statistics(self, taskid, result, start_time, end_time):
         self.task_statistics[taskid]["res"] = result
         self.task_statistics[taskid]["start_time"] = start_time
-        self.task_statistics[taskid]["end_time"] = end_time
+        self.task_statistics[taskid]["end_time"] = end_time        
 
 
     def rr(self):
