@@ -71,7 +71,11 @@ class TaskSchedule:
             simo_args = f"--simo_args {task['RunArgs']}"
             dag_period = f"--dag_period {task['DagPeriod']}"
             # create signal message and save it to task
-            signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+            # for feedback-fine-grained approach, add skipmode
+            if(self.approach_module == 'feedback-fine-grained'):
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
+            else:    
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
             task['SignalMsg'] = signal_message
             TaskQueue.append(task)
             
@@ -253,7 +257,11 @@ class TaskSchedule:
                 simo_args = f"--simo_args {task['RunArgs']}"
                 dag_period = f"--dag_period {task['DagPeriod']}"
                 # create signal message and save it to task
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                # for feedback-fine-grained approach, add skipmode
+                if(self.approach_module == 'feedback-fine-grained'):
+                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
+                else:    
+                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
                 task['SignalMsg'] = signal_message
             TaskQueue.insert(0, task)
         self.TaskQueue = TaskQueue
@@ -312,8 +320,11 @@ class TaskSchedule:
                     simo_args = f"--simo_args {new_task['RunArgs']}"
                     dag_period = f"--dag_period {new_task['DagPeriod']}"
                     # create signal message and save it to task
-                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
-                    
+                    # for feedback-fine-grained approach, add skipmode
+                    if(self.approach_module == 'feedback-fine-grained'):
+                        signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
+                    else:    
+                        signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
                     logger.debug(f'[CTRL] fine-grained merge two task: {signal_message}')
                     
                     task = new_task

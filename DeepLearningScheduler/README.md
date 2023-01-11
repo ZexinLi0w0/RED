@@ -97,6 +97,10 @@ python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.j
 
 ### Enable Skip Mode
 
+Only Progress Tracker + Fine Grained Combination approach will enable skip mode.
+
+But you can enable it manually.
+
 Add --skipmode for signal_message in `control_signal.py`
 
 Comment line 50 and uncomment <b>the 52nd line</b>
