@@ -77,5 +77,5 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 
 ### Baseline
 ```
-python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json"
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "baseline"
 ```

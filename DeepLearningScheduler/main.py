@@ -50,16 +50,14 @@ def create_subprocess(control_queue, base_time, config=()):
         loop.stop()
         loop.close()
 
-def run_handlers(handlers, tasks_list, control_queue, logger):
+def run_handlers(handlers, tasks_list, control_queue, logger, apporach_module='baseline'):
     """
     Function to run handlers concurrently.
     """
     # Create a list of processes
     processes = []
     # base time for all handlers and tasks
-    base_time = time.time()    
-    id2process = defaultdict(None)
-    id2config = defaultdict(None)
+    base_time = time.time()        
     for handler in handlers:
         handler_id = int(handler["id"])
         handler_name = handler["name"]
@@ -67,11 +65,9 @@ def run_handlers(handlers, tasks_list, control_queue, logger):
         run_args = convert_args_to_dict(handler["run_args"] if "run_args" in handler else None)
 
         # Create a process for each handler
-        config = (handler_id, handler_name, handler_description, run_args)
-        id2config[handler_id] = config
+        config = (handler_id, handler_name, handler_description, run_args)        
         process = Process(target=create_subprocess, name=handler_name, args=(control_queue, base_time, config))
         processes.append(process)
-        id2process[handler_id] = process
     # Start all processes
     for process in processes:
         process.start()
@@ -79,7 +75,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger):
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, id2process, id2config, logger=logger, base_time=base_time))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, apporach_module=apporach_module, logger=logger, base_time=base_time))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -102,7 +98,9 @@ def parseArguments():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument("--config", "-c", required=True, help="path of config file")
     parser.add_argument("--task", "-t", required=True, help="path of task config file")
+    parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: baseline(do nothing), feedback(according to the feedback of task execution to adjust next release time), fine-grained(reconstruct dag in task generation)")
     parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
+
     args = parser.parse_args()
 
     # Load the handlers from the handler config file
@@ -122,7 +120,11 @@ def parseArguments():
     if not isinstance(config["handler_list"], list):
         print("Error: `handler_list` must be a list")
         return
-    
+    approach_module = args.approach
+    # check if the approach is valid
+    if approach_module not in ["baseline", "feedback", "fine-grained"]:
+        print("Error: `approach` must be one of the following: baseline, feedback, fine-grained")
+        return
     handlers = config["handler_list"]
     
     # Validate the handlers
@@ -137,12 +139,12 @@ def parseArguments():
     # task_config = load_task_config(args.task)
     # tasks_list = generate_tasks(task_config)
     
-    return handlers, tasks_list
+    return handlers, tasks_list, approach_module
     
 
 if __name__ == "__main__":
     logger = logging_basic_setting()
-    handlers, tasks_list = parseArguments()
+    handlers, tasks_list, approach_module = parseArguments()
     # logging.debug(f'Parse config files to generate handlers: {handlers}')
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
@@ -151,4 +153,4 @@ if __name__ == "__main__":
     control_queue = Queue()
 
     # Start the handlers concurrently
-    run_handlers(handlers, tasks_list, control_queue, logger)
+    run_handlers(handlers, tasks_list, control_queue, logger, apporach_module=approach_module)

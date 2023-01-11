@@ -161,7 +161,7 @@ def generate_tasks_from_dag(dag_config):
     TaskId: task id
     DagPeriod: the period time of DAG
     HandlerId: handler id
-    ReleaseTime: The relative release time of task, depends on Period, ReleaseTimeDelay
+    ReleaseTime: The relative release time of task, depends on ReleaseTimeDelay and DagPeriod
     Deadline: The relative deadline of task, depends on Deadline, ReleaseTime and ReleaseTimeDelay
     Priority: task priority
     Dependencies: task dependencies, contains the handler id of tasks
@@ -170,26 +170,39 @@ def generate_tasks_from_dag(dag_config):
     tasks = []
     DagRepeatedTimes = 10
     start_time = 0
+    def generate_task_obj(config, start_time, period):
+        task = {
+            "TaskId": f"{config['TaskName']}_[{period}]_{generate(size=7)}",
+            "DagPeriod": f"{i}",
+            "HandlerId": config["HandlerId"], # always 5
+            "ReleaseTime": start_time / 1000,
+            "Deadline": (start_time + config["WorstRunningTime"]) / 1000, # deadline won't extend for ReleaseTimeDelay
+            "Priority": config["Priority"],
+            "Dependencies": config["Dependencies"],
+            "RunArgs": ",".join([str(c) for c in config["RunArgs"]]),
+        }
+        return task, config["WorstRunningTime"]
     for dag in dag_config:
         for i in range(DagRepeatedTimes):
-            for config in dag:
-                task = {
-                    "TaskId": f"{config['TaskName']}_[{i}]_{generate(size=7)}",
-                    "DagPeriod": f"{i}",
-                    "HandlerId": config["HandlerId"], # always 5
-                    "ReleaseTime": start_time / 1000,
-                    "Deadline": (start_time + config["WorstRunningTime"]) / 1000, # deadline won't extend for ReleaseTimeDelay
-                    "Priority": config["Priority"],
-                    "Dependencies": config["Dependencies"],
-                    "RunArgs": ",".join([str(c) for c in config["RunArgs"]]),
-                }
-                tasks.append(task)
-                start_time += config["WorstRunningTime"]
+            for config in dag:                
+                if(type(config) == list):
+                    # for sub dag structure
+                    parellel_running_time = 0
+                    for subconfig in config:
+                        task, running_time = generate_task_obj(subconfig, start_time, i)
+                        # print('[debug] subconfig', task, start_time, i, subconfig['WorstRunningTime'])
+                        tasks.append(task)
+                        parellel_running_time += running_time
+                    start_time += parellel_running_time
+                else:
+                    task, running_time = generate_task_obj(config, start_time, i)
+                    tasks.append(task)
+                    start_time += running_time
     return tasks
 
 
 if __name__ == "__main__":
-    dag_config = load_dag_config("TaskConfigs/obstacle-free-cruising-nano.json")
+    dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
     tasks = generate_tasks_from_dag(dag_config)
     # print(tasks)
     assert(len(tasks) == 70)

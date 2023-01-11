@@ -4,13 +4,22 @@ import random
 from collections import defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_task import statistics_compution, task_scatter
+from visual_task import statistics_compution, task_scatter3
 import logging
 
+def liststr2list(s):
+    return [i for i in s.strip('[').strip(']').split(',')]
+
+def list2str(l):
+    return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, apporach_module='base_line'):
         self.tasks = tasks
         self.logger = logger
+        # more approaches to adjust tasks, baseline(do nothing),
+        # feedback(according to the feedback of task execution to adjust next release time),
+        # fine-grained(reconstruct dag in task generation)  
+        self.approach_module = apporach_module
         # control queue of signaling
         self.control_queue = control_queue
         # start time of generating tasks
@@ -109,6 +118,10 @@ class TaskSchedule:
         return True
         
     def after_finsihed_task_distribution(self):
+        """
+        the method after all tasks are distributed and executed
+        save the data for statistics and draw the scatter
+        """
         logger = self.logger
         task_statistics = self.task_statistics
         logger.info(f"[CTRL] All tasks finished")
@@ -124,7 +137,7 @@ class TaskSchedule:
 
         with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
-        task_scatter(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
+        task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
         return
 
@@ -163,6 +176,77 @@ class TaskSchedule:
     def send_signal(self, signal_message):
         # send the signal to the handler
         self.control_queue.put(signal_message)
+    
+    # dag adjustment approaches
+    def feedback_adjust(self, end_time):
+        # feedback(according to the feedback of task execution to adjust next release time)
+        self.logger.debug(f'[CTRL] Feedback adjust endtime: {end_time} , {type(end_time)}')
+        TaskQueue = self.TaskQueue
+        if(len(TaskQueue)>0):
+            task = TaskQueue.pop(0)
+            task["ReleaseTime"] = end_time
+            TaskQueue.append(task)
+        self.TaskQueue = TaskQueue
+    
+    def fine_grained_adjust(self, merge_tick=0.02, merge_handler=[5]):
+        """
+        fine-grained(reconstruct dag in task generation), only works for SIMO/MIMO
+        merge_tick: the time interval to merge two tasks
+        merge_handler: the handler id can be considered merging
+        """
+        logger = self.logger
+        TaskQueue = self.TaskQueue
+        TaskStartTime = self.TaskStartTime
+        putback = []
+        prev = None
+        # release time sorting to merge
+        TaskQueue.sort(key=lambda x: x["ReleaseTime"])
+        while(len(TaskQueue)):
+            task = TaskQueue.pop(0)
+            # try to merge if two tasks has close release time
+            if(prev is not None):
+                if(task["HandlerId"] in merge_handler and abs(prev["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and prev["DagPeriod"] == task["DagPeriod"]):
+                    # merge the two tasks into one
+                    """
+                    TODO: merge rules
+                    1. pick smaller release_time
+                    2. pick larger deadline(lower missing deadlines)
+                    3. fullfill the dependencies without repeated values
+                    4. pick higher priority
+                    5. fullfill the RunArgs without repeated values
+                    6. merge the taskid as f'{taskid}_{prev_taskid}'
+                    """
+                    releaseTime = min(prev["ReleaseTime"], task["ReleaseTime"])
+                    deadline = max(prev["Deadline"], task["Deadline"])
+                    dependencies = list(set(prev["Dependencies"] + task["Dependencies"]))
+                    priority = max(prev["Priority"], task["Priority"])
+                    runArgs = list2str(list(set(liststr2list(prev["RunArgs"]) + liststr2list(task["RunArgs"]))))
+                    taskId = f"{task['TaskId']}_{prev['TaskId']}"
+
+                    # generate a new task and signal message as merging result
+                    handler_id = task["HandlerId"]
+                    taskid = f"--taskid {taskId}"
+                    release_time = f"--release_time {releaseTime}"
+                    deadline = f"--deadline {deadline}"
+                    relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
+                    simo_args = f"--simo_args {runArgs}"
+                    dag_period = f"--dag_period {task['DagPeriod']}"
+                    # create signal message and save it to task
+                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                    logger.debug(f'[CTRL] fine-grained merge two task: {signal_message}')
+                    task['SignalMsg'] = signal_message
+                    prev = task
+                else:
+                    putback.append(prev)
+                    prev = task
+            else:
+                prev = task
+        logger.debug(f'[CTRL] fine-grained merge result: {putback}')
+        self.TaskQueue = putback
+
+
+
+
 
     def init_task_statistics(self, task):
         # record the task object for statistics
