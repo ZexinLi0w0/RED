@@ -82,17 +82,17 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseli
 
 ### Task Progress Tracker(Execution Feedback to adjust release time)
 ```
-python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "feedback"
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "feedback"
 ```
 
 ### Fine Grained
 ```
-python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "fine-grained"
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "fine-grained"
 ```
 
 ### Progress Tracker + Fine Grained Combination
 ```
-python main.py -c "./handler-config.json" -t ".\TaskConfigs\simo-baseline-nano.json" -a "feedback-fine-grained"
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "feedback-fine-grained"
 ```
 
 ### Enable Skip Mode
