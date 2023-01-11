@@ -153,7 +153,7 @@ class TaskSchedule:
 
         with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
-        task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
+        # task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
         return
 
