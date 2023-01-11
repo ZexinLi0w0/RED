@@ -44,15 +44,18 @@ def statistics_compution(task_statistics):
     missing_deadline_info = defaultdict(int)
     finished_info = defaultdict(float)
     avg_finished_time = 0
+    task_num = 0
     for task in task_statistics.values():
-        if task['res'] != 'success':
-            missing_deadline_rate += 1
-            missing_deadline_info[task["taskid"]] = 1
-        else:
+        if task['res'] != 'skip':
             finished_info[task['taskid']] = float(task['end_time']) - float(task['start_time'])
             avg_finished_time += finished_info[task['taskid']]
-    if((len(task_statistics)-missing_deadline_rate)!=0):
-        avg_finished_time = avg_finished_time/(len(task_statistics)-missing_deadline_rate)
+            task_num += 1
+        if task['res'] == 'failure' or task['res'] == 'skip':
+            missing_deadline_rate += 1
+            missing_deadline_info[task["taskid"]] = 1
+            
+    if(task_num!=0):
+        avg_finished_time = avg_finished_time/task_num
     else:
         avg_finished_time = 0
     
