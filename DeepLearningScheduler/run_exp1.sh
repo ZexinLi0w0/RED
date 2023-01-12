@@ -1,6 +1,6 @@
 platform="agx"
 deadline="tight"
-test_case_num=2
+test_case_num=10
 
 mkdir -p exp1/raw_data
 for (( i=0 ; i < ${test_case_num} ; i++ ))
@@ -31,7 +31,7 @@ cat exp1/raw_data/${platform}_${deadline}_REDdrop.txt | grep End | grep -oE ": [
 
 platform="agx"
 deadline="loose"
-test_case_num=2
+test_case_num=10
 
 mkdir -p exp1/raw_data
 for (( i=0 ; i < ${test_case_num} ; i++ ))
