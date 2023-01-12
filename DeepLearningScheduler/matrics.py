@@ -1,11 +1,12 @@
 import math
-def throughput_score(latencies):
+def throughput_score(latencies, min_latency = 5.5):
     """
     Calculates the throughput score for a given list of latencies.
     latencies: Array<Latency:int>
     """
     latency_avg = sum(latencies) / len(latencies)
-    return min(latencies) / latency_avg
+    # return (15-max(latencies)) / 15
+    return min_latency / latency_avg
 
 def RTscore(finished_times, deadlines):
     missing_deadline = []

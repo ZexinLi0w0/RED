@@ -11,7 +11,7 @@ from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 24})
 
 """
 Before running this script, you need to install visdom first and launch a visdom server in another shell.
@@ -78,7 +78,7 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
         # hard-code to calculate the deadline
         deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
         finished_time = now_time - task_start_time
-
+        print('metrics finished time', finished_time, deadline_time)
         metrics2 = RTscore([finished_time], [deadline_time])
         metrics3 = QoEScore([finished_time], [deadline_time])
         
@@ -633,13 +633,13 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     width = total_width / n
     x = x - (total_width - width) / 2
 
-    plt.bar(x, a,  width=width, label='Throughput Score')
+    plt.bar(x, a,  width=width, label='Throughput Score', color=(140,93,66))
     plt.bar(x + width, b, width=width, label='RT Score')
     plt.bar(x + 2 * width, c, width=width, label='QoE Score')
-    plt.legend()
-    plt.xticks([0,1,2,3], ['Baseline', 'Progress Tracker', 'Fine Grained', 'RED'])
-    plt.xlabel('Approaches')
-    plt.title(f"{name}")
+    # plt.legend()
+    plt.xticks([0,1,2,3], ['Baseline', 'IDA', 'FG', 'RED'])
+    plt.ylabel('Matrics Score')
+    # plt.title(f"{name}")
 
     plt.show()
     
@@ -658,10 +658,20 @@ def figure6(deadline):
         "tight": [],
         "loose": []
     }
-    name = 'agx'
+    name = 'orin'
     time_constrains = ['tight', 'loose']
     task = ['baseline', 'progress_tracker', 'fine_grained', 'REDdrop']
     basepath = f'./taskdata/{name}_exp1/processed_data/'
+    # get min response time
+    min_response_time = math.inf
+    for time_constrain_type in time_constrains:
+        for task_type in task:
+            filepath = f'{basepath}{name}_{time_constrain_type}_{task_type}.txt'
+            with open(filepath, 'r+') as f:
+                lines = f.readlines()
+                for line in lines:
+                    min_response_time = min(min_response_time, float(line))
+    
     # combine these to generate file path
     for time_constrain_type in time_constrains:
         for task_type in task:
@@ -676,7 +686,7 @@ def figure6(deadline):
                     # print('finished time: ', float(line))
                     finished_times.append(float(line))
                 deadline_times = [deadline[name][time_constrain_type]/1000]*10
-                a = throughput_score(finished_times)
+                a = throughput_score(finished_times, min_latency=min_response_time)
                 b = RTscore(finished_times, deadline_times)
                 c = QoEScore(finished_times, deadline_times)
                 
