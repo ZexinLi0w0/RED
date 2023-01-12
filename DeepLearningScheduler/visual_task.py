@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import math
 import pandas as pd
 import seaborn as sns
+from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
@@ -598,6 +599,83 @@ def task_boxplot_221(task_statistics, datafile='taskdata.pkl'):
 
     # plt.savefig(f'./taskdata_figure/{datafile}.pdf')
 
+def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6 1/4"):
+    """
+    并列柱状图, Figure 6主图
+    x轴，三个matrix score一组, 四组四个approach
+    """
+
+    size = 4
+    x = np.arange(size)
+    a = np.array(matrics1_list) # matrics 1, throughput score
+    b = np.array(matrics2_list) # matrics 2, RTscore
+    c = np.array(matrics3_list) # matrics 3, QoEScore
+
+    total_width, n = 0.8, 3
+    width = total_width / n
+    x = x - (total_width - width) / 2
+
+    plt.bar(x, a,  width=width, label='Throughput Score')
+    plt.bar(x + width, b, width=width, label='RT Score')
+    plt.bar(x + 2 * width, c, width=width, label='QoE Score')
+    plt.legend()
+    plt.xticks([0,1,2,3], ['Baseline', 'Progress Tracker', 'Fine Grained', 'RED'])
+    plt.xlabel('Approaches')
+    plt.title(f"{name}")
+
+    plt.show()
+    
+
+def figure6(deadline):
+    # TODO: add name(agx, orin, nano, tx2) as key for matrics
+    matrics1_data = {
+        "tight": [],
+        "loose": []
+    } # loose 4 approaches for matrics1, tight 4 approaches for matrics1
+    matrics2_data = {
+        "tight": [],
+        "loose": []
+    }
+    matrics3_data = {
+        "tight": [],
+        "loose": []
+    }
+    name = 'agx'
+    time_constrains = ['tight', 'loose']
+    task = ['baseline', 'progress_tracker', 'fine_grained', 'REDdrop']
+    basepath = f'./taskdata/{name}_exp1/processed_data/'
+    # combine these to generate file path
+    for time_constrain_type in time_constrains:
+        for task_type in task:
+            filepath = f'{basepath}{name}_{time_constrain_type}_{task_type}.txt'
+            with open(filepath, 'r+') as f:
+                # read each line
+                lines = f.readlines()
+                finished_times = []
+                if(len(lines)<10):
+                    print('error: no enough data')
+                for line in lines[0:10]:
+                    # print('finished time: ', float(line))
+                    finished_times.append(float(line))
+                deadline_times = [deadline[name][time_constrain_type]/1000]*10
+                a = throughput_score(finished_times)
+                b = RTscore(finished_times, deadline_times)
+                c = QoEScore(finished_times, deadline_times)
+                
+                # TODO: add name as key for matrics
+                matrics1_data[time_constrain_type].append(a)
+                matrics2_data[time_constrain_type].append(b)
+                matrics3_data[time_constrain_type].append(c)
+
+                print(f'{name}_{time_constrain_type}_{task_type}')
+                print('throughput score: ', a, "RT score: ", b, "QoE score: ", c)
+    print(f"matrics all: {matrics1_data}, {matrics2_data}, {matrics3_data}")
+
+    # draw matrics figure 6
+    for time_constrain_type in time_constrains:
+        # TODO: add name as key for matrics
+        boxplot_vertical(matrics1_data[time_constrain_type], matrics2_data[time_constrain_type], matrics3_data[time_constrain_type], name=f"{name} {time_constrain_type} Performance")
+
 def visual_task_blocks(tasks):    
     vis = visdom.Visdom(env=WindowName)
     rows = []
@@ -790,5 +868,25 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = pickle.load(open(args.data, "rb"))
     # task_scatter2(data, datafile=args.data)
-    task_scatter3(data, datafile=args.data)
+    # task_scatter3(data, datafile=args.data)
+    deadline = {
+        'orin': {
+            "tight": 2400,
+            "loose": 3600
+        },
+        "nano": {
+            "tight": 2400,
+            "loose": 3600
+        },
+        "tx2": {
+            "tight": 6720,
+            "loose": 8400
+        },
+        "agx": {
+            "tight": 6500,
+            "loose": 9750
+        }
+    }
+    figure6(deadline)
+    # boxplot_vertical([1],[2])
 

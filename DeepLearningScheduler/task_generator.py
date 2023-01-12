@@ -120,9 +120,11 @@ def load_dag_config(dag_config_path):
         return
     
     dag_config = config["dag_list"]
-
+    running_time_factor = 1
+    if("RunningTimeFactor" in config):
+        running_time_factor = config["RunningTimeFactor"]
     
-    return dag_config
+    return dag_config, running_time_factor
 
 def generate_tasks(task_config):
     """
@@ -153,7 +155,7 @@ def generate_tasks(task_config):
                 tasks.append(task)
     return tasks
 
-def generate_tasks_from_dag(dag_config):
+def generate_tasks_from_dag(dag_config, time_factor=1):
     """
     Generate tasks queue from the task config.
     Task Attributes:
@@ -176,12 +178,12 @@ def generate_tasks_from_dag(dag_config):
             "DagPeriod": i,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
-            "Deadline": (start_time + config["WorstRunningTime"]) / 1000, # deadline won't extend for ReleaseTimeDelay
+            "Deadline": (start_time + config["WorstRunningTime"]*time_factor) / 1000, # deadline won't extend for ReleaseTimeDelay
             "Priority": config["Priority"],
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
         }
-        return task, config["WorstRunningTime"]
+        return task, config["WorstRunningTime"]*time_factor
     for dag in dag_config:
         for i in range(DagRepeatedTimes):
             for config in dag:                
@@ -202,7 +204,7 @@ def generate_tasks_from_dag(dag_config):
 
 
 if __name__ == "__main__":
-    dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
-    tasks = generate_tasks_from_dag(dag_config)
+    dag_config, running_time_factor = load_dag_config("TaskConfigs/simo/agx_tight.json")
+    tasks = generate_tasks_from_dag(dag_config, time_factor=running_time_factor)
     print(tasks)
     assert(len(tasks) == 70)

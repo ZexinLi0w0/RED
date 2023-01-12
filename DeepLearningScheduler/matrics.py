@@ -5,7 +5,7 @@ def throughput_score(latencies):
     latencies: Array<Latency:int>
     """
     latency_avg = sum(latencies) / len(latencies)
-    return round(min(latencies) / latency_avg, 4)
+    return min(latencies) / latency_avg
 
 def RTscore(finished_times, deadlines):
     missing_deadline = []
@@ -14,6 +14,7 @@ def RTscore(finished_times, deadlines):
             missing_deadline.append(1)
         else:
             missing_deadline.append(0)
+    print('missing deadline rate:', sum(missing_deadline)/len(missing_deadline))
     return 1 - (sum(missing_deadline) / len(missing_deadline))
 
 def QoEScore(finished_times, deadlines, lambda_param = 1):

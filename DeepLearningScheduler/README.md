@@ -87,6 +87,9 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_ti
 
 # tx2 loose
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_loose.json" -a "baseline"
+
+# tx2 tight
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_tight.json" -a "baseline"
 ```
 
 ### Task Progress Tracker(Execution Feedback to adjust release time)
