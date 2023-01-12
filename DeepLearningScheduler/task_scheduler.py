@@ -14,13 +14,15 @@ def liststr2list(s):
 def list2str(l):
     return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline'):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config'):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
         # feedback(according to the feedback of task execution to adjust next release time),
         # fine-grained(reconstruct dag in task generation)  
         self.approach_module = approach_module
+        # record the task config name for generate the naem of data file to save
+        self.task_filename = task_filename
         # control queue of signaling
         self.control_queue = control_queue
         # start time of generating tasks
@@ -162,7 +164,7 @@ class TaskSchedule:
         relative_end2end_runtime = time.time() - self.TaskStartTime
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
 
-        with open(f"./taskdata/task_statistics_{now_time_string}.pkl", "wb") as f:
+        with open(f"./taskdata/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
         # task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
