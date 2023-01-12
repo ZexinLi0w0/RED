@@ -369,6 +369,7 @@ def task_scatter3(task_statistics, datafile='taskdata.pkl'):
         # if(release_time<=1):
         #     continue
         # If the task was finished on time, add its start time and end time to the finished lists
+        print('[debug] time: ',task_info, end_time - release_time)
         if task_info['res'] == 'success':
             handler2points[handler_id]["finished_x"].append(end_time)
             handler2points[handler_id]["finished_y"].append(1000*(end_time - release_time))

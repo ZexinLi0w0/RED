@@ -1,0 +1,74 @@
+{
+    "dag_list": [
+      [
+        {
+          "TaskName": "S1_Stage1_LaneDetection",
+          "HandlerId": 6,
+          "RunningTime": 3150,
+          "Dependencies": [],
+          "Priority": 1,
+          "RunArgs": [1],
+          "WorstRunningTime": 110
+        },
+        {
+          "TaskName": "S1_Stage2_Segmentation",
+          "HandlerId": 6,
+          "RunningTime": 3150,
+          "Dependencies": [1],
+          "Priority": 1,
+          "RunArgs": [3],
+          "WorstRunningTime": 115
+        },
+        {
+          "TaskName": "S1_Stage3_Control_Autopilot",
+          "HandlerId": 6,
+          "RunningTime": 3150,
+          "Dependencies": [3],
+          "Priority": 1,
+          "RunArgs": [2],
+          "WorstRunningTime": 90
+        }
+      ],
+      [
+        {
+          "TaskName": "S2_Stage1_LaneDetection",
+          "HandlerId": 6,
+          "RunningTime": 4400,
+          "Dependencies": [],
+          "Priority": 1,
+          "RunArgs": [1],
+          "WorstRunningTime": 110
+        },
+        [
+          {
+            "TaskName": "S2_Stage2_Segmentation",
+            "HandlerId": 6,
+            "RunningTime": 4400,
+            "Dependencies": [1],
+            "Priority": 1,
+            "RunArgs": [3],
+            "WorstRunningTime": 115
+          },
+          {
+            "TaskName": "S2_Stage2_Object_Detection",
+            "HandlerId": 6,
+            "RunningTime": 4400,
+            "Dependencies": [1],
+            "Priority": 1,
+            "RunArgs": [4],
+            "WorstRunningTime": 125
+          }
+        ],
+        {
+          "TaskName": "S2_Stage3_Control_Autopilot",
+          "HandlerId": 6,
+          "RunningTime": 4400,
+          "Dependencies": [3, 4],
+          "Priority": 1,
+          "RunArgs": [2],
+          "WorstRunningTime": 90
+        }
+      ]
+    ]
+  }
+  

@@ -98,7 +98,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
                 relative_time = float(args_dict['relative_time'])
                 deadline = float(args_dict['deadline'])
 
-                logger.debug(f'[{handler_id}][{handler_name}] Received signal: {signal_message} on {time.time() - relative_time}')
+                # logger.debug(f'[{handler_id}][{handler_name}] Received signal: {signal_message} on {time.time() - relative_time}')
 
                 start_time = time.time() - relative_time
                 # if this task is out of deadline, return failure
@@ -232,7 +232,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 dag_period = args_dict['dag_period']
 
                 start_time = time.time() - relative_time
-                logger.debug(f'Task: {taskid}, Start Time:{start_time}, ReleaseTime: {args_dict["release_time"]}, Simo: {simo_args} on {time.time() - relative_time}. Signal: {signal_message} ')
+                # logger.debug(f'Task: {taskid}, Start Time:{start_time}, ReleaseTime: {args_dict["release_time"]}, Simo: {simo_args} on {time.time() - relative_time}. Signal: {signal_message} ')
                 # skip repeat signal while already in execution
                 if("skipmode" in args_dict):
                     # if this task is out of deadline, return failure
@@ -251,7 +251,6 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                         continue
                 
                 decoder_list = [int(i) for i in simo_args.strip('[').strip(']').split(',')]
-                # logger.debug(f'[debug] handler decode_list: {decoder_list}')
                 STATUS = HandlerStatus.Running
                 # run until finished
                 output = await loop.create_task(instance.run(decoder_list=decoder_list))

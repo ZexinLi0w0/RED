@@ -104,3 +104,10 @@ But you can enable it manually.
 Add --skipmode for signal_message in `control_signal.py`
 
 Comment line 50 and uncomment <b>the 52nd line</b>
+
+
+### Overhead measurement
+
+```
+python main.py -c "./overhead-handler.json" -t ".\TaskConfigs\overhead-measure.json" -a "feedback"
+```

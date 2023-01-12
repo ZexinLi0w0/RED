@@ -21,7 +21,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import math, asyncio
-class handler1(AbstractHandler):
+class handler6(AbstractHandler):
     def __init__(self, task_id, task_name, task_description):
         super().__init__(task_id, task_name, task_description)
         # 相对路径从根目录开始，因为handler的调用为根目录下的main.py
@@ -32,14 +32,9 @@ class handler1(AbstractHandler):
         self.model_path = './Autopilot/model_10000.pkl'
         self.BATCH = 1
     
-    async def run(self):
+    async def run(self, decoder_list=[]):
         try:
-            output_list = []
-            for i in range(self.BATCH):
-                net_out = self.test_net.forward(self.data_input).squeeze().float() 
-                steer_pred_angle = net_out.detach().cpu().numpy() / math.pi * 180
-                output_list.append(steer_pred_angle)
-            return output_list
+            return True
         except MemoryError:
             return "Memory Error in running task"
         except SystemError:
@@ -56,24 +51,7 @@ class handler1(AbstractHandler):
     
 
     async def load_data(self):
-        transform = transforms.Compose([
-        transforms.ToTensor(),               ## shape:(31784, 100, 100, 3) -->(31784, 3,100, 100)
-        transforms.Normalize((0.43567735,0.49298695,0.5192303), (0.22272868,0.24110594,0.29045662))     
-        ])
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        img = np.array(cv2.resize((cv2.cvtColor(plt.imread(self.input_path), cv2.COLOR_RGB2HSV)), (self.width, self.height)), dtype=np.float32)
-        data_input = transform(img).unsqueeze(0)
-        #load network
-        test_net = torch.load(self.model_path)
-        test_net.eval()
-        data_input = data_input.to(device)
-        test_net = test_net.to(device)
-        self.data_input = data_input
-        self.test_net = test_net
-        return {
-            "data_input": data_input,
-            "network": test_net,
-        }
+        return True
     
     def ready(self):
         print(f'I\'m ready {self.task_name}')
@@ -86,7 +64,7 @@ class handler1(AbstractHandler):
 
 async def test():
     # test
-    handler =  handler1(1, 'autopilot', 'description',  1, [])
+    handler =  handler6(1, 'empty handler', 'description',  1, [])
     loop = asyncio.get_event_loop()
     load_data_task = loop.create_task(handler.load_data())
     await load_data_task

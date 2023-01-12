@@ -88,7 +88,7 @@ class TaskSchedule:
         self.init_task_statistics()
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
-        logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")
+        # logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")
         # check if task queue satisfy the earlier deadline first
         # prev = None
         # for task in self.TaskQueue:
