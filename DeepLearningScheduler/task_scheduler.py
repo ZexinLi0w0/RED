@@ -58,7 +58,6 @@ class TaskSchedule:
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
         TaskStartTime = time.time()
-        self.TaskStartTime = TaskStartTime
         tasks_list = self.tasks
         logger = self.logger
 
@@ -88,6 +87,7 @@ class TaskSchedule:
         self.scheduler()
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
+
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
         # logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")
@@ -154,14 +154,16 @@ class TaskSchedule:
         logger = self.logger
         task_statistics = self.task_statistics
         logger.info(f"[CTRL] All tasks finished")
-        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info = statistics_compution(task_statistics)
-        logger.info(f"[CTRL] Missing deadline rate: {missing_deadline_rate}")
-        logger.info(f"[CTRL] Average finished time: {avg_finished_time}")
+        now = time.time()
+        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
+        logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
+        logger.info(f"[CTRL] SubTask Average finished time: {avg_finished_time}")
+        logger.info(f"[CTRL] Task Metrics: {metrics}")
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
-        relative_end2end_runtime = time.time() - self.TaskStartTime
+        relative_end2end_runtime = now - self.TaskStartTime
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
 
         with open(f"./taskdata/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
