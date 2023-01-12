@@ -4,13 +4,14 @@ import numpy as np
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import math
+import json
 import pandas as pd
 import seaborn as sns
 from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 12})
 
 """
 Before running this script, you need to install visdom first and launch a visdom server in another shell.
@@ -34,7 +35,7 @@ def ticks_merge(obj, item, tick, merge_tick = 1):
         obj[tick // merge_tick].append(item)
 
 # data visulization, use scatter to show missing deadline rate and finished time of each tasks
-def statistics_compution(task_statistics):
+def statistics_compution(task_statistics, task_config_path='task_config.json', now_time = 0, task_start_time = 0):
     """
     Calculate the statistics of tasks, including: missing deadline rate, finished time
     task_statistics: defaultdict(TaskFinishedObject), each dict contains the information of a task
@@ -64,8 +65,25 @@ def statistics_compution(task_statistics):
         missing_deadline_rate /= len(task_statistics)
     else:
         missing_deadline_rate = 0
+    metrics1 = 1
+    metrics2 = 0
+    metrics3 = 0
+    # matrics calculation
+    with open(f"./TaskConfigs/simo/{task_config_path}", "r") as f:
+        config = json.load(f)
+        dag_list = config["dag_list"]
+        running_time_factor = 1
+        if("RunningTimeFactor" in config):
+            running_time_factor = config["RunningTimeFactor"]
+        # hard-code to calculate the deadline
+        deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
+        finished_time = now_time - task_start_time
 
-    return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info
+        metrics2 = RTscore([finished_time], [deadline_time])
+        metrics3 = QoEScore([finished_time], [deadline_time])
+        
+    metrics = (metrics1, metrics2, metrics3)
+    return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics
     
 
 def task_scatter(task_statistics, datafile='taskdata.pkl'):
@@ -667,7 +685,7 @@ def figure6(deadline):
                 matrics2_data[time_constrain_type].append(b)
                 matrics3_data[time_constrain_type].append(c)
 
-                print(f'{name}_{time_constrain_type}_{task_type}')
+                print(f'[{name}_{time_constrain_type}_{task_type}]')
                 print('throughput score: ', a, "RT score: ", b, "QoE score: ", c)
     print(f"matrics all: {matrics1_data}, {matrics2_data}, {matrics3_data}")
 
@@ -863,30 +881,31 @@ if __name__ == "__main__":
     # test
     # Parse command line arguments
     parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument("--data", "-d", required=True, help="path of data file")
+    parser.add_argument("--data", "-d", required=False, help="path of data file")
     # use pickle to load data
     args = parser.parse_args()
-    data = pickle.load(open(args.data, "rb"))
+    if(args.data is not None):
+        data = pickle.load(open(args.data, "rb"))
     # task_scatter2(data, datafile=args.data)
     # task_scatter3(data, datafile=args.data)
-    deadline = {
-        'orin': {
-            "tight": 2400,
-            "loose": 3600
-        },
-        "nano": {
-            "tight": 2400,
-            "loose": 3600
-        },
-        "tx2": {
-            "tight": 6720,
-            "loose": 8400
-        },
-        "agx": {
-            "tight": 6500,
-            "loose": 9750
-        }
-    }
-    figure6(deadline)
+    # read data from config file
+    names = ['agx', 'nano', 'orin', 'tx2']
+    time_types = ['tight', 'loose']
+    standard_deadline = defaultdict(dict)
+    for name in names:
+        for time_type in time_types:
+            with open(f"./TaskConfigs/simo/{name}_{time_type}.json", "r") as f:
+                config = json.load(f)
+                dag_list = config["dag_list"]
+                running_time_factor = 1
+                if("RunningTimeFactor" in config):
+                    running_time_factor = config["RunningTimeFactor"]
+                # hard-code to calculate the deadline
+                deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
+                standard_deadline[name][time_type] = deadline_time
+    print('[deadline for all tasks]',standard_deadline)
+
+    # print(standard_deadline)
+    figure6(standard_deadline)
     # boxplot_vertical([1],[2])
 
