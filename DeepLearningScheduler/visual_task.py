@@ -789,5 +789,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     data = pickle.load(open(args.data, "rb"))
     # task_scatter2(data, datafile=args.data)
-    task_scatter1(data, datafile=args.data)
+    task_scatter3(data, datafile=args.data)
 

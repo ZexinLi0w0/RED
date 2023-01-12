@@ -221,7 +221,7 @@ class TaskSchedule:
         self.logger.debug(f'[DEBUG]drop following tasks: {[task["TaskId"] for task in dropped]}')
         for task in dropped:
             taskid = task["TaskId"]
-            task_scheduler.finished_task(taskid, 'skip', now_time, now_time)
+            self.finished_task(taskid, 'skip', now_time, now_time)
             # remove task from self.TaskQueue
             self.TaskQueue.remove(task)
                     
