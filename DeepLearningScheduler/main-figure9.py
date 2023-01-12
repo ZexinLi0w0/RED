@@ -39,6 +39,8 @@ if __name__ == "__main__":
         os.system(f'python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose{running_time_factor}.json" -a "fine-grained"')
         os.system(f"mv log.info.txt exp1/raw_data/agx_loose{running_time_factor}_fine_grained.txt")
         os.system(f'python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose{running_time_factor}.json" -a "feedback-fine-grained"')
+        os.system("mkdir -p exp1/processed_data")
+        os.system("mkdir -p exp1/raw_data")
         os.system(f"mv log.info.txt exp1/raw_data/agx_loose{running_time_factor}_REDdrop.txt")
         os.system(f"rm ./TaskConfigs/simo/agx_loose{running_time_factor}.json")
         os.system(f"cat exp1/raw_data/agx_{running_time_factor}_baseline.txt | grep End | grep -oE ': [0-9]+.[0-9]+' | grep -oE '[0-9]+.[0-9]+' >> exp1/processed_data/agx_loose_{running_time_factor}_baseline.txt")
