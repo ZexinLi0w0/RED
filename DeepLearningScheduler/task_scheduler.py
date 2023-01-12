@@ -58,7 +58,6 @@ class TaskSchedule:
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
         TaskStartTime = time.time()
-        self.TaskStartTime = TaskStartTime
         tasks_list = self.tasks
         logger = self.logger
 
@@ -88,6 +87,7 @@ class TaskSchedule:
         self.scheduler()
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
+
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
         # logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")

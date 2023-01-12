@@ -4,13 +4,14 @@ import numpy as np
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import math
+import json
 import pandas as pd
 import seaborn as sns
 from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 12})
 
 """
 Before running this script, you need to install visdom first and launch a visdom server in another shell.
@@ -869,24 +870,24 @@ if __name__ == "__main__":
     data = pickle.load(open(args.data, "rb"))
     # task_scatter2(data, datafile=args.data)
     # task_scatter3(data, datafile=args.data)
-    deadline = {
-        'orin': {
-            "tight": 2400,
-            "loose": 3600
-        },
-        "nano": {
-            "tight": 2400,
-            "loose": 3600
-        },
-        "tx2": {
-            "tight": 6720,
-            "loose": 8400
-        },
-        "agx": {
-            "tight": 6500,
-            "loose": 9750
-        }
-    }
-    figure6(deadline)
+    # read data from config file
+    names = ['agx', 'nano', 'orin', 'tx2']
+    time_types = ['tight', 'loose']
+    standard_deadline = defaultdict(dict)
+    for name in names:
+        for time_type in time_types:
+            with open(f"./TaskConfigs/simo/{name}_{time_type}.json", "r") as f:
+                config = json.load(f)
+                dag_list = config["dag_list"]
+                running_time_factor = 1
+                if("RunningTimeFactor" in config):
+                    running_time_factor = config["RunningTimeFactor"]
+                # hard-code to calculate the deadline
+                deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
+                standard_deadline[name][time_type] = deadline_time
+
+
+    # print(standard_deadline)
+    figure6(standard_deadline)
     # boxplot_vertical([1],[2])
 
