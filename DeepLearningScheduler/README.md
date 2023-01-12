@@ -84,6 +84,9 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_lo
 
 # agx tight
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "baseline"
+
+# tx2 loose
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_loose.json" -a "baseline"
 ```
 
 ### Task Progress Tracker(Execution Feedback to adjust release time)
@@ -136,4 +139,9 @@ Comment line 50 and uncomment <b>the 52nd line</b>
 
 ```
 python main.py -c "./overhead-handler.json" -t "./TaskConfigs/overhead-measure.json" -a "feedback"
+```
+
+### Clean taskdata without rename
+```shell
+rm taskdata/statistics_*
 ```
