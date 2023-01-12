@@ -131,8 +131,8 @@ def parseArguments():
     except ValueError as e:
         print(e)
     # for dag config
-    task_config = load_dag_config(args.task)
-    tasks_list = generate_tasks_from_dag(task_config)
+    task_config, factor = load_dag_config(args.task)
+    tasks_list = generate_tasks_from_dag(task_config, time_factor=factor)
 
     # get filename of taskconfig
     task_file_path = args.task[::-1]

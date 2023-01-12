@@ -206,5 +206,5 @@ def generate_tasks_from_dag(dag_config, time_factor=1):
 if __name__ == "__main__":
     dag_config, running_time_factor = load_dag_config("TaskConfigs/simo/agx_tight.json")
     tasks = generate_tasks_from_dag(dag_config, time_factor=running_time_factor)
-    print(tasks)
+    # print(tasks)
     assert(len(tasks) == 70)
