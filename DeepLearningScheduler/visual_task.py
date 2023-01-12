@@ -11,7 +11,7 @@ from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
-plt.rcParams.update({'font.size': 24})
+plt.rcParams.update({'font.size': 20})
 
 """
 Before running this script, you need to install visdom first and launch a visdom server in another shell.
@@ -632,14 +632,14 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     total_width, n = 0.8, 3
     width = total_width / n
     x = x - (total_width - width) / 2
-
-    plt.bar(x, a,  width=width, label='Throughput Score', color=(140,93,66))
-    plt.bar(x + width, b, width=width, label='RT Score')
-    plt.bar(x + 2 * width, c, width=width, label='QoE Score')
+    zaoyouColor = [(218/255,148/255,100/255),(242/255,216/255,174/255), (128/255,154/255,84/255)]
+    plt.bar(x, a,  width=width, label='Throughput Score', color=zaoyouColor[0])
+    plt.bar(x + width, b, width=width, label='RT Score', color=zaoyouColor[1])
+    plt.bar(x + 2 * width, c, width=width, label='QoE Score', color=zaoyouColor[2])
     # plt.legend()
     plt.xticks([0,1,2,3], ['Baseline', 'IDA', 'FG', 'RED'])
     plt.ylabel('Matrics Score')
-    # plt.title(f"{name}")
+    plt.title(f"{name}")
 
     plt.show()
     
@@ -680,12 +680,11 @@ def figure6(deadline):
                 # read each line
                 lines = f.readlines()
                 finished_times = []
-                if(len(lines)<10):
-                    print('error: no enough data')
-                for line in lines[0:10]:
+                
+                for line in lines:
                     # print('finished time: ', float(line))
                     finished_times.append(float(line))
-                deadline_times = [deadline[name][time_constrain_type]/1000]*10
+                deadline_times = [deadline[name][time_constrain_type]/1000]*len(finished_times)
                 a = throughput_score(finished_times, min_latency=min_response_time)
                 b = RTscore(finished_times, deadline_times)
                 c = QoEScore(finished_times, deadline_times)
@@ -702,7 +701,7 @@ def figure6(deadline):
     # draw matrics figure 6
     for time_constrain_type in time_constrains:
         # TODO: add name as key for matrics
-        boxplot_vertical(matrics1_data[time_constrain_type], matrics2_data[time_constrain_type], matrics3_data[time_constrain_type], name=f"{name} {time_constrain_type} Performance")
+        boxplot_vertical(matrics1_data[time_constrain_type], matrics2_data[time_constrain_type], matrics3_data[time_constrain_type], name=f"{name.upper()} {time_constrain_type}")
 
 def visual_task_blocks(tasks):    
     vis = visdom.Visdom(env=WindowName)
