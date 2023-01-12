@@ -109,5 +109,5 @@ Comment line 50 and uncomment <b>the 52nd line</b>
 ### Overhead measurement
 
 ```
-python main.py -c "./overhead-handler.json" -t ".\TaskConfigs\overhead-measure.json" -a "feedback"
+python main.py -c "./overhead-handler.json" -t "./TaskConfigs/overhead-measure.json" -a "feedback"
 ```

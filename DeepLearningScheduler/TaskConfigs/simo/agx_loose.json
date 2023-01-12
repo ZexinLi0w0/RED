@@ -4,69 +4,69 @@
       {
         "TaskName": "S1_Stage1_LaneDetection",
         "HandlerId": 5,
-        "RunningTime": 2025,
+        "RunningTime": 4050,
         "Dependencies": [],
         "Priority": 1,
         "RunArgs": [1],
-        "WorstRunningTime": 75
+        "WorstRunningTime": 150
       },
       {
         "TaskName": "S1_Stage2_Segmentation",
         "HandlerId": 5,
-        "RunningTime": 2025,
+        "RunningTime": 4050,
         "Dependencies": [1],
         "Priority": 1,
         "RunArgs": [3],
-        "WorstRunningTime": 67.5
+        "WorstRunningTime": 135
       },
       {
         "TaskName": "S1_Stage3_Control_Autopilot",
         "HandlerId": 5,
-        "RunningTime": 2025,
+        "RunningTime": 4050,
         "Dependencies": [3],
         "Priority": 1,
         "RunArgs": [2],
-        "WorstRunningTime": 60
+        "WorstRunningTime": 120
       }
     ],
     [
       {
         "TaskName": "S2_Stage1_LaneDetection",
         "HandlerId": 5,
-        "RunningTime": 2850,
+        "RunningTime": 5700,
         "Dependencies": [],
         "Priority": 1,
         "RunArgs": [1],
-        "WorstRunningTime": 75
+        "WorstRunningTime": 150
       },
       [
         {
           "TaskName": "S2_Stage2_Segmentation",
           "HandlerId": 5,
-          "RunningTime": 2850,
+          "RunningTime": 5700,
           "Dependencies": [1],
           "Priority": 1,
           "RunArgs": [3],
-          "WorstRunningTime": 67.5
+          "WorstRunningTime": 135
         },
         {
           "TaskName": "S2_Stage2_Object_Detection",
           "HandlerId": 5,
-          "RunningTime": 2850,
+          "RunningTime": 5700,
           "Dependencies": [1],
           "Priority": 1,
           "RunArgs": [4],
-          "WorstRunningTime": 82.5
+          "WorstRunningTime": 165
         }
       ],
       {
         "TaskName": "S2_Stage3_Control_Autopilot",
         "HandlerId": 5,
-        "RunningTime": 2850,
+        "RunningTime": 5700,
         "Dependencies": [3, 4],
         "Priority": 1,
         "RunArgs": [2],
-        "WorstRunningTime": 60
+        "WorstRunningTime": 120
       }
     ]
   ]
