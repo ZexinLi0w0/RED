@@ -164,7 +164,8 @@ class TaskSchedule:
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
+        with open(f"./taskdata/end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt", "w") as f:
+            f.write(str(relative_end2end_runtime))
         with open(f"./taskdata/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)
         # task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
