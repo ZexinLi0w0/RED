@@ -50,7 +50,7 @@ def create_subprocess(control_queue, base_time, config=()):
         loop.stop()
         loop.close()
 
-def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline'):
+def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline', task_filename="task_config"):
     """
     Function to run handlers concurrently.
     """
@@ -75,7 +75,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -134,15 +134,22 @@ def parseArguments():
     task_config = load_dag_config(args.task)
     tasks_list = generate_tasks_from_dag(task_config)
 
+    # get filename of taskconfig
+    task_file_path = args.task[::-1]
+    fullname = task_file_path[0:task_file_path.find('/')][::-1]
+    if(task_file_path.find('/') == -1):
+        fullname = task_file_path[0:task_file_path.find('\\')][::-1]
+    filename = fullname[:fullname.find(".json")]
+    print(args.task, fullname, filename)
     # task_config = load_task_config(args.task)
     # tasks_list = generate_tasks(task_config)
     
-    return handlers, tasks_list, approach_module
+    return handlers, tasks_list, approach_module, filename
     
 
 if __name__ == "__main__":
     logger = logging_basic_setting()
-    handlers, tasks_list, approach_module = parseArguments()
+    handlers, tasks_list, approach_module, task_filename = parseArguments()
     # logging.debug(f'Parse config files to generate handlers: {handlers}')
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
@@ -151,4 +158,4 @@ if __name__ == "__main__":
     control_queue = Queue()
 
     # Start the handlers concurrently
-    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module)
+    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module, task_filename=task_filename)

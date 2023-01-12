@@ -93,6 +93,10 @@ python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.j
 # agx loose
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "feedback"
 
+# agx tight
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "feedback"
+
+
 ```
 
 ### Fine Grained
@@ -101,6 +105,9 @@ python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.j
 
 # agx loose
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "fine-grained"
+
+# agx tight
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "fine-grained"
 ```
 
 ### Progress Tracker + Fine Grained Combination
@@ -109,6 +116,9 @@ python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.j
 
 # agx loose
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "feedback-fine-grained"
+
+# agx tight
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "feedback-fine-grained"
 ```
 
 ### Enable Skip Mode
