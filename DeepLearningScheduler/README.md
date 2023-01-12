@@ -78,21 +78,37 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 ### Baseline
 ```
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "baseline"
+
+# agx loose
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "baseline"
+
+# agx tight
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "baseline"
 ```
 
 ### Task Progress Tracker(Execution Feedback to adjust release time)
 ```
 python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "feedback"
+
+# agx loose
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "feedback"
+
 ```
 
 ### Fine Grained
 ```
 python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "fine-grained"
+
+# agx loose
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "fine-grained"
 ```
 
 ### Progress Tracker + Fine Grained Combination
 ```
 python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "feedback-fine-grained"
+
+# agx loose
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_loose.json" -a "feedback-fine-grained"
 ```
 
 ### Enable Skip Mode
