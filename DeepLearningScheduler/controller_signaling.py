@@ -116,7 +116,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
                     # add output for dependency consuming
                     task_scheduler.add_task_output(1, handler_id)
                 task_scheduler.add_task_statistics(taskid, args_dict["output"], args_dict["start_time"], args_dict["end_time"])
-                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, end time: {args_dict['end_time']}")
+                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, over time: {args_dict['end_time']}")
             
         except queue.Empty:
             continue
@@ -217,7 +217,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                         task_scheduler.skipped_dependent_tasks(taskid, dag_period, task_type, now_time=end_time)
                 # report finsihed task to task scheduler
                 task_scheduler.finished_task(taskid, args_dict["output"], args_dict["start_time"], args_dict["end_time"])
-                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, end time: {args_dict['end_time']}")
+                logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, taskover time: {args_dict['end_time']}")
             
         except queue.Empty:
             continue
