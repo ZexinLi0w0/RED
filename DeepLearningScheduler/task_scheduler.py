@@ -87,7 +87,7 @@ class TaskSchedule:
         self.scheduler()
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
-
+        self.TaskStartTime = TaskStartTime
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
         # logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")
@@ -155,6 +155,8 @@ class TaskSchedule:
         task_statistics = self.task_statistics
         logger.info(f"[CTRL] All tasks finished")
         now = time.time()
+        relative_end2end_runtime = now - self.TaskStartTime
+        self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
         missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
         logger.info(f"[CTRL] SubTask Average finished time: {avg_finished_time}")
@@ -162,9 +164,6 @@ class TaskSchedule:
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
-        relative_end2end_runtime = now - self.TaskStartTime
-        self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
 
         with open(f"./taskdata/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
             pickle.dump(task_statistics, f)

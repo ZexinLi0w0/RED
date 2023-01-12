@@ -644,7 +644,7 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     plt.show()
     
 
-def figure6(deadline):
+def figure6(deadline, name):
     # TODO: add name(agx, orin, nano, tx2) as key for matrics
     matrics1_data = {
         "tight": [],
@@ -658,7 +658,6 @@ def figure6(deadline):
         "tight": [],
         "loose": []
     }
-    name = 'orin'
     time_constrains = ['tight', 'loose']
     task = ['baseline', 'progress_tracker', 'fine_grained', 'REDdrop']
     basepath = f'./taskdata/{name}_exp1/processed_data/'
@@ -898,7 +897,8 @@ if __name__ == "__main__":
     # task_scatter2(data, datafile=args.data)
     # task_scatter3(data, datafile=args.data)
     # read data from config file
-    names = ['agx', 'nano', 'orin', 'tx2']
+    # names = ['agx', 'orin', 'tx2', 'nano']
+    names = ['tx2']
     time_types = ['tight', 'loose']
     standard_deadline = defaultdict(dict)
     for name in names:
@@ -915,6 +915,7 @@ if __name__ == "__main__":
     print('[deadline for all tasks]',standard_deadline)
 
     # print(standard_deadline)
-    figure6(standard_deadline)
+    for name in names:
+        figure6(standard_deadline, name)
     # boxplot_vertical([1],[2])
 
