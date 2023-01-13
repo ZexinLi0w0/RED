@@ -11,7 +11,7 @@ from matrics import throughput_score, RTscore, QoEScore
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
-plt.rcParams.update({'font.size': 20})
+plt.rcParams.update({'font.size': 8})
 
 """
 Before running this script, you need to install visdom first and launch a visdom server in another shell.
@@ -622,7 +622,7 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     并列柱状图, Figure 6主图
     x轴，三个matrix score一组, 四组四个approach
     """
-
+    plt.figure(dpi=300, figsize=(3,2))
     size = 4
     x = np.arange(size)
     a = np.array(matrics1_list) # matrics 1, throughput score
@@ -637,6 +637,7 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     plt.bar(x + width, b, width=width, label='RT Score', color=zaoyouColor[1])
     plt.bar(x + 2 * width, c, width=width, label='QoE Score', color=zaoyouColor[2])
     # plt.legend()
+    plt.ylim(0,1.0)
     plt.xticks([0,1,2,3], ['Baseline', 'IDA', 'FG', 'RED'])
     plt.ylabel('Matrics Score')
     plt.title(f"{name}")
@@ -693,9 +694,23 @@ def figure6(deadline, name):
                 matrics2_data[time_constrain_type].append(b)
                 matrics3_data[time_constrain_type].append(c)
 
-                print(f'[{name}_{time_constrain_type}_{task_type}]')
-                print('throughput score: ', a, "RT score: ", b, "QoE score: ", c)
-    print(f"matrics all: {matrics1_data}, {matrics2_data}, {matrics3_data}")
+                # print(f'[{name}_{time_constrain_type}_{task_type}]')
+                # print('throughput score: ', a, "RT score: ", b, "QoE score: ", c)
+    
+    def matrics_performance(matrics, time_constrain_type):
+        return {
+            "IDA": f"{round((matrics[time_constrain_type][1] - matrics[time_constrain_type][0])*100, 2)}%",
+            "FG": f"{round((matrics[time_constrain_type][2] - matrics[time_constrain_type][0])*100, 2)}%",
+            "RED": f"{round((matrics[time_constrain_type][3] - matrics[time_constrain_type][0])*100, 2)}%"
+        }
+    # matrics performance calculation
+    for time_constrain_type in time_constrains:
+        print('-'*50)
+        print(name.upper(), time_constrain_type)
+        print('Throughput Improv: ',matrics_performance(matrics1_data, time_constrain_type))
+        print('RTScore Improv: ', matrics_performance(matrics2_data, time_constrain_type))
+        print('QoEScore Improv: ', matrics_performance(matrics3_data, time_constrain_type))
+    # print(f"matrics all: {matrics1_data}, {matrics2_data}, {matrics3_data}")
 
     # draw matrics figure 6
     for time_constrain_type in time_constrains:
@@ -898,7 +913,7 @@ if __name__ == "__main__":
     # task_scatter3(data, datafile=args.data)
     # read data from config file
     # names = ['agx', 'orin', 'tx2', 'nano']
-    names = ['tx2']
+    names = ['nano']
     time_types = ['tight', 'loose']
     standard_deadline = defaultdict(dict)
     for name in names:
@@ -917,5 +932,6 @@ if __name__ == "__main__":
     # print(standard_deadline)
     for name in names:
         figure6(standard_deadline, name)
+
     # boxplot_vertical([1],[2])
 
