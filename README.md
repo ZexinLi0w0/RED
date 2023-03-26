@@ -13,7 +13,3 @@ b. potentially weak candidate: fundamental criticality changes at runtime; multi
 
 c. memory issue
 due to hardware constraints
-
-## Plan
-
-Code will be available soon.
