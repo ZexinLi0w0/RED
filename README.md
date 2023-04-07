@@ -13,7 +13,3 @@ b. potentially weak candidate: fundamental criticality changes at runtime; multi
 
 c. memory issue
 due to hardware constraints
-
-## Plan
-
-[Notion](https://www.notion.so/ATC-schedule-16d9cc86d9a947ceb28832dc8d013273)
