@@ -48,7 +48,7 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
     width = total_width / n
     # print(x, width)
     x = x - (total_width - width) / 2
-    approaches = ['EDF', 'RED-IDA', 'RED-FG', 'RED']
+    approaches = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
     # zaoyouColor = [(140/255,93/255,66/255), (218/255,148/255,100/255),(242/255,216/255,174/255), (128/255,154/255,84/255)]
     # plt.bar(x, a,  width=width, label=approaches[0], color=zaoyouColor[0])
     # plt.bar(x + width, b, width=width, label=approaches[1], color=zaoyouColor[1])
@@ -59,8 +59,8 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
     color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
 
     plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black')
-    plt.bar(x + width, RED_IDA, width=width, label=approaches[1], color=color_list[1], edgecolor='black')
-    plt.bar(x + 2 * width, RED_FG, width=width, label=approaches[2], color=color_list[2], edgecolor='black')
+    plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black')
+    plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black')
     plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black')
 
     plt.legend(fontsize=fontsize-7, edgecolor='black')
