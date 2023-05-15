@@ -37,7 +37,7 @@ def lineplot_new(xsourcedata: Dict[str, List[int]]):
     plt.yticks(fontsize=fontsize)
 
     plt.axvline(x=3.5, color='black', linestyle='--')
-    plt.xlabel('Loose                                             Tight', fontsize=fontsize)
+    plt.xlabel('Loose Deadline                              Tight Dealine', fontsize=fontsize)
     plt.ylabel('Deadline Miss Rate [%]', fontsize=fontsize)
     plt.ylim(0,1.1)
 
@@ -100,7 +100,7 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
     plt.yticks(fontsize=fontsize)
 
     plt.axvline(x=3.5, color='black', linestyle='--')
-    plt.xlabel('Loose                                             Tight', fontsize=fontsize)
+    plt.xlabel('Loose Deadline                              Tight Dealine', fontsize=fontsize)
     plt.ylabel('Deadline Miss Rate [%]', fontsize=fontsize)
 
     plt.savefig('./overall_deadline_miss_rate.pdf', bbox_inches='tight')

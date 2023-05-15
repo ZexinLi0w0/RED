@@ -63,7 +63,7 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
     plt.yticks(fontsize=fontsize)
 
     plt.axvline(x=3.5, color='black', linestyle='--')
-    plt.xlabel('Loose                                             Tight', fontsize=fontsize)
+    plt.xlabel('Loose Deadline                              Tight Dealine', fontsize=fontsize)
     plt.ylabel('End To End Response Time [s]', fontsize=fontsize)
     # plt.title('Response Time with Dynamic Deadline', fontsize=fontsize)
 
