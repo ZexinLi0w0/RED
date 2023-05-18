@@ -16,7 +16,7 @@ plt.rcParams.update({'font.size': 5})
 fontsize = 20
 
 def plot_legend():
-    devices = ['Xavier', 'RED-FG', 'RED-IDA', 'Orin']
+    devices = ['EDF', 'RED-FG', 'RED-IDA', 'Orin']
     custom_colors = ['white', 'lightgray', 'darkgray', 'black']
 
     # hatches = ['/', 'x', '\\', '+']  # Corrected hatches
