@@ -22,7 +22,7 @@ def lineplot(deadlines, xsourcedata):
     approaches = ['Baseline', 'IDA', 'FG', 'RED']
     for i, approach in enumerate(approaches):
         plt.plot(deadlines, xsourcedata[approach], color=leishenColor[i], marker='D', markersize=1, label=approach)
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
@@ -61,13 +61,14 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
 
     import ChromaPalette as cp
     color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
+    color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
 
     plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black')
     plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black')
     plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black')
     plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black')
 
-    plt.legend(fontsize=fontsize-7, edgecolor='black')
+    # plt.legend(fontsize=fontsize-7, edgecolor='black')
     plt.xticks([0,1,2,3,4,5,6,7],
                ["Nano", "TX2", "Xavier", "Orin", "Nano", "TX2", "Xavier", "Orin"],
                fontsize=fontsize)
@@ -79,9 +80,9 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
     # plt.title('Response Time with Dynamic Deadline', fontsize=fontsize)
 
     ax = plt.gca()
-    legend = plt.legend(bbox_to_anchor=(0.51, 0.98), loc='upper left',
-                        borderaxespad=0., bbox_transform=ax.transAxes,
-                        fontsize=fontsize-7, edgecolor='black')
+    # legend = plt.legend(bbox_to_anchor=(0.51, 0.98), loc='upper left',
+    #                     borderaxespad=0., bbox_transform=ax.transAxes,
+    #                     fontsize=fontsize-7, edgecolor='black')
 
     plt.savefig('./overall_QoE.pdf', bbox_inches='tight')
 

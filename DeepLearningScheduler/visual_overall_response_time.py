@@ -50,6 +50,7 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
 
     import ChromaPalette as cp
     color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
+    color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
 
     plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black')
     plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black')

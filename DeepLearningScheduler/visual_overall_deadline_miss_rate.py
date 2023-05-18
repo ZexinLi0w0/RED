@@ -30,7 +30,7 @@ def lineplot_new(xsourcedata: Dict[str, List[int]]):
     ax.xaxis.set_tick_params(which='minor', bottom=False)  # Hide minor ticks on x-axis
     plt.grid(which='both', axis='y', linestyle='--')  # Show both major and minor gridlines for y-axis only
 
-    plt.legend(fontsize=fontsize - 7, edgecolor='black')
+    # plt.legend(fontsize=fontsize - 7, edgecolor='black')
     plt.xticks([0, 1, 2, 3, 4, 5, 6, 7],
                ["Nano", "TX2", "Xavier", "Orin", "Nano", "TX2", "Xavier", "Orin"],
                fontsize=fontsize)
@@ -60,7 +60,7 @@ def lineplot(deadlines, xsourcedata):
     approaches = ['Baseline', 'IDA', 'FG', 'RED']
     for i, approach in enumerate(approaches):
         plt.plot(deadlines, xsourcedata[approach], color=leishenColor[i], marker='D', markersize=1, label=approach)
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
@@ -87,13 +87,14 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
 
     import ChromaPalette as cp
     color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
+    color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
 
     plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black')
     plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black')
     plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black')
     plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black')
 
-    plt.legend(fontsize=fontsize-7, edgecolor='black')
+    # plt.legend(fontsize=fontsize-7, edgecolor='black')
     plt.xticks([0,1,2,3,4,5,6,7],
                ["Nano", "TX2", "Xavier", "Orin", "Nano", "TX2", "Xavier", "Orin"],
                fontsize=fontsize)
@@ -125,11 +126,12 @@ if __name__ == "__main__":
         # Loose: "Nano", "TX2", "Xavier", "Orin"
         # Tight: "Nano", "TX2", "Xavier", "Orin"
         'EDF': [0.385, 0.157, 0.985, 0.885, 1.0, 1.0, 0.971, 1.0],
-        'RED-FG': [0.5, 0.216, 0.616, 0.816, 0.9, 0.933, 1.0, 1.0],
-        'RED-IDA': [0.328, 0.014, 0.971, 0.828, 0.985, 1.0, 0.985, 1.0],
+        'RED-FG': [0.5, 0.216, 0.971, 0.816, 0.985, 1.0, 0.955, 1.0],
+        'RED-IDA': [0.328, 0.034, 0.616, 0.828, 0.9, 0.933, 0.935, 1.0],
         'RED': [0.2, 0.033, 0.366, 0.55, 0.466, 0.583, 0.633, 0.9],
     }
     # boxplot_vertical(deadlines, xsourcedata['baseline'], xsourcedata['feedback'], xsourcedata['fine-grained'], xsourcedata['feedback-fine-grained'])
     # lineplot(deadlines, xsourcedata)
-    lineplot_new(xsourcedata)
+    # lineplot_new(xsourcedata)
+    boxplot_vertical(deadlines, xsourcedata['EDF'], xsourcedata['RED-IDA'], xsourcedata['RED-FG'], xsourcedata['RED'])
     

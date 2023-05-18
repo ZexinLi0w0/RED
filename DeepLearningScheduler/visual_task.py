@@ -628,6 +628,7 @@ def boxplot_vertical(matrics1_list, matrics2_list, matrics3_list, name="Figure 6
     a = np.array(matrics1_list) # matrics 1, throughput score
     b = np.array(matrics2_list) # matrics 2, RTscore
     c = np.array(matrics3_list) # matrics 3, QoEScore
+    print(c)
 
     total_width, n = 0.8, 3
     width = total_width / n
@@ -913,7 +914,7 @@ if __name__ == "__main__":
     # task_scatter3(data, datafile=args.data)
     # read data from config file
     # names = ['agx', 'orin', 'tx2', 'nano']
-    names = ['nano']
+    names = ['orin']
     time_types = ['tight', 'loose']
     standard_deadline = defaultdict(dict)
     for name in names:

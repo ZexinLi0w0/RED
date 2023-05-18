@@ -26,9 +26,9 @@ def lineplot(deadlines, xsourcedata):
     plt.show()
 
 def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
-    plt.figure(dpi=300, figsize=(10, 5))
+    plt.figure(dpi=300, figsize=(10, 3))
     size = 6
-    fontsize = 20
+    fontsize = 20 - 5
 
     x = np.arange(size)
     EDF = np.array(approach1)
@@ -57,16 +57,22 @@ def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
 
     import ChromaPalette as cp
     color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
+    print(color_list)
+    color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
+    # patterns = ["/", "\\", "|", "-"]
+    patterns = ["", "", "", ""]
 
-    plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black')
-    plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black')
-    plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black')
-    plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black')
+    plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black', hatch=patterns[0])
+    plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black', hatch=patterns[1])
+    plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black', hatch=patterns[2])
+    plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black', hatch=patterns[3])
 
-    plt.legend(fontsize=fontsize-7, edgecolor='black')
+    legend = plt.legend(fontsize=fontsize-7, edgecolor='black', prop={'size': 10}, loc='upper left')
+    plt.ylim(4,10)
+
     plt.xticks([0,1,2,3,4,5], [1,2,3,4,5,6], fontsize=fontsize)
     plt.yticks(fontsize=fontsize)
-    plt.xlabel('Setting ID', fontsize=fontsize)
+    plt.xlabel('Setting ID (larger ID refers to looser deadline setting)', fontsize=fontsize)
     plt.ylabel('End To End Response Time [s]', fontsize=fontsize)
     # plt.title('Response Time with Dynamic Deadline', fontsize=fontsize)
 
