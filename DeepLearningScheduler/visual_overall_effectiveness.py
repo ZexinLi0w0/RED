@@ -17,8 +17,10 @@ fontsize = 20
 
 def plot_legend():
     methods = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
-    custom_colors = ['white', 'lightgray', 'darkgray', 'black']
+    # custom_colors = ['white', 'lightgray', 'darkgray', 'black']
     # hatches = ['/', 'x', '\\', '+']  # Corrected hatches
+
+    custom_colors = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
     legend_patches = [
         mpatches.Patch(facecolor=custom_colors[i],
                        # hatch=hatches[i],
@@ -26,7 +28,7 @@ def plot_legend():
                        label=method)
         for i, method in enumerate(methods)
     ]
-    fig.legend(handles=legend_patches, loc='upper center', ncol=4, fontsize=fontsize, bbox_to_anchor=(0.5, 1.12),
+    fig.legend(handles=legend_patches, loc='upper center', ncol=4, fontsize=fontsize, bbox_to_anchor=(0.5, 1.2),
                edgecolor='black')
 def barplot_latency(source_data, ax):
     size = 4

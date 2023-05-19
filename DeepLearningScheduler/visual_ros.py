@@ -17,7 +17,8 @@ fontsize = 20
 
 def plot_legend():
     devices = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
-    custom_colors = ['white', 'lightgray', 'darkgray', 'black']
+    # custom_colors = ['white', 'lightgray', 'darkgray', 'black']
+    custom_colors = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
 
     # hatches = ['/', 'x', '\\', '+']  # Corrected hatches
     legend_patches = [

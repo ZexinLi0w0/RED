@@ -19,7 +19,7 @@ def plot_legend():
     # methods = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
     # custom_colors = ['white', 'lightgray', 'darkgray', 'black']
 
-    methods = ['EDF', 'RED']
+    methods = ['Tight Deadline', 'Loose Deadline']
     color_list = ['#FFE87C', '#ADD8E6']
 
     # hatches = ['/', 'x', '\\', '+']  # Corrected hatches
