@@ -69,7 +69,9 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics2 = 0
     metrics3 = 0
     # matrics calculation
-    with open(f"./TaskConfigs/simo/{task_config_path}", "r") as f:
+    print('[debug] visual_task.py: task_config_path', task_config_path)
+    config_load_path = '/home/tao/RED/TaskConfigs/simo'
+    with open(f"{config_load_path}/{task_config_path}", "r") as f:
         config = json.load(f)
         dag_list = config["dag_list"]
         running_time_factor = 1
