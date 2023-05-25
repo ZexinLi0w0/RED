@@ -53,9 +53,6 @@ def barplot_latency(source_data, ax):
     x = x - (total_width - width) / 2
     approaches = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
 
-    import ChromaPalette as cp
-
-    color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
     color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
 
     ax.bar(x, EDF, width=width, label=approaches[0], color=color_list[0], edgecolor='black')
@@ -176,4 +173,4 @@ barplot_latency(utilization_2, axs[2,2])
 
 plot_legend()
 
-plt.savefig('./ros.pdf', bbox_inches='tight')
+plt.savefig('./ros_figures/ros.pdf', bbox_inches='tight')
