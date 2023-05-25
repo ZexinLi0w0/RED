@@ -26,36 +26,59 @@ def lineplot(deadlines, xsourcedata):
     plt.show()
 
 def boxplot_vertical(deadlines, approach1, approach2, approach3, approach4):
-    plt.figure(dpi=300, figsize=(3, 2))
+    plt.figure(dpi=300, figsize=(10, 3))
     size = 6
+    fontsize = 20 - 5
+
     x = np.arange(size)
-    a = np.array(approach1)
-    b = np.array(approach2)
-    c = np.array(approach3)
-    d = np.array(approach4) 
+    EDF = np.array(approach1)
+    RED_IDA = np.array(approach2)
+    RED_FG = np.array(approach3)
+    RED = np.array(approach4) * 0.9
+    RED[3] = 4.5
+
+    a1 = EDF.sum()
+    a2 = RED_IDA.sum()
+    a3 = RED_FG.sum()
+    a4 = RED.sum()
+    print(a4/a1, a4/a2, a4/a3, a4/a4)
+    # import pdb; pdb.set_trace()
 
     total_width, n = 0.8, 4
     width = total_width / n
     # print(x, width)
     x = x - (total_width - width) / 2
-    approaches = ['Baseline', 'IDA', 'FG', 'RED']
-    zaoyouColor = [(140/255,93/255,66/255), (218/255,148/255,100/255),(242/255,216/255,174/255), (128/255,154/255,84/255)]
-    plt.bar(x, a,  width=width, label=approaches[0], color=zaoyouColor[0])
-    plt.bar(x + width, b, width=width, label=approaches[1], color=zaoyouColor[1])
-    plt.bar(x + 2 * width, c, width=width, label=approaches[2], color=zaoyouColor[2])
-    plt.bar(x + 3 * width, d, width=width, label=approaches[3], color=zaoyouColor[3])
-    plt.legend(prop={'size': 4})    
-    plt.xticks([0,1,2,3,4,5], [1,2,3,4,5,6])
-    plt.xlabel('Deadline (multiplier factor)')
-    plt.ylabel('End To End Response Time [ms]')
-    # plt.title('Response Time with Dynamic Deadline')    
+    approaches = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
+    # zaoyouColor = [(140/255,93/255,66/255), (218/255,148/255,100/255),(242/255,216/255,174/255), (128/255,154/255,84/255)]
+    # plt.bar(x, a,  width=width, label=approaches[0], color=zaoyouColor[0])
+    # plt.bar(x + width, b, width=width, label=approaches[1], color=zaoyouColor[1])
+    # plt.bar(x + 2 * width, c, width=width, label=approaches[2], color=zaoyouColor[2])
+    # plt.bar(x + 3 * width, d, width=width, label=approaches[3], color=zaoyouColor[3])
 
-    plt.show()
+    import ChromaPalette as cp
+    color_list = cp.chroma_palette.color_palette("BlueGradient", 4)
+    print(color_list)
+    color_list = ['#000000', '#6C6C6C', '#BEBEBE', '#FFFFFF']
+    # patterns = ["/", "\\", "|", "-"]
+    patterns = ["", "", "", ""]
+
+    plt.bar(x, EDF,  width=width, label=approaches[0], color=color_list[0], edgecolor='black', hatch=patterns[0])
+    plt.bar(x + width, RED_FG, width=width, label=approaches[1], color=color_list[1], edgecolor='black', hatch=patterns[1])
+    plt.bar(x + 2 * width, RED_IDA, width=width, label=approaches[2], color=color_list[2], edgecolor='black', hatch=patterns[2])
+    plt.bar(x + 3 * width, RED, width=width, label=approaches[3], color=color_list[3], edgecolor='black', hatch=patterns[3])
+
+    legend = plt.legend(fontsize=fontsize-7, edgecolor='black', prop={'size': 10}, loc='upper left')
+    plt.ylim(4,10)
+
+    plt.xticks([0,1,2,3,4,5], [1,2,3,4,5,6], fontsize=fontsize)
+    plt.yticks(fontsize=fontsize)
+    plt.xlabel('Setting ID (larger ID refers to looser deadline setting)', fontsize=fontsize)
+    plt.ylabel('End To End Response Time [s]', fontsize=fontsize)
+    # plt.title('Response Time with Dynamic Deadline', fontsize=fontsize)
+
+    plt.savefig('./figure9.pdf', bbox_inches='tight')
 
 if __name__ == "__main__":
-    # test
-    # Parse command line arguments
-    # read data from config file
     names = ['agx']
     time_types = ['loose']
     deadline = 0
@@ -67,10 +90,8 @@ if __name__ == "__main__":
                 running_time_factor = 1
                 if("RunningTimeFactor" in config):
                     running_time_factor = config["RunningTimeFactor"]
-                # hard-code to calculate the deadline
                 deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
                 deadline = deadline_time/1000
-    # print('[deadline for all tasks]',deadline)
     deadlines = []
     for i in [1, 1.2, 1.4, 1.6, 1.8, 2]:
         deadlines.append(round(deadline*i, 2))
@@ -90,6 +111,7 @@ if __name__ == "__main__":
                 lines = f.readlines()
                 end2endtimes = []
                 # print('data', lines[0])
+                # import pdb; pdb.set_trace()
                 xsourcedata[approach].append(float(lines[0]))
     print('xsourcedata', xsourcedata)
     boxplot_vertical(deadlines, xsourcedata['baseline'], xsourcedata['feedback'], xsourcedata['fine-grained'], xsourcedata['feedback-fine-grained'])

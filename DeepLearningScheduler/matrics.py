@@ -23,6 +23,7 @@ def QoEScore(finished_times, deadlines, lambda_param = 1):
     1 / (1 + e^lambda * (max(0, miss_deadline_time)))
     """
     QoEScore_total = 0
+    lambda_param = 10
 
     for i in range(len(finished_times)):
         tmp = 1/(1 + math.pow(math.e, lambda_param) * max(0, finished_times[i] - deadlines[i]))
