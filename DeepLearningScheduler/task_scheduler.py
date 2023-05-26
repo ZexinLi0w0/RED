@@ -156,18 +156,20 @@ class TaskSchedule:
         logger.info(f"[CTRL] All tasks finished")
         now = time.time()
         relative_end2end_runtime = now - self.TaskStartTime
+        # use pickle to save the taks_statistics
+        # get now time format like 2021-04-01-12-00-00
+        now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        raw_data_save_path = '/home/tao/RED/taskdata'
+        with open(f"{raw_data_save_path}/end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt", "w") as f:
+            f.write(str(relative_end2end_runtime))
+        with open(f"{raw_data_save_path}/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
+            pickle.dump(task_statistics, f)
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
         missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
         logger.info(f"[CTRL] SubTask Average finished time: {avg_finished_time}")
         logger.info(f"[CTRL] Task Metrics: {metrics}")
-        # use pickle to save the taks_statistics
-        # get now time format like 2021-04-01-12-00-00
-        now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        with open(f"./taskdata/end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt", "w") as f:
-            f.write(str(relative_end2end_runtime))
-        with open(f"./taskdata/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
-            pickle.dump(task_statistics, f)
+
         # task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
         # break the outer loop and exit
         return
