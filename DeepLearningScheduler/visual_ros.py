@@ -28,7 +28,7 @@ def plot_legend():
                        label=device)
         for i, device in enumerate(devices)
     ]
-    fig.legend(handles=legend_patches, loc='upper center', ncol=4, fontsize=fontsize, bbox_to_anchor=(0.5, 0.97),
+    fig.legend(handles=legend_patches, loc='upper center', ncol=4, fontsize=fontsize, bbox_to_anchor=(0.5, 1.05),
                edgecolor='black')
 def barplot_latency(source_data, ax):
     size = 4
@@ -72,62 +72,95 @@ def barplot_latency(source_data, ax):
         ax.text(0.5, -0.2, 'Workload Intensity', horizontalalignment='center', verticalalignment='center',
                 transform=ax.transAxes, fontsize=fontsize)
 
-
+# Deadline 1
 latency_0 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [7.3063, 7.318774700164795, 7.7278337478637695, 13.54952716827392],
+    'RED-FG': [7.305461168289185, 7.3330476284027, 7.335536003112793, 11.68731451034545],
+    'RED-IDA': [7.0520966053, 7.260978937149048, 7.661771297454834, 13.6643815],
+    'RED': [5.81512975692749, 6.2437968254089355, 6.2780749797821045, 7.27012777328],
     'metrics': "End To End Response Time [s]",
-    'title': "1000ms Deadline",
+    'title': "7313ms Deadline",
 }
 
+# Deadline 2
 latency_1 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [9.708656549453735, 9.738280773162842, 9.742734432220459, 13.6087603569],
+    'RED-FG': [9.71573042869567, 9.738280773162842, 9.738394498825073, 11.6936745643615],
+    'RED-IDA': [7.489305019378662, 7.400842189788818, 8.65004777, 13.627264499],
+    'RED': [6.50918436050415, 6.353975296020508,7.1409008502960205, 9.3769302368],
     'metrics': "",
-    'title': "2000ms Deadline",
+    'title': "9750ms Deadline",
 }
 
+# Deadline 3
 latency_2 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [12.125782251358032, 12.12697029113769, 12.146758556365967, 13.6846032142639],
+    'RED-FG': [12.122812747955322, 12.132575750350952, 12.146758556365967, 12.22124505],
+    'RED-IDA': [7.20930314064, 7.25191116333007,12.146758556365967, 13.709626674],
+    'RED': [5.723771333694458, 5.431160688, 7.450958251953125, 10.93888187408447],
     'metrics': "",
-    'title': "3000ms Deadline",
+    'title': "12188ms Deadline",
 }
 
 deadline_0 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [57.14285714285714, 92.85714285714286, 100, 100],
+    'RED-FG': [53.33, 90, 98.33333333333333, 100],
+    'RED-IDA': [48.5714285, 82.85714285714286, 97.14285714285714, 100],
+    'RED': [18.33333333333, 40, 50, 83.3333],
     'metrics': "Deadline Miss Rate [%]",
     'title': "",
 }
 
 deadline_1 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [15.71428571, 15.714285714285714, 28.57142857142857, 100],
+    'RED-FG': [20, 18.3, 31.666666666666664, 100],
+    'RED-IDA': [0, 1.4285714285714286, 0, 100],
+    'RED': [3.333333333, 0, 5, 90],
     'metrics': "",
     'title': "",
 }
 
 deadline_2 = {
-    'EDF': [11.317, 9.458, 8.068, 3.603],
-    'RED-FG': [11.307, 8.831, 7.287, 3.461],
-    'RED-IDA': [10.861, 9.675, 8.114, 3.693],
-    'RED': [9.843, 8.143, 5.606, 2.745],
+    'EDF': [5.714285714285714, 5.714285714285714, 15.714285714285714, 100],
+    'RED-FG': [16.6666666, 16.666666666666, 38.333333333333336, 100],
+    'RED-IDA': [0, 0, 0, 100],
+    'RED': [0, 0, 0, 55],
     'metrics': "",
     'title': "",
 }
 
-utilization_0 = {
+def performance_analysis(deadline_missing_rate):
+    A = 'RED'
+    B = 'EDF'
+    total = 0
+    count = 0
+    for workload in range(4):
+        count += 1
+        total += abs(deadline_missing_rate[A][workload] - deadline_missing_rate[B][workload]) / deadline_missing_rate[B][workload]
+    print(f'{A} compared to {B} the avg performance improvement: ', total / count)
+    return total / count
+    
+print(f'Missing Deadline Rate Decrease', (performance_analysis(deadline_0) + performance_analysis(deadline_1) + performance_analysis(deadline_2))/3)
+
+def QoE(time_to_complete):
+    lambda_param = 10
+    return 1/(1 + math.pow(math.e, lambda_param) * max(0, time_to_complete))
+
+def get_QoE_metrics_dict(latency_dict, deadline_dict, overall_deadline_time):
+    res = {   
+        'metrics': "QoE Score",
+        'title': "",
+        'info': "x",
+    }
+    for key in ['EDF', 'RED-FG', 'RED-IDA', 'RED']:
+        # 0 - light, 1 - medium, 2 - heavy, 3 - overload
+        res[key] = [0]*4
+        for workload in range(0,4):
+            res[key][workload] = QoE(latency_dict[key][workload] - overall_deadline_time)
+    return res
+
+
+qoemetrics_0 = {
     'EDF': [11.317, 9.458, 8.068, 3.603],
     'RED-FG': [11.307, 8.831, 7.287, 3.461],
     'RED-IDA': [10.861, 9.675, 8.114, 3.693],
@@ -137,7 +170,7 @@ utilization_0 = {
     'info': "x",
 }
 
-utilization_1 = {
+qoemetrics_1 = {
     'EDF': [11.317, 9.458, 8.068, 3.603],
     'RED-FG': [11.307, 8.831, 7.287, 3.461],
     'RED-IDA': [10.861, 9.675, 8.114, 3.693],
@@ -147,7 +180,7 @@ utilization_1 = {
     'info': "x",
 }
 
-utilization_2 = {
+qoemetrics_2 = {
     'EDF': [11.317, 9.458, 8.068, 3.603],
     'RED-FG': [11.307, 8.831, 7.287, 3.461],
     'RED-IDA': [10.861, 9.675, 8.114, 3.693],
@@ -157,8 +190,8 @@ utilization_2 = {
     'info': "x",
 }
 
-figsize = (17, 12)
-fig, axs = plt.subplots(3, 3, figsize=figsize)
+figsize = (17, 8)
+fig, axs = plt.subplots(2, 3, figsize=figsize)
 plt.subplots_adjust(wspace=0.3)  # adjust the space between subplots
 
 barplot_latency(latency_0, axs[0,0])
@@ -167,9 +200,9 @@ barplot_latency(latency_2, axs[0,2])
 barplot_latency(deadline_0, axs[1,0])
 barplot_latency(deadline_1, axs[1,1])
 barplot_latency(deadline_2, axs[1,2])
-barplot_latency(utilization_0, axs[2,0])
-barplot_latency(utilization_1, axs[2,1])
-barplot_latency(utilization_2, axs[2,2])
+# barplot_latency(qoemetrics_0, axs[2,0])
+# barplot_latency(qoemetrics_1, axs[2,1])
+# barplot_latency(qoemetrics_2, axs[2,2])
 
 plot_legend()
 

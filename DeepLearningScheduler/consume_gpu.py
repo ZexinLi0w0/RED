@@ -25,6 +25,7 @@ def matrix_multiplication(matrix_size, duration, log_file):
     
     while time.time() < end_time:
         _result = torch.matmul(matrix1, matrix2)
+        time.sleep(0.01)
     # wait for tegrastats to finish writing to file
     tegrastats_process.terminate()
     tegrastats_process.wait()
@@ -41,7 +42,6 @@ def matrix_multiplication(matrix_size, duration, log_file):
                 continue
             gpu_usage = get_gpu_usage(gpu_stats)
             sample_time = gpu_stats[0:19]
-            print(f'sample_time: {sample_time}')
             # skip repeated sample
             if update_simple_time == sample_time:
                 continue
@@ -58,7 +58,7 @@ def matrix_multiplication(matrix_size, duration, log_file):
     log_file.close()
 
     print("Matrix multiplication completed")
-    # os.remove(temp_file_path)
+    os.remove(temp_file_path)
 
 def get_gpu_usage(stats):
     gpu_usage = None
@@ -75,7 +75,6 @@ def main():
     parser.add_argument('-d', '--duration', type=int, default=10, help='Duration of matrix multiplication in seconds')
     parser.add_argument('-l', '--log_file', type=str, default='gpu_usage.log', help='Log file to store GPU usage')
     args = parser.parse_args()
-
     with open(args.log_file, 'w') as log_file:
         matrix_multiplication(args.matrix_size, args.duration, log_file)
 if __name__ == '__main__':
