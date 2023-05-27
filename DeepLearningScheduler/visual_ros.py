@@ -109,6 +109,7 @@ deadline_0 = {
     'RED': [18.33333333333, 40, 50, 83.3333],
     'metrics': "Deadline Miss Rate [%]",
     'title': "",
+    'info': 'x',
 }
 
 deadline_1 = {
@@ -118,6 +119,7 @@ deadline_1 = {
     'RED': [3.333333333, 0, 5, 90],
     'metrics': "",
     'title': "",
+    'info': 'x',
 }
 
 deadline_2 = {
@@ -127,6 +129,7 @@ deadline_2 = {
     'RED': [0, 0, 0, 55],
     'metrics': "",
     'title': "",
+    'info': 'x',
 }
 
 def performance_analysis(deadline_missing_rate):

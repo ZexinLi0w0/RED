@@ -15,12 +15,14 @@ plt.rcParams['font.sans-serif']="Times New Roman"
 plt.rcParams.update({'font.size': 5})
 fontsize = 20
 
+# color_list = ['#FFE87C', '#ADD8E6']
+color_list = ['#4878cf', '#d65f5f']
+
 def plot_legend():
     # methods = ['EDF', 'RED-FG', 'RED-IDA', 'RED']
     # custom_colors = ['white', 'lightgray', 'darkgray', 'black']
 
     methods = ['EDF', 'RED']
-    color_list = ['#FFE87C', '#ADD8E6']
 
     # hatches = ['/', 'x', '\\', '+']  # Corrected hatches
     legend_patches = [
@@ -56,8 +58,8 @@ def histogram_latency(source_data, ax):
     # loose = (loose - np.min(loose)) / (np.max(loose) - np.min(loose))
 
     # smooth data here by generate more data sample points
-    sns.kdeplot(tight, ax=ax, fill=True, alpha=0.5, color='#FFE87C', label='Tight')
-    sns.kdeplot(loose, ax=ax, fill=True, alpha=0.5, color='#ADD8E6', label='Loose')
+    sns.kdeplot(tight, ax=ax, fill=True, alpha=0.5, color=color_list[0], label='Tight')
+    sns.kdeplot(loose, ax=ax, fill=True, alpha=0.5, color=color_list[1], label='Loose')
 
     # all_data = [tight, loose]
     # approaches = ['EDF', 'RED']  # corrected labels
