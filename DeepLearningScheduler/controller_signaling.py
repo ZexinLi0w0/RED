@@ -7,7 +7,7 @@ import pickle
 
 # self-defined modules
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_task import statistics_compution, task_scatter
+from visual_scripts.visual_task import statistics_compution, task_scatter
 from AbstractHandler import HandlerStatus
 from task_scheduler import TaskSchedule
 
