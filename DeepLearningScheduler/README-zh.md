@@ -349,6 +349,13 @@ python main.py -c simo-handler_config.json -t TaskConfigs/simo/agx_loose.json -a
 python main.py -c simo-handler_config.json -t TaskConfigs/simo/agx_loose.json -a feedback-fine-grained
 ```
 
+### 不可分割任务实验（推荐）
+```bash
+python main.py -c simo-handler_config.json -t TaskConfigs/simo/test_non_partitionable.json -a baseline
+```
+- 该命令将以15%不可分割任务比例运行（可在配置文件中调整）。
+- 不可分割任务不会被合并，统计和可视化中有单独标记。
+
 ## 配置说明
 
 ### Handler配置文件格式
@@ -397,3 +404,29 @@ python main.py -c simo-handler_config.json -t TaskConfigs/simo/agx_loose.json -a
     ],
     "RunningTimeFactor": 1
 }
+```
+
+#### SIMO/DAG配置文件（支持不可分割任务）
+
+> 若需在SIMO/DAG实验中支持不可分割任务，可在配置文件中增加如下字段：
+
+```json
+{
+  "RunningTimeFactor": 1.5,
+  "NonPartitionablePercentage": 15, // 不可分割任务占比（可选）
+  "NonPartitionableConfig": {      // 不可分割任务的默认配置（可选）
+    "HandlerId": 5,
+    "WorstRunningTime": 150,
+    "Priority": 2
+  },
+  "dag_list": [ ... ]
+}
+```
+- `NonPartitionablePercentage`：可选，指定多少比例的任务为不可分割任务（如15表示15%）。
+- `NonPartitionableConfig`：可选，不可分割任务的默认参数。
+- 生成的每个任务对象会带有 `IsNonPartitionable` 标记。
+
+#### 不可分割任务说明
+- 不可分割任务不会被细粒度合并（fine-grained adjust）合并。
+- 在统计与可视化中会单独区分。
+- 适用于需要保证原子性或不可拆分的任务场景。
