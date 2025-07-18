@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_task import statistics_compution, task_scatter3
+from visual_scripts.visual_task import statistics_compution, task_scatter3
 import logging
 from copy import deepcopy
 
@@ -70,12 +70,13 @@ class TaskSchedule:
             # only for simo
             simo_args = f"--simo_args {task['RunArgs']}" if 'RunArgs' in task else ""
             dag_period = f"--dag_period {task['DagPeriod']}" if 'DagPeriod' in task else ""
+            non_partitionable_flag = "--non_partitionable true" if task.get("IsNonPartitionable", False) else ""
             # create signal message and save it to task
             # for feedback-fine-grained approach, add skipmode
             if(self.approach_module == 'feedback-fine-grained'):
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag, "--skipmode 1")
             else:    
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag)
             task['SignalMsg'] = signal_message
             TaskQueue.append(task)
             
@@ -314,6 +315,10 @@ class TaskSchedule:
         TaskQueue.sort(key=lambda x: x["ReleaseTime"])
         while(len(TaskQueue)):
             task = TaskQueue.pop(0)
+            # Skip merging for non-partitionable tasks
+            if task.get("IsNonPartitionable", False):
+                merged_task.append(task)
+                continue
             if(task["HandlerId"] not in merge_handler):
                 putback.append(task)
                 continue
@@ -321,6 +326,10 @@ class TaskSchedule:
             putback = []
             while(len(TaskQueue)):
                 other_task = TaskQueue.pop(0)
+                # Also skip merging for non-partitionable tasks
+                if other_task.get("IsNonPartitionable", False):
+                    putback.append(other_task)
+                    continue
                 if(abs(other_task["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and other_task["DagPeriod"] == task["DagPeriod"]):
                     # merge the two tasks
                     """
@@ -342,6 +351,7 @@ class TaskSchedule:
                         "Priority": max(other_task["Priority"], task["Priority"]),
                         "Dependencies": list(set(other_task["Dependencies"] + task["Dependencies"])),
                         "RunArgs": list2str(list(set(liststr2list(other_task["RunArgs"]) + liststr2list(task["RunArgs"])))),
+                        "IsNonPartitionable": False,
                     }
                     handler_id = new_task["HandlerId"]
                     taskid = f"--taskid {new_task['TaskId']}"
@@ -385,6 +395,7 @@ class TaskSchedule:
                 "dependency": task["Dependencies"],
                 "dag_period": task["DagPeriod"],
                 "simo_args": task["RunArgs"],
+                "is_non_partitionable": task.get("IsNonPartitionable", False),
             }
         self.task_statistics = task_statistics
 
@@ -418,8 +429,12 @@ class TaskSchedule:
 if __name__ == "__main__":
     # test the task scheduler
     from task_generator import load_dag_config, generate_tasks_from_dag
-    dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
-    tasks = generate_tasks_from_dag(dag_config)
+    result = load_dag_config("TaskConfigs/simo-baseline-nano.json")
+    if result is None:
+        print("Error: Failed to load DAG config")
+        exit(1)
+    dag_config, factor, non_partitionable_percentage, non_partitionable_config = result
+    tasks = generate_tasks_from_dag(dag_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
     handler_status = defaultdict(int)
     # create a task scheduler
     # task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='priority')

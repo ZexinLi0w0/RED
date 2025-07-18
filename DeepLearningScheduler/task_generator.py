@@ -87,7 +87,10 @@ def load_dag_config(dag_config_path):
     Load a dag config from a JSON file.
     Task Configuration:
     {
-        "dag_list": List<List<TaskConfigObject>>
+        "dag_list": List<List<TaskConfigObject>>,
+        "RunningTimeFactor": float,
+        "NonPartitionablePercentage": int (optional),
+        "NonPartitionableConfig": dict (optional)
     }
 
     TaskConfigObject Attributes:
@@ -111,12 +114,12 @@ def load_dag_config(dag_config_path):
     
     # Check if the config file has a handler list
     if "dag_list" not in config:
-        print("Error: Missing `task_list` in config file")
+        print("Error: Missing `dag_list` in config file")
         return
     
     # Check if the handler list is a list
     if not isinstance(config["dag_list"], list):
-        print("Error: `task_list` must be a list")
+        print("Error: `dag_list` must be a list")
         return
     
     dag_config = config["dag_list"]
@@ -124,7 +127,22 @@ def load_dag_config(dag_config_path):
     if("RunningTimeFactor" in config):
         running_time_factor = config["RunningTimeFactor"]
     
-    return dag_config, running_time_factor
+    # Load non-partitionable task configuration
+    non_partitionable_percentage = 0
+    non_partitionable_config = None
+    if("NonPartitionablePercentage" in config):
+        non_partitionable_percentage = config["NonPartitionablePercentage"]
+        if not isinstance(non_partitionable_percentage, (int, float)) or non_partitionable_percentage < 0 or non_partitionable_percentage > 100:
+            print("Error: NonPartitionablePercentage must be a number between 0 and 100")
+            return
+    
+    if("NonPartitionableConfig" in config):
+        non_partitionable_config = config["NonPartitionableConfig"]
+        if not isinstance(non_partitionable_config, dict):
+            print("Error: NonPartitionableConfig must be a dictionary")
+            return
+    
+    return dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config
 
 def generate_tasks(task_config):
     """
@@ -155,7 +173,7 @@ def generate_tasks(task_config):
                 tasks.append(task)
     return tasks
 
-def generate_tasks_from_dag(dag_config, time_factor=1):
+def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percentage=0.0, non_partitionable_config=None):
     """
     Generate tasks queue from the task config.
     Task Attributes:
@@ -168,43 +186,88 @@ def generate_tasks_from_dag(dag_config, time_factor=1):
     Priority: task priority
     Dependencies: task dependencies, contains the handler id of tasks
     RunArgs: SIMO run arguments
+    IsNonPartitionable: flag indicating if task is non-partitionable
     """
+    import random
+    
     tasks = []
     DagRepeatedTimes = 10
     start_time = 0
-    def generate_task_obj(config, start_time, period):
+    
+    def generate_task_obj(config, start_time, period, is_non_partitionable=False):
         task = {
             "TaskId": f"{config['TaskName']}_[{period}]_{generate(size=7)}",
-            "DagPeriod": i,
+            "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
             "Deadline": (start_time + config["WorstRunningTime"]*time_factor) / 1000, # deadline won't extend for ReleaseTimeDelay
             "Priority": config["Priority"],
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
+            "IsNonPartitionable": is_non_partitionable,
         }
         return task, config["WorstRunningTime"]*time_factor
+    # Calculate total number of tasks to determine how many should be non-partitionable
+    total_tasks = 0
     for dag in dag_config:
         for i in range(DagRepeatedTimes):
-            for config in dag:                
-                if(type(config) == list):
+            for config in dag:
+                if isinstance(config, list):
+                    total_tasks += len(config)
+                else:
+                    total_tasks += 1
+    
+    non_partitionable_count = int(total_tasks * non_partitionable_percentage / 100)
+    
+    # Generate all task positions and randomly select non-partitionable ones
+    all_task_positions = []
+    task_index = 0
+    for dag_idx, dag in enumerate(dag_config):
+        for period in range(DagRepeatedTimes):
+            for config_idx, config in enumerate(dag):
+                if isinstance(config, list):
+                    for sub_idx, subconfig in enumerate(config):
+                        all_task_positions.append((dag_idx, period, config_idx, sub_idx, task_index))
+                        task_index += 1
+                else:
+                    all_task_positions.append((dag_idx, period, config_idx, None, task_index))
+                    task_index += 1
+    
+    # Randomly select positions for non-partitionable tasks
+    non_partitionable_positions = set()
+    if non_partitionable_count > 0:
+        selected_positions = random.sample(all_task_positions, non_partitionable_count)
+        non_partitionable_positions = {(pos[0], pos[1], pos[2], pos[3]) for pos in selected_positions}
+    
+    # Generate tasks with non-partitionable selection
+    task_index = 0
+    for dag_idx, dag in enumerate(dag_config):
+        for i in range(DagRepeatedTimes):
+            for config_idx, config in enumerate(dag):                
+                if isinstance(config, list):
                     # for sub dag structure
                     parellel_running_time = 0
-                    for subconfig in config:
-                        task, running_time = generate_task_obj(subconfig, start_time, i)
+                    for sub_idx, subconfig in enumerate(config):
+                        is_non_partitionable = (dag_idx, i, config_idx, sub_idx) in non_partitionable_positions
+                        task, running_time = generate_task_obj(subconfig, start_time, i, is_non_partitionable)
                         # print('[debug] subconfig', task, start_time, i, subconfig['WorstRunningTime'])
                         tasks.append(task)
                         parellel_running_time += running_time
                     start_time += parellel_running_time
                 else:
-                    task, running_time = generate_task_obj(config, start_time, i)
+                    is_non_partitionable = (dag_idx, i, config_idx, None) in non_partitionable_positions
+                    task, running_time = generate_task_obj(config, start_time, i, is_non_partitionable)
                     tasks.append(task)
                     start_time += running_time
     return tasks
 
 
 if __name__ == "__main__":
-    dag_config, running_time_factor = load_dag_config("TaskConfigs/simo/agx_tight.json")
-    tasks = generate_tasks_from_dag(dag_config, time_factor=running_time_factor)
+    result = load_dag_config("TaskConfigs/simo/agx_tight.json")
+    if result is None:
+        print("Error: Failed to load DAG config")
+        exit(1)
+    dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config = result
+    tasks = generate_tasks_from_dag(dag_config, time_factor=running_time_factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
     # print(tasks)
     assert(len(tasks) == 70)

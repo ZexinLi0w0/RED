@@ -131,8 +131,11 @@ def parseArguments():
     except ValueError as e:
         print(e)
     # for dag config
-    task_config, factor = load_dag_config(args.task)
-    tasks_list = generate_tasks_from_dag(task_config, time_factor=factor)
+    result = load_dag_config(args.task)
+    if result is None:
+        raise Exception("Error: Failed to load DAG config")
+    task_config, factor, non_partitionable_percentage, non_partitionable_config = result
+    tasks_list = generate_tasks_from_dag(task_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
 
     # get filename of taskconfig
     task_file_path = args.task[::-1]

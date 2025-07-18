@@ -59,6 +59,37 @@ Dependencies: the dependencies of tasks
 Priority: the priority of tasks
 ```
 
+#### SIMO/DAG Task Config (with Non-Partitionable Tasks Support)
+
+> For SIMO/DAG experiments, use a config file with a `dag_list` and optionally enable non-partitionable tasks:
+
+```
+{
+  "RunningTimeFactor": 1.5,
+  "NonPartitionablePercentage": 15, // percentage of tasks that are non-partitionable (optional)
+  "NonPartitionableConfig": {      // config for non-partitionable tasks (optional)
+    "HandlerId": 5,
+    "WorstRunningTime": 150,
+    "Priority": 2
+  },
+  "dag_list": [ ... ]
+}
+```
+- `NonPartitionablePercentage`: (optional) Percentage of tasks to randomly mark as non-partitionable (e.g., 15 for 15%).
+- `NonPartitionableConfig`: (optional) Default config for non-partitionable tasks.
+- Each generated task will have an `IsNonPartitionable` flag.
+
+### How to Run with Non-Partitionable Tasks
+
+1. **Prepare your SIMO/DAG config** with the `NonPartitionablePercentage` and `NonPartitionableConfig` fields as shown above (see `TaskConfigs/simo/test_non_partitionable.json` for an example).
+2. **Run your experiment** as usual:
+
+```shell
+python main.py -c handler-config.json -t TaskConfigs/simo/test_non_partitionable.json -a baseline
+```
+
+- The system will randomly select the specified percentage of tasks as non-partitionable.
+- Non-partitionable tasks will not be merged in fine-grained adjustment and are tracked in statistics and visualizations.
 
 ### Test a handler
 
@@ -73,7 +104,7 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 ```
 
 
-## SIMO Experiement
+## SIMO Experiment
 
 ### Baseline
 ```
@@ -92,6 +123,13 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_lo
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_tight.json" -a "baseline"
 ```
 
+### Non-Partitionable Tasks Experiment (NEW)
+```
+python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/test_non_partitionable.json" -a "baseline"
+```
+- This will run with 15% of tasks as non-partitionable (see config for details).
+- You can change the percentage or config as needed.
+
 ### Task Progress Tracker(Execution Feedback to adjust release time)
 ```
 python main.py -c "./handler-config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "feedback"
@@ -101,7 +139,6 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_lo
 
 # agx tight
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/agx_tight.json" -a "feedback"
-
 
 ```
 

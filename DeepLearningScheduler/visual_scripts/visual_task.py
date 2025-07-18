@@ -47,14 +47,40 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     finished_info = defaultdict(float)
     avg_finished_time = 0
     task_num = 0
+    
+    # Non-partitionable task statistics
+    non_partitionable_missing_rate = 0
+    non_partitionable_finished_info = defaultdict(float)
+    non_partitionable_task_num = 0
+    partitionable_missing_rate = 0
+    partitionable_finished_info = defaultdict(float)
+    partitionable_task_num = 0
+    
     for task in task_statistics.values():
+        is_non_partitionable = task.get('is_non_partitionable', False)
+        
         if task['res'] != 'skip':
             finished_info[task['taskid']] = float(task['end_time']) - float(task['start_time'])
             avg_finished_time += finished_info[task['taskid']]
             task_num += 1
+            
+            # Track non-partitionable vs partitionable task performance
+            if is_non_partitionable:
+                non_partitionable_finished_info[task['taskid']] = finished_info[task['taskid']]
+                non_partitionable_task_num += 1
+            else:
+                partitionable_finished_info[task['taskid']] = finished_info[task['taskid']]
+                partitionable_task_num += 1
+                
         if task['res'] == 'failure' or task['res'] == 'skip':
             missing_deadline_rate += 1
             missing_deadline_info[task["taskid"]] = 1
+            
+            # Track missing deadlines by task type
+            if is_non_partitionable:
+                non_partitionable_missing_rate += 1
+            else:
+                partitionable_missing_rate += 1
             
     if(task_num!=0):
         avg_finished_time = avg_finished_time/task_num
@@ -65,6 +91,17 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
         missing_deadline_rate /= len(task_statistics)
     else:
         missing_deadline_rate = 0
+        
+    # Calculate task type specific statistics
+    if non_partitionable_task_num > 0:
+        non_partitionable_missing_rate /= non_partitionable_task_num
+    if partitionable_task_num > 0:
+        partitionable_missing_rate /= partitionable_task_num
+        
+    # Print task type statistics
+    print(f'[STATS] Non-partitionable tasks: {non_partitionable_task_num}, Missing deadline rate: {non_partitionable_missing_rate:.4f}')
+    print(f'[STATS] Partitionable tasks: {partitionable_task_num}, Missing deadline rate: {partitionable_missing_rate:.4f}')
+    
     metrics1 = 1
     metrics2 = 0
     metrics3 = 0
@@ -143,22 +180,43 @@ def task_scatter(task_statistics, datafile='taskdata.pkl'):
     }
 
     for handler_id in [1,2,3,4,5]:
-        if(len(handler2points[handler_id]["finished_x"]) == 0 and len(handler2points[handler_id]["missing_x"]) == 0 and len(handler2points[handler_id]["skip_x"]) == 0):
+        total_tasks = (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]) +
+                      len(handler2points[handler_id]["non_partitionable_finished_x"]) + len(handler2points[handler_id]["non_partitionable_missing_x"]) + len(handler2points[handler_id]["non_partitionable_skip_x"]))
+        if(total_tasks == 0):
             continue
+            
         # Plot the finished tasks as blue circles
         finished_scatter = ax.scatter(handler2points[handler_id]["finished_x"], handler2points[handler_id]["finished_y"], c = handlerid2color[handler_id], marker='o', s = 15, label= f"{id2name[handler_id]}")
         missing_scatter = ax.scatter(handler2points[handler_id]["missing_x"], handler2points[handler_id]["missing_y"], c = handlerid2color[handler_id], marker='x', s = 50)
         skiped_scatter = ax.scatter(handler2points[handler_id]["skip_x"], handler2points[handler_id]["skip_y"], c = handlerid2color[handler_id], marker='+', s = 50) 
-        missing_deadline_rate = len(handler2points[handler_id]["missing_x"]) / (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]))
-        finished_rate = len(handler2points[handler_id]["finished_x"]) / (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]))
-        skip_rate = len(handler2points[handler_id]["skip_x"]) / (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"]))
+        
+        # Plot non-partitionable tasks with larger markers and different style
+        if len(handler2points[handler_id]["non_partitionable_finished_x"]) > 0:
+            ax.scatter(handler2points[handler_id]["non_partitionable_finished_x"], handler2points[handler_id]["non_partitionable_finished_y"], 
+                      c = handlerid2color[handler_id], marker='s', s = 25, alpha=0.7, edgecolors='black', linewidth=1)
+        if len(handler2points[handler_id]["non_partitionable_missing_x"]) > 0:
+            ax.scatter(handler2points[handler_id]["non_partitionable_missing_x"], handler2points[handler_id]["non_partitionable_missing_y"], 
+                      c = handlerid2color[handler_id], marker='X', s = 60, alpha=0.7, edgecolors='black', linewidth=1)
+        if len(handler2points[handler_id]["non_partitionable_skip_x"]) > 0:
+            ax.scatter(handler2points[handler_id]["non_partitionable_skip_x"], handler2points[handler_id]["non_partitionable_skip_y"], 
+                      c = handlerid2color[handler_id], marker='*', s = 60, alpha=0.7, edgecolors='black', linewidth=1)
+        
+        # Calculate statistics including both task types
+        partitionable_tasks = len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["skip_x"])
+        non_partitionable_tasks = len(handler2points[handler_id]["non_partitionable_finished_x"]) + len(handler2points[handler_id]["non_partitionable_missing_x"]) + len(handler2points[handler_id]["non_partitionable_skip_x"])
+        
+        missing_deadline_rate = (len(handler2points[handler_id]["missing_x"]) + len(handler2points[handler_id]["non_partitionable_missing_x"])) / total_tasks
+        finished_rate = (len(handler2points[handler_id]["finished_x"]) + len(handler2points[handler_id]["non_partitionable_finished_x"])) / total_tasks
+        skip_rate = (len(handler2points[handler_id]["skip_x"]) + len(handler2points[handler_id]["non_partitionable_skip_x"])) / total_tasks
+        
         finish_handles.append(finished_scatter)
         missing_handles.append(missing_scatter)
         skip_handles.append(skiped_scatter)
         print('Statistics of handler ', handler_id, ':')
-        print('missing deadline rate: ', missing_deadline_rate)
-        print('finished rate: ', finished_rate)
-        print('skip rate: ', skip_rate)
+        print('  Total tasks: ', total_tasks, '(partitionable: ', partitionable_tasks, ', non-partitionable: ', non_partitionable_tasks, ')')
+        print('  missing deadline rate: ', missing_deadline_rate)
+        print('  finished rate: ', finished_rate)
+        print('  skip rate: ', skip_rate)
 
     ax.legend(loc="upper right", title="Task Name")
     # ax.legend(['Finished', 'Missed', 'Dropped'], loc="upper right", title="Task Status")
@@ -367,6 +425,7 @@ def task_scatter3(task_statistics, datafile='taskdata.pkl'):
     For approach 1,2,3,4
     Use matlibplot to draw a scatter plot of the finished time of each task, X-axis is the timeline, Y-axis is the finished time.
     Finished task is marked as blue circle, missing deadline task is marked as red x.
+    Non-partitionable tasks are marked with larger markers and different colors.
     task_statistics: defaultdict(TaskFinishedObject), each dict contains the information of a task
     dict_values([{'taskid': 'Period[0]_#39_Id[1]', 'release_time': 0.9750000000000001, 'deadline': 0.9850000000000001, 'priority': 1, 'dependency': [], 'res': 'success', 'start_time': '0.9760010242462158', 'end_time': '0.9840006828308105'}])
     """
@@ -379,7 +438,13 @@ def task_scatter3(task_statistics, datafile='taskdata.pkl'):
             'missing_x': [],
             'missing_y': [],
             'skip_x': [],
-            'skip_y': []
+            'skip_y': [],
+            'non_partitionable_finished_x': [],
+            'non_partitionable_finished_y': [],
+            'non_partitionable_missing_x': [],
+            'non_partitionable_missing_y': [],
+            'non_partitionable_skip_x': [],
+            'non_partitionable_skip_y': []
         }
 
     # Iterate over the task statistics dictionary
@@ -387,20 +452,34 @@ def task_scatter3(task_statistics, datafile='taskdata.pkl'):
         handler_id = task_info["handler_id"]
         release_time = float(task_info['release_time'])
         end_time = float(task_info['end_time'])
+        is_non_partitionable = task_info.get('is_non_partitionable', False)
+        
         # if(release_time<=1):
         #     continue
         # If the task was finished on time, add its start time and end time to the finished lists
         print('[debug] time: ',task_info, end_time - release_time)
         if task_info['res'] == 'success':
-            handler2points[handler_id]["finished_x"].append(end_time)
-            handler2points[handler_id]["finished_y"].append(1000*(end_time - release_time))
+            if is_non_partitionable:
+                handler2points[handler_id]["non_partitionable_finished_x"].append(end_time)
+                handler2points[handler_id]["non_partitionable_finished_y"].append(1000*(end_time - release_time))
+            else:
+                handler2points[handler_id]["finished_x"].append(end_time)
+                handler2points[handler_id]["finished_y"].append(1000*(end_time - release_time))
         # If the task missed its deadline, add its release time and deadline to the missed lists
         elif task_info['res'] == 'failure':
-            handler2points[handler_id]["missing_x"].append(end_time)
-            handler2points[handler_id]["missing_y"].append(1000*(end_time - release_time))
+            if is_non_partitionable:
+                handler2points[handler_id]["non_partitionable_missing_x"].append(end_time)
+                handler2points[handler_id]["non_partitionable_missing_y"].append(1000*(end_time - release_time))
+            else:
+                handler2points[handler_id]["missing_x"].append(end_time)
+                handler2points[handler_id]["missing_y"].append(1000*(end_time - release_time))
         elif task_info["res"] == "skip":
-            handler2points[handler_id]["skip_x"].append(release_time)
-            handler2points[handler_id]["skip_y"].append(end_time - release_time)
+            if is_non_partitionable:
+                handler2points[handler_id]["non_partitionable_skip_x"].append(release_time)
+                handler2points[handler_id]["non_partitionable_skip_y"].append(end_time - release_time)
+            else:
+                handler2points[handler_id]["skip_x"].append(release_time)
+                handler2points[handler_id]["skip_y"].append(end_time - release_time)
     
     
     # Create a figure and axis object using Matplotlib
