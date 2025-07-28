@@ -7,6 +7,7 @@ from control_signal import convert_args_to_dict, generate_signal, parse_signal, 
 from visual_scripts.visual_task import statistics_compution, task_scatter3
 import logging
 from copy import deepcopy
+from burst_task_manager import BurstTaskManager, BurstAwareTaskScheduler
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -14,7 +15,7 @@ def liststr2list(s):
 def list2str(l):
     return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config'):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -54,6 +55,29 @@ class TaskSchedule:
         else:
             self.scheduler_name = scheduler
             self.scheduler = self.__getattribute__(self.scheduler_name)
+        
+        # Burst task management
+        self.burst_enabled = burst_enabled
+        if burst_enabled:
+            burst_config = burst_config or {}
+            gpu_threshold = burst_config.get('gpu_threshold', 80.0)
+            queue_threshold = burst_config.get('queue_threshold', 10)
+            self.burst_manager = BurstTaskManager(
+                gpu_threshold=gpu_threshold,
+                queue_threshold=queue_threshold,
+                logger=logger
+            )
+            self.burst_scheduler = BurstAwareTaskScheduler(
+                burst_manager=self.burst_manager,
+                base_scheduler=self.scheduler_name,
+                logger=logger
+            )
+            # Start burst monitoring
+            self.burst_manager.start_monitoring()
+            self.logger.info(f"[BURST] Burst task management enabled with GPU threshold: {gpu_threshold}%, Queue threshold: {queue_threshold}")
+        else:
+            self.burst_manager = None
+            self.burst_scheduler = None
     
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
@@ -84,8 +108,20 @@ class TaskSchedule:
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
             self.fine_grained_adjust()
-        # offline Task schedule agorithm
-        self.scheduler()
+        # offline Task schedule algorithm
+        if self.burst_enabled and self.burst_scheduler:
+            # Use burst-aware scheduling
+            current_time = time.time()
+            self.TaskQueue = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
+        else:
+            # Use original scheduling
+            if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
+                # Call the scheduler method directly
+                scheduler_method = getattr(self, self.scheduler_name)
+                scheduler_method()
+            else:
+                self.scheduler()
+        
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
         self.TaskStartTime = TaskStartTime
@@ -135,6 +171,18 @@ class TaskSchedule:
             else:
                 # put it back
                 putback.append(task)
+        
+        # Apply burst-aware scheduling to putback tasks if enabled
+        if self.burst_enabled and self.burst_scheduler and len(putback) > 0:
+            current_time = time.time()
+            remaining_tasks, dropped_tasks = self.burst_scheduler.burst_manager.proactive_drop(putback, current_time)
+            
+            # Handle dropped tasks
+            for dropped_task in dropped_tasks:
+                self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
+            
+            putback = remaining_tasks
+        
         if(len(putback) > 0):
             # put back the tasks with the same orders
             self.TaskQueue = putback + TaskQueue
@@ -157,6 +205,14 @@ class TaskSchedule:
         logger.info(f"[CTRL] All tasks finished")
         now = time.time()
         relative_end2end_runtime = now - self.TaskStartTime
+        
+        # Log burst statistics if enabled
+        if self.burst_enabled and self.burst_manager:
+            burst_stats = self.burst_manager.get_burst_statistics()
+            logger.info(f"[BURST] Final burst statistics: {burst_stats}")
+            # Stop burst monitoring
+            self.burst_manager.stop_monitoring()
+        
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -245,6 +301,15 @@ class TaskSchedule:
         """
         self.finished_task_num += 1
         self.add_task_statistics(taskid, output, start_time, end_time)
+    
+    def handle_dropped_task(self, taskid, reason="burst_drop"):
+        """
+        Handle a task that was dropped due to burst management
+        """
+        self.finished_task_num += 1
+        now = time.time()
+        self.add_task_statistics(taskid, reason, now, now)
+        self.logger.info(f"[BURST] Task {taskid} dropped due to {reason}")
 
     def missing_deadline_met(self, handlers, task=None, now_time=time.time()):
         """
@@ -393,8 +458,8 @@ class TaskSchedule:
                 "deadline": task["Deadline"],
                 "priority": task["Priority"],
                 "dependency": task["Dependencies"],
-                "dag_period": task["DagPeriod"],
-                "simo_args": task["RunArgs"],
+                "dag_period": task.get("DagPeriod", None),
+                "simo_args": task.get("RunArgs", ""),
                 "is_non_partitionable": task.get("IsNonPartitionable", False),
             }
         self.task_statistics = task_statistics

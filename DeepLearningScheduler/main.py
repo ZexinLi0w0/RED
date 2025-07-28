@@ -50,7 +50,7 @@ def create_subprocess(control_queue, base_time, config=()):
         loop.stop()
         loop.close()
 
-def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline', task_filename="task_config"):
+def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline', task_filename="task_config", burst_config=None):
     """
     Function to run handlers concurrently.
     """
@@ -75,7 +75,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename, burst_config=burst_config))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -100,6 +100,7 @@ def parseArguments():
     parser.add_argument("--task", "-t", required=True, help="path of task config file")
     parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: \n 1. baseline(do nothing), \n 2. feedback(according to the feedback of task execution to adjust next release time), \n 3. fine-grained(reconstruct dag in task generation), \n 4. feedback-fine-grained")
     parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
+    parser.add_argument("--burst-config", "-b", required=False, help="path of burst task configuration file")
 
     args = parser.parse_args()
 
@@ -144,15 +145,27 @@ def parseArguments():
         fullname = task_file_path[0:task_file_path.find('\\')][::-1]
     filename = fullname[:fullname.find(".json")]
     print(args.task, fullname, filename)
+    
+    # Load burst configuration if provided
+    burst_config = None
+    if args.burst_config:
+        try:
+            with open(args.burst_config, "r") as f:
+                burst_config = json.load(f)
+            print(f"Loaded burst configuration: {burst_config}")
+        except (json.JSONDecodeError, FileNotFoundError) as e:
+            print(f"Warning: Failed to load burst configuration: {e}")
+            burst_config = None
+    
     # task_config = load_task_config(args.task)
     # tasks_list = generate_tasks(task_config)
     
-    return handlers, tasks_list, approach_module, filename
+    return handlers, tasks_list, approach_module, filename, burst_config
     
 
 if __name__ == "__main__":
     logger = logging_basic_setting()
-    handlers, tasks_list, approach_module, task_filename = parseArguments()
+    handlers, tasks_list, approach_module, task_filename, burst_config = parseArguments()
     # logging.debug(f'Parse config files to generate handlers: {handlers}')
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
@@ -161,4 +174,4 @@ if __name__ == "__main__":
     control_queue = Queue()
 
     # Start the handlers concurrently
-    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module, task_filename=task_filename)
+    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module, task_filename=task_filename, burst_config=burst_config)
