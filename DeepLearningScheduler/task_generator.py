@@ -4,6 +4,9 @@ from nanoid import generate
 # Required Attributes for TaskConfigObject
 TaskConfigAttributes = ["HandlerId", "Period", "Deadline", "RunningTime", "Priority", "Dependencies"]
 
+# Optional Attributes for Burst Task Support
+BurstTaskAttributes = ["BurstPriority", "CriticalityWeight", "DropThreshold"]
+
 def validate_task_config(task_config):
     """
     Function to validate the task configs.
@@ -168,7 +171,10 @@ def generate_tasks(task_config):
                     "ReleaseTime": start_time + i * gap,
                     "Deadline": start_time + i * gap + config["Deadline"], # deadline won't extend for ReleaseTimeDelay
                     "Priority": config["Priority"],
-                    "Dependencies": config["Dependencies"]
+                    "Dependencies": config["Dependencies"],
+                    "BurstPriority": config.get("BurstPriority", config["Priority"]),
+                    "CriticalityWeight": config.get("CriticalityWeight", 1.0),
+                    "DropThreshold": config.get("DropThreshold", 0.5)
                 }
                 tasks.append(task)
     return tasks
@@ -205,6 +211,9 @@ def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percent
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
             "IsNonPartitionable": is_non_partitionable,
+            "BurstPriority": config.get("BurstPriority", config["Priority"]),
+            "CriticalityWeight": config.get("CriticalityWeight", 1.0),
+            "DropThreshold": config.get("DropThreshold", 0.5)
         }
         return task, config["WorstRunningTime"]*time_factor
     # Calculate total number of tasks to determine how many should be non-partitionable
