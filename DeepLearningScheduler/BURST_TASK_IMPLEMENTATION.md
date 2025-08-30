@@ -108,7 +108,11 @@ System overload is detected when:
 
 ### 1. Basic Usage with Burst Management
 ```bash
+# Task config
 python main.py --config handler-config.json --task TaskConfigs/burst-task-config.json --approach baseline --burst-config burst_config.json
+
+#Dag config
+python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
 ```
 
 ### 2. Testing Burst Functionality

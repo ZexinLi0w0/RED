@@ -1,0 +1,56 @@
+{
+    "dag_list": [
+        [
+            {
+                "TaskName": "Preprocess",
+                "HandlerId": 5,
+                "Priority": 2,
+                "Dependencies": [],
+                "RunArgs": {"stage": "preprocess", "notes": "resize_normalize"},
+                "WorstRunningTime": 20,
+                "BurstPriority": 2,
+                "CriticalityWeight": 1.2,
+                "DropThreshold": 0.4
+            },
+            [
+                {
+                    "TaskName": "Detect",
+                    "HandlerId": 5,
+                    "Priority": 3,
+                    "Dependencies": [],
+                    "RunArgs": {"stage": "detect", "model": "yolov5n"},
+                    "WorstRunningTime": 60,
+                    "BurstPriority": 3,
+                    "CriticalityWeight": 2.0,
+                    "DropThreshold": 0.2
+                },
+                {
+                    "TaskName": "Segment",
+                    "HandlerId": 5,
+                    "Priority": 3,
+                    "Dependencies": [],
+                    "RunArgs": {"stage": "segment", "model": "unet"},
+                    "WorstRunningTime": 55,
+                    "BurstPriority": 3,
+                    "CriticalityWeight": 1.8,
+                    "DropThreshold": 0.25
+                }
+            ],
+            {
+                "TaskName": "Postprocess",
+                "HandlerId": 5,
+                "Priority": 2,
+                "Dependencies": [],
+                "RunArgs": {"stage": "postprocess", "notes": "nms_merge"},
+                "WorstRunningTime": 25,
+                "BurstPriority": 2,
+                "CriticalityWeight": 1.0,
+                "DropThreshold": 0.5
+            }
+        ]
+    ],
+    "RunningTimeFactor": 1.0,
+    "NonPartitionablePercentage": 15
+}
+
+
