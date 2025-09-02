@@ -2,49 +2,41 @@
     "dag_list": [
         [
             {
-                "TaskName": "Preprocess",
+                "TaskName": "S1_Stage1_LaneDetection",
                 "HandlerId": 5,
                 "Priority": 2,
                 "Dependencies": [],
-                "RunArgs": {"stage": "preprocess", "notes": "resize_normalize"},
-                "WorstRunningTime": 20,
-                "BurstPriority": 2,
-                "CriticalityWeight": 1.2,
+                "RunArgs": [1],
+                "WorstRunningTime": 60,
                 "DropThreshold": 0.4
             },
             [
                 {
-                    "TaskName": "Detect",
+                    "TaskName": "S1_Stage2_Segmentation",
                     "HandlerId": 5,
                     "Priority": 3,
-                    "Dependencies": [],
-                    "RunArgs": {"stage": "detect", "model": "yolov5n"},
-                    "WorstRunningTime": 60,
-                    "BurstPriority": 3,
-                    "CriticalityWeight": 2.0,
+                    "Dependencies": [1],
+                    "RunArgs": [3],
+                    "WorstRunningTime": 45,
                     "DropThreshold": 0.2
                 },
                 {
-                    "TaskName": "Segment",
+                    "TaskName": "S1_Stage2_Object_Detection",
                     "HandlerId": 5,
                     "Priority": 3,
-                    "Dependencies": [],
-                    "RunArgs": {"stage": "segment", "model": "unet"},
-                    "WorstRunningTime": 55,
-                    "BurstPriority": 3,
-                    "CriticalityWeight": 1.8,
+                    "Dependencies": [1],
+                    "RunArgs": [4],
+                    "WorstRunningTime": 60,
                     "DropThreshold": 0.25
                 }
             ],
             {
-                "TaskName": "Postprocess",
+                "TaskName": "S1_Stage3_Control_Autopilot",
                 "HandlerId": 5,
                 "Priority": 2,
-                "Dependencies": [],
-                "RunArgs": {"stage": "postprocess", "notes": "nms_merge"},
-                "WorstRunningTime": 25,
-                "BurstPriority": 2,
-                "CriticalityWeight": 1.0,
+                "Dependencies": [3, 4],
+                "RunArgs": [2],
+                "WorstRunningTime": 45,
                 "DropThreshold": 0.5
             }
         ]

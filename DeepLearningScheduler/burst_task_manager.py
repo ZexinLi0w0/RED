@@ -129,9 +129,9 @@ class BurstTaskManager:
         """
         Calculate the criticality score for a task.
         
-        Enhanced criticality score formula: C_i = (1 - (S_i / D_i)) * W_i * P_i
-        where S_i = D_i - t is the slack time, D_i is the deadline, t is elapsed time,
-        W_i is the criticality weight, and P_i is the burst priority.
+        Criticality score formula per spec: C_i = 1 - (S_i / D_i)
+        where S_i = D_i - t is the slack time, D_i is the relative intermediate deadline,
+        and t is the elapsed time since task release.
         
         Args:
             task: Task dictionary containing deadline and other attributes
@@ -141,31 +141,26 @@ class BurstTaskManager:
             Criticality score (higher = more critical)
         """
         try:
-            deadline = float(task.get("Deadline", 0))
-            release_time = float(task.get("ReleaseTime", 0))
-            criticality_weight = float(task.get("CriticalityWeight", 1.0))
-            burst_priority = float(task.get("BurstPriority", task.get("Priority", 1)))
-            
-            if deadline <= 0:
+            deadline = float(task.get("Deadline", 0.0))       # absolute
+            release_time = float(task.get("ReleaseTime", 0.0)) # absolute
+
+            # Relative intermediate deadline duration D_i
+            relative_deadline = deadline - release_time
+            if relative_deadline <= 0:
                 return 0.0
             
-            # Calculate elapsed time since task release
-            elapsed_time = current_time - release_time
+            # Elapsed time since release t (non-negative)
+            elapsed_time = max(0.0, current_time - release_time)
+
+            # Slack S_i = D_i - t
+            slack_time = relative_deadline - elapsed_time
+
+            # C_i = 1 - (S_i / D_i)
+            criticality = 1.0 - (slack_time / relative_deadline)
+            # Clamp between 0 and 1
+            criticality = max(0.0, min(1.0, criticality))
+            return criticality
             
-            # Calculate slack time
-            slack_time = deadline - elapsed_time
-            
-            # Calculate base criticality score
-            if deadline > 0:
-                base_criticality = 1.0 - (slack_time / deadline)
-                base_criticality = max(0.0, min(1.0, base_criticality))  # Clamp between 0 and 1
-                
-                # Apply criticality weight and burst priority
-                enhanced_criticality = base_criticality * criticality_weight * burst_priority
-                return enhanced_criticality
-            else:
-                return 0.0
-                
         except (ValueError, TypeError) as e:
             self.logger.warning(f"[BURST] Error calculating criticality score: {e}")
             return 0.0
@@ -209,6 +204,7 @@ class BurstTaskManager:
         self.logger.warning(f"[BURST] Executing proactive drop on {len(task_queue)} tasks")
         
         # Calculate criticality scores for all tasks
+        # [TODO] This can be optimized by priority queue or min heap
         tasks_with_scores = []
         for task in task_queue:
             criticality = self.calculate_criticality_score(task, current_time)

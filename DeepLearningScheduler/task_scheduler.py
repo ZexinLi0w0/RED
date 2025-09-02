@@ -215,12 +215,19 @@ class TaskSchedule:
         
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
+        import os
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        raw_data_save_path = '/home/tao/RED/taskdata'
-        with open(f"{raw_data_save_path}/end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt", "w") as f:
+        # Always use relative ./taskdata under the runtime root
+        raw_data_save_path = os.path.join(os.getcwd(), 'taskdata')
+        os.makedirs(raw_data_save_path, exist_ok=True)
+        end2end_path = os.path.join(raw_data_save_path, f"end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt")
+        stats_path = os.path.join(raw_data_save_path, f"statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl")
+        with open(end2end_path, "w") as f:
             f.write(str(relative_end2end_runtime))
-        with open(f"{raw_data_save_path}/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
+        with open(stats_path, "wb") as f:
             pickle.dump(task_statistics, f)
+        logger.info(f"[CTRL] Saved end2end time to: {end2end_path}")
+        logger.info(f"[CTRL] Saved statistics to: {stats_path}")
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
         missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
