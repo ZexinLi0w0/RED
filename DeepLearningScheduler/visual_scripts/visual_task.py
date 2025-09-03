@@ -107,7 +107,7 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics3 = 0
     # matrics calculation
     print('[debug] visual_task.py: task_config_path', task_config_path)
-    config_load_path = '/home/tao/RED/TaskConfigs/simo'
+    config_load_path = './TaskConfigs/simo'
     with open(f"{config_load_path}/{task_config_path}", "r") as f:
         config = json.load(f)
         dag_list = config["dag_list"]
