@@ -112,7 +112,11 @@ class TaskSchedule:
         if self.burst_enabled and self.burst_scheduler:
             # Use burst-aware scheduling
             current_time = time.time()
-            self.TaskQueue = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
+            scheduled_tasks, dropped_tasks = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
+            # Handle dropped tasks (record as dropped before scheduling proceeds)
+            for dropped_task in dropped_tasks:
+                self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
+            self.TaskQueue = scheduled_tasks
         else:
             # Use original scheduling
             if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:

@@ -101,8 +101,8 @@ System overload is detected when:
 
 ### 1. Basic Usage with Burst Management
 ```bash
-# Task config
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst_config.json --approach baseline --burst-config burst_config.json
+# Nano Tight Burst Task Config - Baseline Approach
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach baseline --burst-config burst_config.json
 
 #Dag config
 python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json

@@ -201,8 +201,6 @@ class BurstTaskManager:
         if not self.is_overload_detected():
             return task_queue, []
         
-        self.logger.warning(f"[BURST] Executing proactive drop on {len(task_queue)} tasks")
-        
         # Calculate criticality scores for all tasks
         # [TODO] This can be optimized by priority queue or min heap
         tasks_with_scores = []
@@ -229,7 +227,8 @@ class BurstTaskManager:
                 remaining_tasks.append(task)
         
         self.dropped_tasks.extend(dropped_tasks)
-        self.logger.info(f"[BURST] Dropped {len(dropped_tasks)} tasks, "
+        if len(dropped_tasks) > 0:
+            self.logger.info(f"[BURST] Dropped {len(dropped_tasks)} tasks, "
                         f"remaining {len(remaining_tasks)} tasks")
         
         return remaining_tasks, dropped_tasks
@@ -262,7 +261,7 @@ class BurstAwareTaskScheduler:
         self.base_scheduler = base_scheduler
         self.logger = logger or logging.getLogger(__name__)
         
-    def schedule_tasks(self, task_queue: List[Dict], current_time: float) -> List[Dict]:
+    def schedule_tasks(self, task_queue: List[Dict], current_time: float) -> Tuple[List[Dict], List[Dict]]:
         """
         Schedule tasks with burst awareness.
         
@@ -271,7 +270,7 @@ class BurstAwareTaskScheduler:
             current_time: Current time since system start
             
         Returns:
-            Scheduled task queue
+            Tuple of (scheduled_tasks, dropped_tasks)
         """
         # Update queue length for monitoring
         self.burst_manager.update_queue_length(len(task_queue))
@@ -296,7 +295,7 @@ class BurstAwareTaskScheduler:
             # Sort by release time (descending) (FCLS)
             scheduled_tasks.sort(key=lambda x: x.get("ReleaseTime", 0), reverse=True)
         
-        return scheduled_tasks
+        return scheduled_tasks, dropped_tasks
     
     def get_burst_statistics(self) -> Dict:
         """Get burst management statistics."""
