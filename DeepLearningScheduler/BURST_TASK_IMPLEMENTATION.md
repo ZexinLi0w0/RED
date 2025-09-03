@@ -13,7 +13,7 @@ This implementation adds burst task support to the existing Deep Learning Schedu
 
 ### 2. Proactive Task Dropping
 - **Overload Detection**: Automatic detection of system overload conditions
-- **Criticality Scoring**: Enhanced criticality score calculation with configurable weights
+- **Criticality Scoring**: Criticality score calculation per spec without extra weights
 - **Intelligent Task Selection**: Drop lower criticality tasks while preserving high-priority tasks
 
 ### 3. Enhanced Task Data Structure
@@ -51,18 +51,16 @@ class BurstAwareTaskScheduler:
 
 ### Criticality Score Formula
 
-The enhanced criticality score is calculated as:
+The criticality score is calculated as:
 
 ```
-C_i = (1 - (S_i / D_i)) * W_i * P_i
+C_i = 1 - (S_i / D_i)
 ```
 
 Where:
 - `S_i = D_i - t` is the slack time
-- `D_i` is the task deadline
+- `D_i` is the task deadline duration (relative intermediate deadline)
 - `t` is the elapsed time since task release
-- `W_i` is the criticality weight
-- `P_i` is the burst priority
 
 ### Overload Detection
 
@@ -77,10 +75,7 @@ System overload is detected when:
 {
     "burst_enabled": true,
     "gpu_threshold": 80.0,
-    "queue_threshold": 10,
-    "drop_percentage": 25,
-    "monitoring_interval": 0.1,
-    "criticality_weight": 1.0
+    "queue_threshold": 10
 }
 ```
 
@@ -96,8 +91,6 @@ System overload is detected when:
             "RunningTime": 1,
             "Dependencies": [],
             "Priority": 1,
-            "BurstPriority": 2,
-            "CriticalityWeight": 1.5,
             "DropThreshold": 0.3
         }
     ]
@@ -108,7 +101,11 @@ System overload is detected when:
 
 ### 1. Basic Usage with Burst Management
 ```bash
-python main.py --config handler-config.json --task TaskConfigs/burst-task-config.json --approach baseline --burst-config burst_config.json
+# Nano Tight Burst Task Config - Baseline Approach
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach baseline --burst-config burst_config.json
+
+#Dag config
+python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
 ```
 
 ### 2. Testing Burst Functionality
@@ -126,9 +123,7 @@ The burst task management is seamlessly integrated with the existing scheduling 
 
 ### Task Data Structure Enhancements
 
-#### New Attributes Added:
-- `BurstPriority`: Separate priority for burst scenarios
-- `CriticalityWeight`: Weight factor for criticality calculation
+#### Attributes Used:
 - `DropThreshold`: Individual task drop threshold
 
 #### Enhanced Task Generation:
