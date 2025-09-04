@@ -109,9 +109,11 @@ class BurstTaskManager:
     def __init__(self, 
                  gpu_threshold: float = 80.0,
                  queue_threshold: int = 10,
+                 default_drop_threshold: float = 0.5,
                  logger=None):
         self.gpu_threshold = gpu_threshold
         self.queue_threshold = queue_threshold
+        self.default_drop_threshold = default_drop_threshold
         self.logger = logger or logging.getLogger(__name__)
         self.health_monitor = SystemHealthMonitor(logger)
         self.dropped_tasks = []
@@ -141,8 +143,9 @@ class BurstTaskManager:
             Criticality score (higher = more critical)
         """
         try:
-            deadline = float(task.get("Deadline", 0.0))       # absolute
-            release_time = float(task.get("ReleaseTime", 0.0)) # absolute
+            # Here current_time is expected to be relative to TaskStartTime
+            deadline = float(task.get("Deadline", 0.0))       # relative to TaskStartTime
+            release_time = float(task.get("ReleaseTime", 0.0)) # relative to TaskStartTime
 
             # Relative intermediate deadline duration D_i
             relative_deadline = deadline - release_time
@@ -216,7 +219,7 @@ class BurstTaskManager:
         remaining_tasks = []
         
         for task, criticality in tasks_with_scores:
-            drop_threshold = float(task.get("DropThreshold", 0.5))
+            drop_threshold = float(task.get("DropThreshold", self.default_drop_threshold))
             
             # Drop task if its criticality is below its drop threshold
             if criticality < drop_threshold:

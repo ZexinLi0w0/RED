@@ -87,6 +87,44 @@ def test_burst_task_manager():
     stats = burst_manager.get_burst_statistics()
     logger.info(f"Burst statistics: {stats}")
 
+def test_burst_drop_due_to_gpu():
+    """Test that GPU over-utilization triggers proactive dropping of low-criticality tasks."""
+    logger = setup_logging()
+    logger.info("Testing Burst Drop due to GPU Over-Utilization...")
+
+    # Create burst task manager with low GPU threshold to ensure overload triggers
+    burst_manager = BurstTaskManager(
+        gpu_threshold=50.0,   # any value below mocked GPU util
+        queue_threshold=1000, # keep queue impact out of the test
+        logger=logger
+    )
+
+    # Mock system health to simulate high GPU utilization
+    burst_manager.health_monitor.get_system_health = lambda: {"gpu_utilization": 95.0, "queue_length": 0}
+
+    # Prepare tasks with varying criticality (relative time frame)
+    # C = t/D. With drop_threshold=0.5, tasks with C < 0.5 will be dropped
+    tasks = [
+        {"TaskId": "gpu_task_1", "HandlerId": 5, "ReleaseTime": 0.0, "Deadline": 1.0, "Priority": 1},  # t/D=0.2 -> drop
+        {"TaskId": "gpu_task_2", "HandlerId": 5, "ReleaseTime": 0.0, "Deadline": 1.0, "Priority": 1},  # t/D=0.2 -> drop
+        {"TaskId": "gpu_task_3", "HandlerId": 5, "ReleaseTime": 0.0, "Deadline": 1.0, "Priority": 1},  # t/D=0.8 -> keep
+    ]
+
+    # Current time relative to TaskStartTime
+    low_t = 0.2
+    high_t = 0.8
+
+    # First two tasks evaluated at low_t, last one at high_t
+    remaining_1, dropped_1 = burst_manager.proactive_drop(tasks[:2], low_t)
+    remaining_2, dropped_2 = burst_manager.proactive_drop(tasks[2:], high_t)
+
+    dropped_total = len(dropped_1) + len(dropped_2)
+    kept_total = len(remaining_1) + len(remaining_2)
+
+    logger.info(f"GPU-drop test: dropped={dropped_total}, kept={kept_total}")
+    # Expect at least one drop due to GPU overload and low criticality
+    assert dropped_total >= 1
+
 def test_task_scheduler_with_burst():
     """Test the task scheduler with burst management enabled."""
     logger = setup_logging()
@@ -114,7 +152,7 @@ def test_task_scheduler_with_burst():
         
         # Create task scheduler with burst management
         handler_status = defaultdict(lambda: 1)  # All handlers ready
-        task_scheduler = TaskSchedule(
+        task_scheduler = TaskScthedule(
             tasks=tasks,
             handler_status=handler_status,
             control_queue=[],
@@ -177,6 +215,8 @@ def main():
         
         # Test burst task manager
         test_burst_task_manager()
+        # Test GPU-overload-driven dropping
+        test_burst_drop_due_to_gpu()
         
         # Test task scheduler with burst management
         test_task_scheduler_with_burst()

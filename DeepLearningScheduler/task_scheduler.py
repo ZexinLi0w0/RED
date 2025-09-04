@@ -62,9 +62,11 @@ class TaskSchedule:
             burst_config = burst_config or {}
             gpu_threshold = burst_config.get('gpu_threshold', 80.0)
             queue_threshold = burst_config.get('queue_threshold', 10)
+            default_drop_threshold = burst_config.get('drop_threshold', 0.5)
             self.burst_manager = BurstTaskManager(
                 gpu_threshold=gpu_threshold,
                 queue_threshold=queue_threshold,
+                default_drop_threshold=default_drop_threshold,
                 logger=logger
             )
             self.burst_scheduler = BurstAwareTaskScheduler(
@@ -111,7 +113,8 @@ class TaskSchedule:
         # offline Task schedule algorithm
         if self.burst_enabled and self.burst_scheduler:
             # Use burst-aware scheduling
-            current_time = time.time()
+            # Use time relative to TaskStartTime so it aligns with task ReleaseTime/Deadline units
+            current_time = time.time() - TaskStartTime
             scheduled_tasks, dropped_tasks = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
             # Handle dropped tasks (record as dropped before scheduling proceeds)
             for dropped_task in dropped_tasks:
@@ -178,7 +181,8 @@ class TaskSchedule:
         
         # Apply burst-aware scheduling to putback tasks if enabled
         if self.burst_enabled and self.burst_scheduler and len(putback) > 0:
-            current_time = time.time()
+            # Use time relative to TaskStartTime for consistent criticality calculation
+            current_time = time.time() - TaskStartTime
             remaining_tasks, dropped_tasks = self.burst_scheduler.burst_manager.proactive_drop(putback, current_time)
             
             # Handle dropped tasks
@@ -213,7 +217,7 @@ class TaskSchedule:
         # Log burst statistics if enabled
         if self.burst_enabled and self.burst_manager:
             burst_stats = self.burst_manager.get_burst_statistics()
-            logger.info(f"[BURST] Final burst statistics: {burst_stats}")
+            logger.info(f"[BURST] burst statistics: {burst_stats}")
             # Stop burst monitoring
             self.burst_manager.stop_monitoring()
         
