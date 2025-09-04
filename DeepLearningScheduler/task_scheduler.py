@@ -63,10 +63,12 @@ class TaskSchedule:
             gpu_threshold = burst_config.get('gpu_threshold', 80.0)
             queue_threshold = burst_config.get('queue_threshold', 10)
             default_drop_threshold = burst_config.get('drop_threshold', 0.5)
+            monitoring_interval = burst_config.get('monitoring_interval', 0.05)
             self.burst_manager = BurstTaskManager(
                 gpu_threshold=gpu_threshold,
                 queue_threshold=queue_threshold,
                 default_drop_threshold=default_drop_threshold,
+                monitoring_interval=monitoring_interval,
                 logger=logger
             )
             self.burst_scheduler = BurstAwareTaskScheduler(

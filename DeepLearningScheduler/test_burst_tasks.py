@@ -152,7 +152,7 @@ def test_task_scheduler_with_burst():
         
         # Create task scheduler with burst management
         handler_status = defaultdict(lambda: 1)  # All handlers ready
-        task_scheduler = TaskScthedule(
+        task_scheduler = TaskSchedule(
             tasks=tasks,
             handler_status=handler_status,
             control_queue=[],

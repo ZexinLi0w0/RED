@@ -12,12 +12,13 @@ class SystemHealthMonitor:
     Monitors system health indicators including GPU utilization, queue length, and deadline slack.
     """
     
-    def __init__(self, logger=None):
+    def __init__(self, logger=None, monitoring_interval: float = 0.1):
         self.logger = logger or logging.getLogger(__name__)
         self.gpu_utilization = 0.0
         self.queue_length = 0
         self.monitoring_active = False
         self.monitor_thread = None
+        self.monitoring_interval = max(0.02, float(monitoring_interval))
         
     def start_monitoring(self):
         """Start the system health monitoring thread."""
@@ -40,9 +41,10 @@ class SystemHealthMonitor:
             try:
                 # Update GPU utilization
                 self.gpu_utilization = self._get_gpu_utilization()
+                self.logger.debug(f"[BURST][HEALTH] GPU utilization: {self.gpu_utilization:.1f}%")
                 
                 # Sleep for a short interval before next measurement
-                time.sleep(0.1)  # 100ms interval
+                time.sleep(self.monitoring_interval)
                 
             except Exception as e:
                 self.logger.error(f"[BURST] Error in monitoring loop: {e}")
@@ -110,12 +112,13 @@ class BurstTaskManager:
                  gpu_threshold: float = 80.0,
                  queue_threshold: int = 10,
                  default_drop_threshold: float = 0.5,
+                 monitoring_interval: float = 0.1,
                  logger=None):
         self.gpu_threshold = gpu_threshold
         self.queue_threshold = queue_threshold
         self.default_drop_threshold = default_drop_threshold
         self.logger = logger or logging.getLogger(__name__)
-        self.health_monitor = SystemHealthMonitor(logger)
+        self.health_monitor = SystemHealthMonitor(logger, monitoring_interval=monitoring_interval)
         self.dropped_tasks = []
         self.burst_mode_active = False
         
