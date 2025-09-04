@@ -17,9 +17,7 @@ This implementation adds burst task support to the existing Deep Learning Schedu
 - **Intelligent Task Selection**: Drop lower criticality tasks while preserving high-priority tasks
 
 ### 3. Enhanced Task Data Structure
-- **BurstPriority**: Separate priority for burst management scenarios
-- **CriticalityWeight**: Configurable weight for criticality score calculation
-- **DropThreshold**: Individual task drop threshold for fine-grained control
+- Drop-related control is global via burst_config; per-task `DropThreshold` is not required.
 
 ## Architecture
 
@@ -75,7 +73,8 @@ System overload is detected when:
 {
     "burst_enabled": true,
     "gpu_threshold": 80.0,
-    "queue_threshold": 10
+    "queue_threshold": 10,
+    "drop_threshold": 0.5
 }
 ```
 
@@ -90,8 +89,7 @@ System overload is detected when:
             "Period": 40,
             "RunningTime": 1,
             "Dependencies": [],
-            "Priority": 1,
-            "DropThreshold": 0.3
+            "Priority": 1
         }
     ]
 }
@@ -101,8 +99,14 @@ System overload is detected when:
 
 ### 1. Basic Usage with Burst Management
 ```bash
-# Nano Tight Burst Task Config - Baseline Approach
+# Nano Tight Burst Task Config - Baseline Approach(EDF)
 python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach baseline --burst-config burst_config.json
+# Feedback Approach(RED-IDA)
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback --burst-config burst_config.json
+# Fine-grained Approach(RED-FG)
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach fine-grained --burst-config burst_config.json
+# Feedback-fine-grained Approach(RED)
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback-fine-grained --burst-config burst_config.json
 
 #Dag config
 python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
@@ -124,7 +128,7 @@ The burst task management is seamlessly integrated with the existing scheduling 
 ### Task Data Structure Enhancements
 
 #### Attributes Used:
-- `DropThreshold`: Individual task drop threshold
+- No per-task burst attributes are required. Global `drop_threshold` in burst_config is applied.
 
 #### Enhanced Task Generation:
 ```python
