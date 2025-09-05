@@ -7,7 +7,7 @@ import pickle
 
 # self-defined modules
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_task import statistics_compution, task_scatter
+from visual_scripts.visual_task import statistics_compution, task_scatter
 from AbstractHandler import HandlerStatus
 from task_scheduler import TaskSchedule
 
@@ -121,7 +121,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config'):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None):
     """
     SIMO Baseline handler
     """
@@ -140,7 +140,18 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         warmup[handler["id"]] = 0
     
     # register task scheduler with edf scheduler
-    task_scheduler = TaskSchedule(tasks_list, handler_status=handler_status, control_queue=control_queue, scheduler='edf', logger=logger, approach_module=approach_module, task_filename=task_filename)
+    burst_enabled = burst_config is not None and burst_config.get('burst_enabled', False)
+    task_scheduler = TaskSchedule(
+        tasks_list, 
+        handler_status=handler_status, 
+        control_queue=control_queue, 
+        scheduler='edf', 
+        logger=logger, 
+        approach_module=approach_module, 
+        task_filename=task_filename,
+        burst_enabled=burst_enabled,
+        burst_config=burst_config
+    )
     # controller signal response loop
     while True: 
         # avoid to busy loop

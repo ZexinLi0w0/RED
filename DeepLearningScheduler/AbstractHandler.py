@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+import asyncio
 
 class HandlerStatus(Enum):
     Entry = "Entry"
@@ -78,8 +79,11 @@ if __name__=="__main__":
             print("exception")
         def exit(self):
             print("exit")
-    task1 = task(1, 'task1', 'task1', 1, [])
-    task1.load_data()
-    task1.ready()
-    task1.run()
-    task1.exit()
+    async def main():
+        task1 = task(1, 'task1', 'task1')
+        await task1.load_data()
+        task1.ready()
+        await task1.run()
+        task1.exit()
+    
+    asyncio.run(main())

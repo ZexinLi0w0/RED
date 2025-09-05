@@ -4,9 +4,10 @@ import random
 from collections import defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_task import statistics_compution, task_scatter3
+from visual_scripts.visual_task import statistics_compution, task_scatter3
 import logging
 from copy import deepcopy
+from burst_task_manager import BurstTaskManager, BurstAwareTaskScheduler
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -14,7 +15,7 @@ def liststr2list(s):
 def list2str(l):
     return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config'):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -54,6 +55,33 @@ class TaskSchedule:
         else:
             self.scheduler_name = scheduler
             self.scheduler = self.__getattribute__(self.scheduler_name)
+        
+        # Burst task management
+        self.burst_enabled = burst_enabled
+        if burst_enabled:
+            burst_config = burst_config or {}
+            gpu_threshold = burst_config.get('gpu_threshold', 80.0)
+            queue_threshold = burst_config.get('queue_threshold', 10)
+            default_drop_threshold = burst_config.get('drop_threshold', 0.5)
+            monitoring_interval = burst_config.get('monitoring_interval', 0.05)
+            self.burst_manager = BurstTaskManager(
+                gpu_threshold=gpu_threshold,
+                queue_threshold=queue_threshold,
+                default_drop_threshold=default_drop_threshold,
+                monitoring_interval=monitoring_interval,
+                logger=logger
+            )
+            self.burst_scheduler = BurstAwareTaskScheduler(
+                burst_manager=self.burst_manager,
+                base_scheduler=self.scheduler_name,
+                logger=logger
+            )
+            # Start burst monitoring
+            self.burst_manager.start_monitoring()
+            self.logger.info(f"[BURST] Burst task management enabled with GPU threshold: {gpu_threshold}%, Queue threshold: {queue_threshold}")
+        else:
+            self.burst_manager = None
+            self.burst_scheduler = None
     
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
@@ -70,12 +98,13 @@ class TaskSchedule:
             # only for simo
             simo_args = f"--simo_args {task['RunArgs']}" if 'RunArgs' in task else ""
             dag_period = f"--dag_period {task['DagPeriod']}" if 'DagPeriod' in task else ""
+            non_partitionable_flag = "--non_partitionable true" if task.get("IsNonPartitionable", False) else ""
             # create signal message and save it to task
             # for feedback-fine-grained approach, add skipmode
             if(self.approach_module == 'feedback-fine-grained'):
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag, "--skipmode 1")
             else:    
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
+                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag)
             task['SignalMsg'] = signal_message
             TaskQueue.append(task)
             
@@ -83,8 +112,25 @@ class TaskSchedule:
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
             self.fine_grained_adjust()
-        # offline Task schedule agorithm
-        self.scheduler()
+        # offline Task schedule algorithm
+        if self.burst_enabled and self.burst_scheduler:
+            # Use burst-aware scheduling
+            # Use time relative to TaskStartTime so it aligns with task ReleaseTime/Deadline units
+            current_time = time.time() - TaskStartTime
+            scheduled_tasks, dropped_tasks = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
+            # Handle dropped tasks (record as dropped before scheduling proceeds)
+            for dropped_task in dropped_tasks:
+                self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
+            self.TaskQueue = scheduled_tasks
+        else:
+            # Use original scheduling
+            if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
+                # Call the scheduler method directly
+                scheduler_method = getattr(self, self.scheduler_name)
+                scheduler_method()
+            else:
+                self.scheduler()
+        
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
         self.TaskStartTime = TaskStartTime
@@ -134,6 +180,19 @@ class TaskSchedule:
             else:
                 # put it back
                 putback.append(task)
+        
+        # Apply burst-aware scheduling to putback tasks if enabled
+        if self.burst_enabled and self.burst_scheduler and len(putback) > 0:
+            # Use time relative to TaskStartTime for consistent criticality calculation
+            current_time = time.time() - TaskStartTime
+            remaining_tasks, dropped_tasks = self.burst_scheduler.burst_manager.proactive_drop(putback, current_time)
+            
+            # Handle dropped tasks
+            for dropped_task in dropped_tasks:
+                self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
+            
+            putback = remaining_tasks
+        
         if(len(putback) > 0):
             # put back the tasks with the same orders
             self.TaskQueue = putback + TaskQueue
@@ -156,14 +215,29 @@ class TaskSchedule:
         logger.info(f"[CTRL] All tasks finished")
         now = time.time()
         relative_end2end_runtime = now - self.TaskStartTime
+        
+        # Log burst statistics if enabled
+        if self.burst_enabled and self.burst_manager:
+            burst_stats = self.burst_manager.get_burst_statistics()
+            logger.info(f"[BURST] burst statistics: {burst_stats}")
+            # Stop burst monitoring
+            self.burst_manager.stop_monitoring()
+        
         # use pickle to save the taks_statistics
         # get now time format like 2021-04-01-12-00-00
+        import os
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        raw_data_save_path = '/home/tao/RED/taskdata'
-        with open(f"{raw_data_save_path}/end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt", "w") as f:
+        # Always use relative ./taskdata under the runtime root
+        raw_data_save_path = os.path.join(os.getcwd(), 'taskdata')
+        os.makedirs(raw_data_save_path, exist_ok=True)
+        end2end_path = os.path.join(raw_data_save_path, f"end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt")
+        stats_path = os.path.join(raw_data_save_path, f"statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl")
+        with open(end2end_path, "w") as f:
             f.write(str(relative_end2end_runtime))
-        with open(f"{raw_data_save_path}/statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl", "wb") as f:
+        with open(stats_path, "wb") as f:
             pickle.dump(task_statistics, f)
+        logger.info(f"[CTRL] Saved end2end time to: {end2end_path}")
+        logger.info(f"[CTRL] Saved statistics to: {stats_path}")
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
         missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
@@ -244,6 +318,15 @@ class TaskSchedule:
         """
         self.finished_task_num += 1
         self.add_task_statistics(taskid, output, start_time, end_time)
+    
+    def handle_dropped_task(self, taskid, reason="burst_drop"):
+        """
+        Handle a task that was dropped due to burst management
+        """
+        self.finished_task_num += 1
+        now = time.time()
+        self.add_task_statistics(taskid, reason, now, now)
+        self.logger.info(f"[BURST] Task {taskid} dropped due to {reason}")
 
     def missing_deadline_met(self, handlers, task=None, now_time=time.time()):
         """
@@ -314,6 +397,10 @@ class TaskSchedule:
         TaskQueue.sort(key=lambda x: x["ReleaseTime"])
         while(len(TaskQueue)):
             task = TaskQueue.pop(0)
+            # Skip merging for non-partitionable tasks
+            if task.get("IsNonPartitionable", False):
+                merged_task.append(task)
+                continue
             if(task["HandlerId"] not in merge_handler):
                 putback.append(task)
                 continue
@@ -321,6 +408,10 @@ class TaskSchedule:
             putback = []
             while(len(TaskQueue)):
                 other_task = TaskQueue.pop(0)
+                # Also skip merging for non-partitionable tasks
+                if other_task.get("IsNonPartitionable", False):
+                    putback.append(other_task)
+                    continue
                 if(abs(other_task["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and other_task["DagPeriod"] == task["DagPeriod"]):
                     # merge the two tasks
                     """
@@ -342,6 +433,7 @@ class TaskSchedule:
                         "Priority": max(other_task["Priority"], task["Priority"]),
                         "Dependencies": list(set(other_task["Dependencies"] + task["Dependencies"])),
                         "RunArgs": list2str(list(set(liststr2list(other_task["RunArgs"]) + liststr2list(task["RunArgs"])))),
+                        "IsNonPartitionable": False,
                     }
                     handler_id = new_task["HandlerId"]
                     taskid = f"--taskid {new_task['TaskId']}"
@@ -383,8 +475,9 @@ class TaskSchedule:
                 "deadline": task["Deadline"],
                 "priority": task["Priority"],
                 "dependency": task["Dependencies"],
-                "dag_period": task["DagPeriod"],
-                "simo_args": task["RunArgs"],
+                "dag_period": task.get("DagPeriod", None),
+                "simo_args": task.get("RunArgs", ""),
+                "is_non_partitionable": task.get("IsNonPartitionable", False),
             }
         self.task_statistics = task_statistics
 
@@ -418,8 +511,12 @@ class TaskSchedule:
 if __name__ == "__main__":
     # test the task scheduler
     from task_generator import load_dag_config, generate_tasks_from_dag
-    dag_config = load_dag_config("TaskConfigs/simo-baseline-nano.json")
-    tasks = generate_tasks_from_dag(dag_config)
+    result = load_dag_config("TaskConfigs/simo-baseline-nano.json")
+    if result is None:
+        print("Error: Failed to load DAG config")
+        exit(1)
+    dag_config, factor, non_partitionable_percentage, non_partitionable_config = result
+    tasks = generate_tasks_from_dag(dag_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
     handler_status = defaultdict(int)
     # create a task scheduler
     # task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='priority')
