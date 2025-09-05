@@ -46,6 +46,12 @@ class SystemHealthMonitor:
                 # Sleep for a short interval before next measurement
                 time.sleep(self.monitoring_interval)
                 
+            except RuntimeError as e:
+                # GPU monitoring completely failed, log error and stop monitoring
+                self.logger.error(f"[BURST] GPU monitoring failed: {e}")
+                self.logger.error("[BURST] Stopping GPU monitoring due to persistent failures")
+                self.monitoring_active = False
+                break
             except Exception as e:
                 self.logger.error(f"[BURST] Error in monitoring loop: {e}")
                 time.sleep(1)
@@ -53,43 +59,76 @@ class SystemHealthMonitor:
     def _get_gpu_utilization(self) -> float:
         """
         Get current GPU utilization percentage.
-        Returns 0.0 if GPU monitoring is not available.
+        Raises RuntimeError if GPU monitoring is not available.
         """
+        tegrastats_error = None
+        nvidia_smi_error = None
+        
+        # First try tegrastats for Jetson devices (AGX Nano, etc.)
         try:
-            # Try to get GPU utilization using nvidia-smi
+            # Use tegrastats --readall for single sample
+            result = subprocess.run(
+                ["tegrastats", "--readall"],
+                capture_output=True, text=True, timeout=2
+            )
+            if result.returncode == 0:
+                gpu_util = self._parse_tegrastats_gpu(result.stdout)
+                if gpu_util is not None:
+                    return gpu_util
+                else:
+                    tegrastats_error = "Failed to parse GPU utilization from tegrastats output"
+            else:
+                tegrastats_error = f"tegrastats failed with return code {result.returncode}: {result.stderr}"
+        except subprocess.TimeoutExpired:
+            tegrastats_error = "tegrastats command timed out"
+        except FileNotFoundError:
+            tegrastats_error = "tegrastats command not found"
+        except Exception as e:
+            tegrastats_error = f"tegrastats error: {e}"
+        
+        # Fallback: try nvidia-smi for desktop GPUs
+        try:
             result = subprocess.run(
                 ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
                 capture_output=True, text=True, timeout=1
             )
             if result.returncode == 0:
                 return float(result.stdout.strip())
-        except (subprocess.TimeoutExpired, FileNotFoundError, ValueError):
-            pass
+            else:
+                nvidia_smi_error = f"nvidia-smi failed with return code {result.returncode}: {result.stderr}"
+        except subprocess.TimeoutExpired:
+            nvidia_smi_error = "nvidia-smi command timed out"
+        except FileNotFoundError:
+            nvidia_smi_error = "nvidia-smi command not found"
+        except ValueError as e:
+            nvidia_smi_error = f"nvidia-smi parsing error: {e}"
+        except Exception as e:
+            nvidia_smi_error = f"nvidia-smi error: {e}"
         
-        # Fallback: try tegrastats for Jetson devices
-        try:
-            result = subprocess.run(
-                ["tegrastats", "--readall"],
-                capture_output=True, text=True, timeout=1
-            )
-            if result.returncode == 0:
-                return self._parse_tegrastats_gpu(result.stdout)
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
+        # Both methods failed, raise exception with detailed error information
+        error_msg = "Failed to get GPU utilization from both methods:\n"
+        error_msg += f"  tegrastats: {tegrastats_error}\n"
+        error_msg += f"  nvidia-smi: {nvidia_smi_error}\n"
+        error_msg += "Please ensure the appropriate GPU monitoring tool is available and accessible."
         
-        return 0.0
+        raise RuntimeError(error_msg)
     
     def _parse_tegrastats_gpu(self, stats_output: str) -> float:
         """Parse GPU utilization from tegrastats output."""
         try:
             # Look for GR3D_FREQ pattern in tegrastats output
-            if "GR3D_FREQ" in stats_output:
-                parts = stats_output.split("GR3D_FREQ", 1)
-                if len(parts) > 1:
-                    gpu_part = parts[1].split()[0]
-                    return float(gpu_part.replace("%", ""))
-        except (ValueError, IndexError):
-            pass
+            # Format: GR3D_FREQ 0%@318 (utilization%@frequency)
+            import re
+            match = re.search(r'GR3D_FREQ\s+(\d+)%@(\d+)', stats_output)
+            if match:
+                utilization = int(match.group(1))
+                frequency = int(match.group(2))
+                self.logger.debug(f"[BURST][HEALTH] Parsed GPU: {utilization}% @ {frequency}MHz")
+                return float(utilization)
+            else:
+                self.logger.debug(f"[BURST][HEALTH] No GR3D_FREQ pattern found in: {stats_output.strip()}")
+        except (ValueError, IndexError, AttributeError) as e:
+            self.logger.debug(f"[BURST][HEALTH] Error parsing tegrastats: {e}")
         return 0.0
     
     def get_system_health(self) -> Dict[str, float]:
