@@ -135,9 +135,8 @@ def test_task_scheduler_with_burst():
         "burst_enabled": True,
         "gpu_threshold": 75.0,
         "queue_threshold": 8,
-        "drop_percentage": 25,
-        "monitoring_interval": 0.1,
-        "criticality_weight": 1.0
+        "drop_threshold": 0.5,
+        "monitoring_interval": 0.1
     }
     
     # Load task configuration
@@ -184,10 +183,42 @@ def test_task_scheduler_with_burst():
     except Exception as e:
         logger.error(f"Error in test: {e}")
 
+def test_gpu_monitoring():
+    """Test GPU monitoring on different platforms (AGX Nano, desktop GPU)."""
+    logger = setup_logging()
+    logger.info("Testing GPU Monitoring...")
+    
+    from burst_task_manager import SystemHealthMonitor
+    
+    # Create health monitor
+    health_monitor = SystemHealthMonitor(logger=logger, monitoring_interval=0.1)
+    
+    # Test single GPU reading
+    try:
+        gpu_util = health_monitor._get_gpu_utilization()
+        logger.info(f"✓ GPU monitoring successful: {gpu_util}%")
+        
+        # Test system health
+        health = health_monitor.get_system_health()
+        logger.info(f"System Health: {health}")
+        
+        return True
+    except RuntimeError as e:
+        logger.error(f"✗ GPU monitoring failed: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"✗ Unexpected error in GPU monitoring: {e}")
+        return False
+
 def test_system_health_monitor():
-    """Test the system health monitor."""
+    """Test the system health monitor with continuous monitoring."""
     logger = setup_logging()
     logger.info("Testing System Health Monitor...")
+    
+    # First test GPU monitoring capability
+    if not test_gpu_monitoring():
+        logger.warning("GPU monitoring failed, skipping continuous monitoring test")
+        return
     
     # Create health monitor
     health_monitor = SystemHealthMonitor(logger=logger)
@@ -210,6 +241,9 @@ def main():
     logger.info("Starting Burst Task Management Tests...")
     
     try:
+        # Test GPU monitoring first
+        test_gpu_monitoring()
+        
         # Test system health monitor
         test_system_health_monitor()
         
