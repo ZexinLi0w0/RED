@@ -291,3 +291,17 @@ def generate_task_list(self):
 ## Conclusion
 
 This plan provides a comprehensive approach to adding Non-Partitionable Tasks support to the DeepLearningScheduler system. The implementation will be done incrementally to minimize risk and ensure backward compatibility. Each phase includes specific deliverables and testing requirements to ensure quality and functionality. 
+
+
+## Usage
+### 1. Basic Usage with Non-Partitionable Tasks
+```bash
+# cd /experiment/zexin/ATC23/DeepLearningScheduler
+# 更改test_non_partitionable.json 里的 NonPartitionablePercentage 来控制不可划分任务的比例.
+# Nano Tight Non-Partitionable Task Config - Baseline Approach(EDF)
+python main.py --config handler-config.json --task TaskConfigs/simo/test_non_partitionable.json --approach baseline
+
+# Feedback-fine-grained Approach(RED)
+python main.py --config handler-config.json --task TaskConfigs/simo/test_non_partitionable.json --approach feedback-fine-grained
+```
+

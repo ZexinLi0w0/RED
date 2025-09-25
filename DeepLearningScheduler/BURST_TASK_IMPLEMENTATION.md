@@ -101,12 +101,16 @@ System overload is detected when:
 ```bash
 # Nano Tight Burst Task Config - Baseline Approach(EDF)
 python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach baseline --burst-config burst_config.json
-# Feedback Approach(RED-IDA)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback --burst-config burst_config.json
-# Fine-grained Approach(RED-FG)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach fine-grained --burst-config burst_config.json
+
 # Feedback-fine-grained Approach(RED)
 python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback-fine-grained --burst-config burst_config.json
+
+
+# # Feedback Approach(RED-IDA)
+# python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback --burst-config burst_config.json
+# # Fine-grained Approach(RED-FG)
+# python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach fine-grained --burst-config burst_config.json
+
 
 #Dag config
 python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
