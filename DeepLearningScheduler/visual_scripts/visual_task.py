@@ -93,14 +93,11 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
         missing_deadline_rate = 0
         
     # Calculate task type specific statistics
+    # 这里non_partitionable_missing_rate和partitionable_missing_rate的计算是错误的, 重复统计了任务
     if non_partitionable_task_num > 0:
         non_partitionable_missing_rate /= non_partitionable_task_num
     if partitionable_task_num > 0:
         partitionable_missing_rate /= partitionable_task_num
-        
-    # Print task type statistics
-    print(f'[STATS] Non-partitionable tasks: {non_partitionable_task_num}, Missing deadline rate: {non_partitionable_missing_rate:.4f}')
-    print(f'[STATS] Partitionable tasks: {partitionable_task_num}, Missing deadline rate: {partitionable_missing_rate:.4f}')
     
     metrics1 = 1
     metrics2 = 0

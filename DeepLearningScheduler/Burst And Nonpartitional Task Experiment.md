@@ -50,7 +50,7 @@ Non-partitionable 不需要 tight/loose, 只需要跑一个 bench
 |Device|DDL|Approach|EndToEnd Response Time|Missing DDL Rate|QoE|
 |-----|---|---------------|--------|------|----|
 |Nano|Tight|Baseline|26.636419534683228|1.0000|1.0|
-|Nano|Tight|RED|7.1950249671936035|x|x|
+|Nano|Tight|RED|7.1950249671936035|0.9393939393939394|1.0|
 |-----|---|---------------|--------|------|----|
 |Orin|Tight|Baseline|x|x|x|
 |Orin|Tight|RED|x|x|x|

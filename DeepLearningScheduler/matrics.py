@@ -24,10 +24,11 @@ def QoEScore(finished_times, deadlines, lambda_param = 1):
     """
     QoEScore_total = 0
     lambda_param = 10
-
+    
     for i in range(len(finished_times)):
         tmp = 1/(1 + math.pow(math.e, lambda_param) * max(0, finished_times[i] - deadlines[i]))
         QoEScore_total += tmp
+    print("[DEBUG] QoE score calculation, finished_times: ", finished_times, "deadlines: ", deadlines, "lambda_param: ", lambda_param, "QoE Score: ", QoEScore_total / len(finished_times))
     return QoEScore_total / len(finished_times)
 
 if __name__ == "__main__":
