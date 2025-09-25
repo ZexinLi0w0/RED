@@ -297,11 +297,12 @@ This plan provides a comprehensive approach to adding Non-Partitionable Tasks su
 ### 1. Basic Usage with Non-Partitionable Tasks
 ```bash
 # cd /experiment/zexin/ATC23/DeepLearningScheduler
-# 更改test_non_partitionable.json 里的 NonPartitionablePercentage 来控制不可划分任务的比例.
+# agx_loose_non_partitionable.json 里的 NonPartitionablePercentage 来控制不可划分任务的比例.
+# 使用 cat /sys/devices/platform/gpu.0/load 查看 gpu 占用率(0-1000)
 # Nano Tight Non-Partitionable Task Config - Baseline Approach(EDF)
-python main.py --config handler-config.json --task TaskConfigs/simo/test_non_partitionable.json --approach baseline
+python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_non_partitionable.json --approach baseline
 
 # Feedback-fine-grained Approach(RED)
-python main.py --config handler-config.json --task TaskConfigs/simo/test_non_partitionable.json --approach feedback-fine-grained
+python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_non_partitionable.json --approach feedback-fine-grained
 ```
 
