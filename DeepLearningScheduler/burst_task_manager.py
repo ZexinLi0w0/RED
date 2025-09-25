@@ -57,6 +57,27 @@ class SystemHealthMonitor:
                 self.logger.error(f"[BURST] Error in monitoring loop: {e}")
                 time.sleep(1)
     
+    def _load_sysfs_gpu(self) -> Optional[float]:
+        """
+        在 Jetson/Tegra 上，读取 `/sys/devices/platform/gpu.0/load`
+        并把 0‑1000 的整数转换为 %
+        返回 None 表示文件不存在或内容不可解析。
+        """
+        sysfs_path = "/sys/devices/platform/gpu.0/load"
+        if not os.path.exists(sysfs_path):
+            return None
+
+        try:
+            with open(sysfs_path, "r") as f:
+                raw = f.read().strip()
+            # 预期是整数 0‑1000
+            val = int(raw)
+            if 0 <= val <= 1000:
+                return val / 10.0   # 0‑1000 → 0‑100%
+        except Exception:
+            return None
+        return None
+
     def _get_gpu_utilization(self) -> float:
         """
         Get current GPU utilization percentage.
@@ -66,27 +87,32 @@ class SystemHealthMonitor:
         nvidia_smi_error = None
         apple_error = None
         
-        # First try tegrastats for Jetson devices (AGX Nano, etc.)
-        try:
-            # Use tegrastats --readall for single sample
-            result = subprocess.run(
-                ["tegrastats", "--readall"],
-                capture_output=True, text=True, timeout=2
-            )
-            if result.returncode == 0:
-                gpu_util = self._parse_tegrastats_gpu(result.stdout)
-                if gpu_util is not None:
-                    return gpu_util
-                else:
-                    tegrastats_error = "Failed to parse GPU utilization from tegrastats output"
-            else:
-                tegrastats_error = f"tegrastats failed with return code {result.returncode}: {result.stderr}"
-        except subprocess.TimeoutExpired:
-            tegrastats_error = "tegrastats command timed out"
-        except FileNotFoundError:
-            tegrastats_error = "tegrastats command not found"
-        except Exception as e:
-            tegrastats_error = f"tegrastats error: {e}"
+        # First try sysfs for Jetson devices (AGX Nano, etc.)
+        gpu_util = self._load_sysfs_gpu()
+        if gpu_util is not None:
+            return float(gpu_util)
+
+        # Then try tegrastats for Jetson devices (AGX Nano, etc.)
+        # try:
+        #     # Use tegrastats --readall for single sample
+        #     result = subprocess.run(
+        #         ["tegrastats", "--readall"],
+        #         capture_output=True, text=True, timeout=2
+        #     )
+        #     if result.returncode == 0:
+        #         gpu_util = self._parse_tegrastats_gpu(result.stdout)
+        #         if gpu_util is not None:
+        #             return gpu_util
+        #         else:
+        #             tegrastats_error = "Failed to parse GPU utilization from tegrastats output"
+        #     else:
+        #         tegrastats_error = f"tegrastats failed with return code {result.returncode}: {result.stderr}"
+        # except subprocess.TimeoutExpired:
+        #     tegrastats_error = "tegrastats command timed out"
+        # except FileNotFoundError:
+        #     tegrastats_error = "tegrastats command not found"
+        # except Exception as e:
+        #     tegrastats_error = f"tegrastats error: {e}"
         
         # Fallback: try nvidia-smi for desktop GPUs
         try:
@@ -130,30 +156,32 @@ class SystemHealthMonitor:
         
         # Both methods failed, raise exception with detailed error information
         error_msg = "Failed to get GPU utilization from both methods:\n"
-        error_msg += f"  tegrastats: {tegrastats_error}\n"
-        error_msg += f"  nvidia-smi: {nvidia_smi_error}\n"
-        error_msg += f"  Apple powermetrics: {apple_error or 'N/A'}\n"
-        error_msg += "Please ensure the appropriate GPU monitoring tool is available and accessible."
+        if tegrastats_error is not None:
+            error_msg += f"  tegrastats: {tegrastats_error}\n"
+        if nvidia_smi_error is not None:
+            error_msg += f"  nvidia-smi: {nvidia_smi_error}\n"
+        if apple_error is not None:
+            error_msg += f"  Apple powermetrics: {apple_error or 'N/A'}\n"
         
         raise RuntimeError(error_msg)
     
-    def _parse_tegrastats_gpu(self, stats_output: str) -> float:
-        """Parse GPU utilization from tegrastats output."""
-        try:
-            # Look for GR3D_FREQ pattern in tegrastats output
-            # Format: GR3D_FREQ 0%@318 (utilization%@frequency)
-            import re
-            match = re.search(r'GR3D_FREQ\s+(\d+)%@(\d+)', stats_output)
-            if match:
-                utilization = int(match.group(1))
-                frequency = int(match.group(2))
-                self.logger.debug(f"[BURST][HEALTH] Parsed GPU: {utilization}% @ {frequency}MHz")
-                return float(utilization)
-            else:
-                self.logger.debug(f"[BURST][HEALTH] No GR3D_FREQ pattern found in: {stats_output.strip()}")
-        except (ValueError, IndexError, AttributeError) as e:
-            self.logger.debug(f"[BURST][HEALTH] Error parsing tegrastats: {e}")
-        return 0.0
+    # def _parse_tegrastats_gpu(self, stats_output: str) -> float:
+    #     """Parse GPU utilization from tegrastats output."""
+    #     try:
+    #         # Look for GR3D_FREQ pattern in tegrastats output
+    #         # Format: GR3D_FREQ 0%@318 (utilization%@frequency)
+    #         import re
+    #         match = re.search(r'GR3D_FREQ\s+(\d+)%@(\d+)', stats_output)
+    #         if match:
+    #             utilization = int(match.group(1))
+    #             frequency = int(match.group(2))
+    #             self.logger.debug(f"[BURST][HEALTH] Parsed GPU: {utilization}% @ {frequency}MHz")
+    #             return float(utilization)
+    #         else:
+    #             self.logger.debug(f"[BURST][HEALTH] No GR3D_FREQ pattern found in: {stats_output.strip()}")
+    #     except (ValueError, IndexError, AttributeError) as e:
+    #         self.logger.debug(f"[BURST][HEALTH] Error parsing tegrastats: {e}")
+    #     return 0.0
     
     def get_system_health(self) -> Dict[str, float]:
         """Get current system health metrics."""
