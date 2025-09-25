@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Optional
 import subprocess
 import threading
+import platform
 import queue
 
 class SystemHealthMonitor:
@@ -63,6 +64,7 @@ class SystemHealthMonitor:
         """
         tegrastats_error = None
         nvidia_smi_error = None
+        apple_error = None
         
         # First try tegrastats for Jetson devices (AGX Nano, etc.)
         try:
@@ -104,11 +106,33 @@ class SystemHealthMonitor:
             nvidia_smi_error = f"nvidia-smi parsing error: {e}"
         except Exception as e:
             nvidia_smi_error = f"nvidia-smi error: {e}"
+            
+        if platform.machine().startswith("arm"):
+            try:
+                # powermetrics 需要 root，若没有 root 则会报 PermissionError
+                result = subprocess.run(
+                    ["powermetrics", "--samplers", "smc"],
+                    capture_output=True, text=True, timeout=2, check=True
+                )
+                gpu_util = self._parse_powermetrics_gpu(result.stdout)
+                if gpu_util is not None:
+                    return gpu_util
+                apple_error = "failed to parse powermetrics output"
+            except subprocess.TimeoutExpired:
+                apple_error = "powermetrics timed out"
+            except FileNotFoundError:
+                apple_error = "powermetrics not found"
+            except PermissionError:
+                apple_error = ("powermetrics requires root privileges. "
+                               "Run script with sudo or grant permissions.")
+            except Exception as e:
+                apple_error = f"powermetrics error: {e}"
         
         # Both methods failed, raise exception with detailed error information
         error_msg = "Failed to get GPU utilization from both methods:\n"
         error_msg += f"  tegrastats: {tegrastats_error}\n"
         error_msg += f"  nvidia-smi: {nvidia_smi_error}\n"
+        error_msg += f"  Apple powermetrics: {apple_error or 'N/A'}\n"
         error_msg += "Please ensure the appropriate GPU monitoring tool is available and accessible."
         
         raise RuntimeError(error_msg)
@@ -137,6 +161,25 @@ class SystemHealthMonitor:
             "gpu_utilization": self.gpu_utilization,
             "queue_length": self.queue_length
         }
+    
+    def _parse_powermetrics_gpu(self, output: str) -> Optional[float]:
+        """
+        解析 powermetrics 输出，返回 GPU 利用率（%）。
+        这里使用“GPU Power”字段并按 10 W 作为最大功率进行估算。
+        """
+        max_power_w = 10.0   # 经验值：Apple GPU 最大功率 ~ 10 W
+        for line in output.splitlines():
+            if "GPU Power:" in line:
+                try:
+                    # 例如: "GPU Power: 3.12 W"
+                    part = line.split(":")[1].strip()
+                    power_str = part.split()[0]
+                    power_w = float(power_str)
+                    util = min(power_w / max_power_w * 100.0, 100.0)
+                    return round(util, 1)
+                except Exception:
+                    return None
+        return None
     
     def update_queue_length(self, length: int):
         """Update the current queue length."""
