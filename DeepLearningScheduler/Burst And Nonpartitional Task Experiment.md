@@ -20,14 +20,14 @@
 |Nano|Tight|FG|x|x|x|  |
 |Nano|Tight|RED|x|x|x|  |
 |-----|---|-------------|--------|------|----|------|
-|Orin|Loose|Baseline|x|x|x|  |
-|Orin|Loose|IDA|x|x|x|  |
-|Orin|Loose|FG|x|x|x|  |
-|Orin|Loose|RED|x|x|x|  |
-|Orin|Tight|Baseline|x|x|x|  |
-|Orin|Tight|IDA|x|x|x|  |
-|Orin|Tight|FG|x|x|x|  |
-|Orin|Tight|RED|x|x|x|  |
+|AGX|Loose|Baseline|x|x|x|  |
+|AGX|Loose|IDA|x|x|x|  |
+|AGX|Loose|FG|x|x|x|  |
+|AGX|Loose|RED|x|x|x|  |
+|AGX|Tight|Baseline|x|x|x|  |
+|AGX|Tight|IDA|x|x|x|  |
+|AGX|Tight|FG|x|x|x|  |
+|AGX|Tight|RED|x|x|x|  |
 |-----|---|-------------|--------|------|----|------|
 |Apple Chip|Loose|Baseline|x|x|x|  |
 |Apple Chip|Loose|IDA|x|x|x|  |
@@ -47,15 +47,24 @@ Non-partitionable 不需要 tight/loose, 只需要跑一个 bench
 
 
 -----------------------------
+
 |Device|DDL|Approach|EndToEnd Response Time|Missing DDL Rate|QoE|
 |-----|---|---------------|--------|------|----|
-|Orin|Loose - 0% Non-partitionable|Baseline|26.592604160308838|1.0|1.0|
-|Orin|Loose - 0% Non-partitionable|RED|16.10952377319336|0.8166666666666667|1.0|
-|Orin|Loose - 50% Non-partitionable|Baseline|24.540611505508423|1.0|1.0|
-|Orin|Loose - 50% Non-partitionable|RED|16.20795202255249|0.7910447761194029|1.0|
-|Orin|Loose - 100% Non-partitionable|Baseline|26.388326406478882|1.0|1.0|
-|Orin|Loose - 100% Non-partitionable|RED|16.377562999725342|0.8285714285714286|1.0|
+|AGX|Loose - 0% Non-partitionable|Baseline|26.592604160308838|1.0|1.0|
+|AGX|Loose - 0% Non-partitionable|RED|16.10952377319336|0.8166666666666667|1.0|
+|AGX|Loose - 50% Non-partitionable|Baseline|24.540611505508423|1.0|1.0|
+|AGX|Loose - 50% Non-partitionable|RED|16.20795202255249|0.7910447761194029|1.0|
+|AGX|Loose - 100% Non-partitionable|Baseline|26.388326406478882|1.0|1.0|
+|AGX|Loose - 100% Non-partitionable|RED|16.377562999725342|0.8285714285714286|1.0|
 |-----|---|---------------|--------|------|----|
+|Nano|Loose - 0% Non-partitionable|Baseline|41.76921510696411|0.9857|1.0|
+|Nano|Loose - 0% Non-partitionable|RED|37.4719443321228|0.6|1.0|
+|Nano|Loose - 50% Non-partitionable|Baseline|41.92612266540527|0.9857142857142858|1.0|
+|Nano|Loose - 50% Non-partitionable|RED|38.914307832717896|0.6811594202898551|1.0|
+|Nano|Loose - 100% Non-partitionable|Baseline|42.10524606704712|0.9714285714285714|1.0|
+|Nano|Loose - 100% Non-partitionable|RED|39.40302109718323|0.6428571428571429|1.0|
+|-----|---|---------------|--------|------|----|
+
 
 
 
@@ -139,3 +148,120 @@ INFO     [CTRL] SubTask Missing deadline rate: 0.8285714285714286
 INFO     [CTRL] SubTask Average finished time: 0.3373293876647949
 INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
 ```
+
+### Nano Non-partitionable tasks 100%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_baseline_2025-09-29-03-03-16.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_baseline_2025-09-29-03-03-16.pkl
+INFO     [CTRL] Task End to End Finished time: 42.10524606704712
+metrics finished time 42.10524606704712 39637.5
+[DEBUG] QoE score calculation, finished_times:  [42.10524606704712] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.9714285714285714
+INFO     [CTRL] SubTask Average finished time: 0.5515822614942278
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Non-partitionable tasks 100%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-03-18-49.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-03-18-49.pkl
+INFO     [CTRL] Task End to End Finished time: 39.40302109718323
+metrics finished time 39.40302109718323 39637.5
+[DEBUG] QoE score calculation, finished_times:  [39.40302109718323] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.6428571428571429
+INFO     [CTRL] SubTask Average finished time: 0.6031683401627974
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Non-partitionable tasks 50%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_baseline_2025-09-29-03-34-52.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_baseline_2025-09-29-03-34-52.pkl
+INFO     [CTRL] Task End to End Finished time: 41.92612266540527
+metrics finished time 41.92612266540527 39637.5
+[DEBUG] QoE score calculation, finished_times:  [41.92612266540527] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.9857142857142858
+INFO     [CTRL] SubTask Average finished time: 0.5331307445253645
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Non-partitionable tasks 50%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-03-38-08.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-03-38-08.pkl
+INFO     [CTRL] Task End to End Finished time: 38.914307832717896
+metrics finished time 38.914307832717896 39637.5
+[DEBUG] QoE score calculation, finished_times:  [38.914307832717896] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.6811594202898551
+INFO     [CTRL] SubTask Average finished time: 0.6031320903982434
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Non-partitionable tasks 0%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_baseline_2025-09-29-03-59-00.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_baseline_2025-09-29-03-59-00.pkl
+INFO     [CTRL] Task End to End Finished time: 41.76921510696411
+metrics finished time 41.76921510696411 39637.5
+[DEBUG] QoE score calculation, finished_times:  [41.76921510696411] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.9857
+INFO     [CTRL] SubTask Average finished time: 0.5617344038827079
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Non-partitionable tasks 0%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-04-08-02.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_non_partitionable_feedback-fine-grained_2025-09-29-04-08-02.pkl
+INFO     [CTRL] Task End to End Finished time: 37.4719443321228
+metrics finished time 37.4719443321228 39637.5
+[DEBUG] QoE score calculation, finished_times:  [37.4719443321228] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.6
+INFO     [CTRL] SubTask Average finished time: 0.620154286330601
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 实验数据转 Latex 表格
+
+Based on the filled latex table, update data and address comment in main text. Make sure to check logic and make transition smooth. 
+
+Table:
+<Filled data table>
+
+Text:
+\begin{table}[!tbp]
+\centering
+\caption{End-to-end latency/deadline miss rate/QoE score under different non-partitionable task ratios in obstacle-free cruising scenarios.}
+\label{tab:nonpartitionable}
+\begin{tabular}{l|cc|cc|cc}
+\hline
+\multirow{2}{*}{Platform} & \multicolumn{2}{c|}{0\% Non-Part.} & \multicolumn{2}{c|}{50\% Non-Part.} & \multicolumn{2}{c}{100\% Non-Part.} \\
+\cline{2-7}
+ & EDF & \tool & EDF & \tool & EDF & \tool \\
+\hline
+Nano Orin              & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} \\
+AGX Orin               & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} \\
+MacBook Pro & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} & \zx{xx} \\
+\hline
+\end{tabular}
+\end{table}

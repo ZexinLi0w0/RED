@@ -304,5 +304,10 @@ python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_no
 
 # Feedback-fine-grained Approach(RED)
 python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_non_partitionable.json --approach feedback-fine-grained
+
+
+# Nano config
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_non_partitionable.json --approach baseline
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_non_partitionable.json --approach feedback-fine-grained
 ```
 
