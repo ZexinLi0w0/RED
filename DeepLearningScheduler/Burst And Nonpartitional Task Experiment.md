@@ -49,43 +49,93 @@ Non-partitionable 不需要 tight/loose, 只需要跑一个 bench
 -----------------------------
 |Device|DDL|Approach|EndToEnd Response Time|Missing DDL Rate|QoE|
 |-----|---|---------------|--------|------|----|
-|Nano|Tight|Baseline|26.636419534683228|1.0000|1.0|
-|Nano|Tight|RED|7.1950249671936035|0.9393939393939394|1.0|
+|Orin|Loose - 0% Non-partitionable|Baseline|26.592604160308838|1.0|1.0|
+|Orin|Loose - 0% Non-partitionable|RED|16.10952377319336|0.8166666666666667|1.0|
+|Orin|Loose - 50% Non-partitionable|Baseline|24.540611505508423|1.0|1.0|
+|Orin|Loose - 50% Non-partitionable|RED|16.20795202255249|0.7910447761194029|1.0|
+|Orin|Loose - 100% Non-partitionable|Baseline|26.388326406478882|1.0|1.0|
+|Orin|Loose - 100% Non-partitionable|RED|16.377562999725342|0.8285714285714286|1.0|
 |-----|---|---------------|--------|------|----|
-|Orin|Tight|Baseline|x|x|x|
-|Orin|Tight|RED|x|x|x|
-|-----|---|---------------|--------|------|----|
-|Apple Chip|Tight|Baseline|x|x|x|
-|Apple Chip|Tight|RED|x|x|x|
-|-----|---|---------------|--------|------|----|
+
 
 
 ## 实验日志
 
-AGX Non-partitionable tasks 50%, EDF
+### AGX Non-partitionable tasks 0%, EDF
+
 ```
 INFO     [CTRL] All tasks finished
-INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_test_non_partitionable_baseline_2025-09-25-09-23-08.txt
-INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_test_non_partitionable_baseline_2025-09-25-09-23-08.pkl
-INFO     [CTRL] Task End to End Finished time: 26.636419534683228
-[STATS] Non-partitionable tasks: 35, Missing deadline rate: 1.0000
-[STATS] Partitionable tasks: 35, Missing deadline rate: 1.0000
-metrics finished time 26.636419534683228 7312.5
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_baseline_2025-09-25-11-13-19.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_baseline_2025-09-25-11-13-19.pkl
+INFO     [CTRL] Task End to End Finished time: 26.592604160308838
+metrics finished time 26.592604160308838 17062.5
+[DEBUG] QoE score calculation, finished_times:  [26.592604160308838] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
 INFO     [CTRL] SubTask Missing deadline rate: 1.0
-INFO     [CTRL] SubTask Average finished time: 0.34591717038835795
+INFO     [CTRL] SubTask Average finished time: 0.32350641659327917
 INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
 ```
 
-AGX Non-partitionable tasks 50%, RED
+### AGX Non-partitionable tasks 0%, RED
 ```
 INFO     [CTRL] All tasks finished
-INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_test_non_partitionable_feedback-fine-grained_2025-09-25-09-25-43.txt
-INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_test_non_partitionable_feedback-fine-grained_2025-09-25-09-25-43.pkl
-INFO     [CTRL] Task End to End Finished time: 7.1950249671936035
-[STATS] Non-partitionable tasks: 6, Missing deadline rate: 5.3333
-[STATS] Partitionable tasks: 4, Missing deadline rate: 7.5000
-metrics finished time 7.1950249671936035 7312.5
-INFO     [CTRL] SubTask Missing deadline rate: 0.9393939393939394
-INFO     [CTRL] SubTask Average finished time: 0.36302230358123777
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-11-17-24.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-11-17-24.pkl
+INFO     [CTRL] Task End to End Finished time: 16.10952377319336
+metrics finished time 16.10952377319336 17062.5
+[DEBUG] QoE score calculation, finished_times:  [16.10952377319336] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.8166666666666667
+INFO     [CTRL] SubTask Average finished time: 0.35806707713914954
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Non-partitionable tasks 50%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_baseline_2025-09-25-11-02-27.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_baseline_2025-09-25-11-02-27.pkl
+INFO     [CTRL] Task End to End Finished time: 24.540611505508423
+metrics finished time 24.540611505508423 17062.5
+[DEBUG] QoE score calculation, finished_times:  [24.540611505508423] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3151942798069545
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Non-partitionable tasks 50%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-11-09-52.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-11-09-52.pkl
+INFO     [CTRL] Task End to End Finished time: 16.20795202255249
+metrics finished time 16.20795202255249 17062.5
+[DEBUG] QoE score calculation, finished_times:  [16.20795202255249] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.7910447761194029
+INFO     [CTRL] SubTask Average finished time: 0.35578368450033254
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Non-partitionable tasks 100%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_baseline_2025-09-25-10-44-07.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_baseline_2025-09-25-10-44-07.pkl
+INFO     [CTRL] Task End to End Finished time: 26.388326406478882
+metrics finished time 26.388326406478882 17062.5
+[DEBUG] QoE score calculation, finished_times:  [26.388326406478882] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3421064853668213
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Non-partitionable tasks 100%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-10-48-50.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_non_partitionable_feedback-fine-grained_2025-09-25-10-48-50.pkl
+INFO     [CTRL] Task End to End Finished time: 16.377562999725342
+metrics finished time 16.377562999725342 17062.5
+[DEBUG] QoE score calculation, finished_times:  [16.377562999725342] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.8285714285714286
+INFO     [CTRL] SubTask Average finished time: 0.3373293876647949
 INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
 ```
