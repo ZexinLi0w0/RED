@@ -16,7 +16,7 @@ def test_end_to_end_non_partitionable():
         print("Error: Failed to load DAG config")
         return False
     
-    dag_config, factor, non_partitionable_percentage, non_partitionable_config = result
+    dag_config, factor, non_partitionable_percentage, non_partitionable_config, _ = result
     print(f"Configuration loaded:")
     print(f"  RunningTimeFactor: {factor}")
     print(f"  NonPartitionablePercentage: {non_partitionable_percentage}%")

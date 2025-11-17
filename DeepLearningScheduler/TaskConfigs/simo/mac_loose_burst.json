@@ -1,0 +1,95 @@
+{
+    "RunningTimeFactor": 0.5,
+    "BurstTaskRatio": 50,
+    "dag_list": [
+        [
+            {
+                "TaskName": "S1_Stage1_LaneDetection",
+                "HandlerId": 5,
+                "Priority": 1,
+                "Dependencies": [],
+                "RunArgs": [1],
+                "RunningTime": 4725,
+                "WorstRunningTime": 165,
+                "DropThreshold": 0.4
+            },
+            [
+                {
+                    "TaskName": "S1_Stage2_Segmentation",
+                    "HandlerId": 5,
+                    "Priority": 1,
+                    "Dependencies": [1],
+                    "RunArgs": [3],
+                    "RunningTime": 4725,
+                    "WorstRunningTime": 172.5,
+                    "DropThreshold": 0.2
+                },
+                {
+                    "TaskName": "S1_Stage2_Object_Detection",
+                    "HandlerId": 5,
+                    "Priority": 1,
+                    "Dependencies": [1],
+                    "RunArgs": [4],
+                    "RunningTime": 4725,
+                    "WorstRunningTime": 187.5,
+                    "DropThreshold": 0.25
+                }
+            ],
+            {
+                "TaskName": "S1_Stage3_Control_Autopilot",
+                "HandlerId": 5,
+                "Priority": 1,
+                "Dependencies": [3, 4],
+                "RunArgs": [2],
+                "RunningTime": 4725,
+                "WorstRunningTime": 135,
+                "DropThreshold": 0.5
+            }
+        ],
+        [
+            {
+                "TaskName": "S2_Stage1_LaneDetection",
+                "HandlerId": 5,
+                "Priority": 1,
+                "Dependencies": [],
+                "RunArgs": [1],
+                "RunningTime": 6600,
+                "WorstRunningTime": 165,
+                "DropThreshold": 0.4
+            },
+            [
+                {
+                    "TaskName": "S2_Stage2_Segmentation",
+                    "HandlerId": 5,
+                    "Priority": 1,
+                    "Dependencies": [1],
+                    "RunArgs": [3],
+                    "RunningTime": 6600,
+                    "WorstRunningTime": 172.5,
+                    "DropThreshold": 0.2
+                },
+                {
+                    "TaskName": "S2_Stage2_Object_Detection",
+                    "HandlerId": 5,
+                    "Priority": 1,
+                    "Dependencies": [1],
+                    "RunArgs": [4],
+                    "RunningTime": 6600,
+                    "WorstRunningTime": 187.5,
+                    "DropThreshold": 0.25
+                }
+            ],
+            {
+                "TaskName": "S2_Stage3_Control_Autopilot",
+                "HandlerId": 5,
+                "Priority": 1,
+                "Dependencies": [3, 4],
+                "RunArgs": [2],
+                "RunningTime": 6600,
+                "WorstRunningTime": 135,
+                "DropThreshold": 0.5
+            }
+        ]
+    ]
+}
+

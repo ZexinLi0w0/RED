@@ -121,7 +121,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0):
     """
     SIMO Baseline handler
     """
@@ -150,7 +150,8 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         approach_module=approach_module, 
         task_filename=task_filename,
         burst_enabled=burst_enabled,
-        burst_config=burst_config
+        burst_config=burst_config,
+        burst_task_ratio=burst_task_ratio
     )
     # controller signal response loop
     while True: 
