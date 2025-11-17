@@ -39,7 +39,96 @@
 |Apple Chip|Tight|RED|x|x|x|  |
 |-----|---|-------------|--------|------|----|------|
 
+## 实验日志
+### Mac Burst tasks 0%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_baseline_2025-11-17-03-06-13.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_baseline_2025-11-17-03-06-13.pkl
+INFO     [CTRL] Task End to End Finished time: 6.581241130828857
+metrics finished time 6.581241130828857 5662.5
+[DEBUG] QoE score calculation, finished_times:  [6.581241130828857] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.5125
+INFO     [CTRL] SubTask Average finished time: 0.0748733937740326
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
 
+### Mac Burst tasks 0%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_fine-grained_2025-11-17-03-07-29.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_fine-grained_2025-11-17-03-07-29.pkl
+INFO     [CTRL] Task End to End Finished time: 6.57703709602356
+metrics finished time 6.57703709602356 5662.5
+[DEBUG] QoE score calculation, finished_times:  [6.57703709602356] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.4166666666666667
+INFO     [CTRL] SubTask Average finished time: 0.08716992139816285
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Mac Burst tasks 50%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_baseline_2025-11-17-03-08-40.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_baseline_2025-11-17-03-08-40.pkl
+INFO     [CTRL] Task End to End Finished time: 9.053339004516602
+metrics finished time 9.053339004516602 5662.5
+[DEBUG] QoE score calculation, finished_times:  [9.053339004516602] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.9833333333333333
+INFO     [CTRL] SubTask Average finished time: 0.07529547810554504
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Mac Burst tasks 50%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_fine-grained_2025-11-17-03-09-07.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_fine-grained_2025-11-17-03-09-07.pkl
+INFO     [CTRL] Task End to End Finished time: 6.576007843017578
+metrics finished time 6.576007843017578 5662.5
+[DEBUG] QoE score calculation, finished_times:  [6.576007843017578] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.6666666666666666
+INFO     [CTRL] SubTask Average finished time: 0.08225281635920206
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Mac Burst tasks 100%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_baseline_2025-11-17-03-09-46.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_baseline_2025-11-17-03-09-46.pkl
+INFO     [CTRL] Task End to End Finished time: 11.697674036026001
+metrics finished time 11.697674036026001 5662.5
+[DEBUG] QoE score calculation, finished_times:  [11.697674036026001] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.99375
+INFO     [CTRL] SubTask Average finished time: 0.07298269122838974
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Mac Burst tasks 100%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/end2endtime_mac_loose_burst_fine-grained_2025-11-17-03-10-15.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/statistics_mac_loose_burst_fine-grained_2025-11-17-03-10-15.pkl
+INFO     [CTRL] Task End to End Finished time: 6.577796697616577
+metrics finished time 6.577796697616577 5662.5
+[DEBUG] QoE score calculation, finished_times:  [6.577796697616577] deadlines:  [5662.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.08265920877456664
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
 
 # Nonpartitional Task Experiment
 
@@ -71,7 +160,6 @@ Non-partitionable 不需要 tight/loose, 只需要跑一个 bench
 ## 实验日志
 
 ### AGX Non-partitionable tasks 0%, EDF
-
 ```
 INFO     [CTRL] All tasks finished
 INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_non_partitionable_baseline_2025-09-25-11-13-19.txt
