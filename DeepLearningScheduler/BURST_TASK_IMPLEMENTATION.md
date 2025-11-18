@@ -114,6 +114,14 @@ python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_b
 
 #Dag config
 python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
+
+# Mac Experiment
+## Baseline Approach(EDF)
+python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_burst.json --approach baseline --burst-config burst_config.json
+
+## Fine-grained Approach(RED-FG)
+python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_burst.json --approach fine-grained --burst-config burst_config.json
+
 ```
 
 ### 2. Testing Burst Functionality

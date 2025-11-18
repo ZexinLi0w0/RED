@@ -7,7 +7,7 @@ from control_signal import convert_args_to_dict, generate_signal, parse_signal, 
 from visual_scripts.visual_task import statistics_compution, task_scatter3
 import logging
 from copy import deepcopy
-from burst_task_manager import BurstTaskManager, BurstAwareTaskScheduler
+from burst_task_manager import BurstTaskManager
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -15,7 +15,7 @@ def liststr2list(s):
 def list2str(l):
     return ",".join([str(c) for c in l])
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None):
+    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -71,21 +71,23 @@ class TaskSchedule:
                 monitoring_interval=monitoring_interval,
                 logger=logger
             )
-            self.burst_scheduler = BurstAwareTaskScheduler(
-                burst_manager=self.burst_manager,
-                base_scheduler=self.scheduler_name,
-                logger=logger
-            )
             # Start burst monitoring
             self.burst_manager.start_monitoring()
             self.logger.info(f"[BURST] Burst task management enabled with GPU threshold: {gpu_threshold}%, Queue threshold: {queue_threshold}")
         else:
             self.burst_manager = None
-            self.burst_scheduler = None
+        self.burst_task_ratio = burst_task_ratio or 0
+        self._burst_tasks_augmented = False
     
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
         TaskStartTime = time.time()
+        if self.burst_enabled and self.burst_manager and self.burst_task_ratio > 0 and not self._burst_tasks_augmented:
+            extra_tasks = self.burst_manager.generate_burst_tasks(self.tasks, self.burst_task_ratio)
+            if extra_tasks:
+                self.logger.info(f"[BURST] Augmenting task list with {len(extra_tasks)} burst tasks (ratio={self.burst_task_ratio}%).")
+                self.tasks = self.tasks + extra_tasks
+            self._burst_tasks_augmented = True
         tasks_list = self.tasks
         logger = self.logger
 
@@ -112,24 +114,13 @@ class TaskSchedule:
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
             self.fine_grained_adjust()
-        # offline Task schedule algorithm
-        if self.burst_enabled and self.burst_scheduler:
-            # Use burst-aware scheduling
-            # Use time relative to TaskStartTime so it aligns with task ReleaseTime/Deadline units
-            current_time = time.time() - TaskStartTime
-            scheduled_tasks, dropped_tasks = self.burst_scheduler.schedule_tasks(self.TaskQueue, current_time)
-            # Handle dropped tasks (record as dropped before scheduling proceeds)
-            for dropped_task in dropped_tasks:
-                self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
-            self.TaskQueue = scheduled_tasks
+        # offline Task schedule algorithm (baseline only)
+        if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
+            # Call the scheduler method directly
+            scheduler_method = getattr(self, self.scheduler_name)
+            scheduler_method()
         else:
-            # Use original scheduling
-            if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
-                # Call the scheduler method directly
-                scheduler_method = getattr(self, self.scheduler_name)
-                scheduler_method()
-            else:
-                self.scheduler()
+            self.scheduler()
         
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
@@ -182,10 +173,10 @@ class TaskSchedule:
                 putback.append(task)
         
         # Apply burst-aware scheduling to putback tasks if enabled
-        if self.burst_enabled and self.burst_scheduler and len(putback) > 0:
+        if self.burst_enabled and self.burst_manager and len(putback) > 0:
             # Use time relative to TaskStartTime for consistent criticality calculation
             current_time = time.time() - TaskStartTime
-            remaining_tasks, dropped_tasks = self.burst_scheduler.burst_manager.proactive_drop(putback, current_time)
+            remaining_tasks, dropped_tasks = self.burst_manager.proactive_drop(putback, current_time)
             
             # Handle dropped tasks
             for dropped_task in dropped_tasks:
@@ -219,7 +210,6 @@ class TaskSchedule:
         # Log burst statistics if enabled
         if self.burst_enabled and self.burst_manager:
             burst_stats = self.burst_manager.get_burst_statistics()
-            logger.info(f"[BURST] burst statistics: {burst_stats}")
             # Stop burst monitoring
             self.burst_manager.stop_monitoring()
         
@@ -515,7 +505,7 @@ if __name__ == "__main__":
     if result is None:
         print("Error: Failed to load DAG config")
         exit(1)
-    dag_config, factor, non_partitionable_percentage, non_partitionable_config = result
+    dag_config, factor, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
     tasks = generate_tasks_from_dag(dag_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
     handler_status = defaultdict(int)
     # create a task scheduler
@@ -532,7 +522,7 @@ if __name__ == "__main__":
     #     prev = task["Priority"]
     # print("Priority Test passed")
 
-    task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='edf')
+    task_scheduler = TaskSchedule(tasks, handler_status, [], scheduler='edf', burst_task_ratio=burst_task_ratio)
     task_scheduler.generate_task_list()
     prev = None
     

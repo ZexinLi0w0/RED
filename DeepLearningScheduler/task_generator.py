@@ -145,7 +145,12 @@ def load_dag_config(dag_config_path):
             print("Error: NonPartitionableConfig must be a dictionary")
             return
     
-    return dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config
+    burst_task_ratio = config.get("BurstTaskRatio", 0)
+    if not isinstance(burst_task_ratio, (int, float)) or burst_task_ratio < 0 or burst_task_ratio > 100:
+        print("Error: BurstTaskRatio must be a number between 0 and 100")
+        return
+    
+    return dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config, burst_task_ratio
 
 def generate_tasks(task_config):
     """
