@@ -7,6 +7,7 @@ import math
 import json
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
 from matrics import throughput_score, RTscore, QoEScore
 
 
@@ -35,6 +36,76 @@ def ticks_merge(obj, item, tick, merge_tick = 1):
         obj[tick // merge_tick].append(item)
 
 # data visulization, use scatter to show missing deadline rate and finished time of each tasks
+def _resolve_task_config(task_config_path: str) -> Path:
+    """
+    Resolve the path to the task configuration file. The task_config_path argument
+    can be a full/relative path or just the file name. We probe the common
+    TaskConfigs directories to stay backward compatible with historical setups.
+    """
+    candidate = Path(task_config_path)
+    search_roots = [
+        Path("."),
+        Path("./TaskConfigs"),
+        Path("./TaskConfigs/simo"),
+        Path("./TaskConfigs/simo/new_scenarios"),
+    ]
+
+    if candidate.is_file():
+        return candidate
+
+    for root in search_roots:
+        maybe = root / task_config_path
+        if maybe.is_file():
+            return maybe
+
+    raise FileNotFoundError(f"Unable to locate task config file: {task_config_path}")
+
+
+def _task_duration_ms(task_node):
+    """
+    Extract a duration (ms) from a task node. Prefer RunningTime, fall back to
+    WorstRunningTime, defaulting to 0 if both are missing.
+    """
+    if not isinstance(task_node, dict):
+        return 0
+    return (
+        task_node.get("RunningTime")
+        or task_node.get("WorstRunningTime")
+        or 0
+    )
+
+
+def _stage_duration_ms(stage_node):
+    """
+    Calculate the duration of a stage. A stage can be a single task dict or
+    a list of parallel tasks. We conservatively sum the durations of parallel
+    tasks to match how release times are constructed in generate_tasks_from_dag.
+    """
+    if isinstance(stage_node, list):
+        return sum(_task_duration_ms(task) for task in stage_node)
+    return _task_duration_ms(stage_node)
+
+
+def _overall_deadline_seconds(config: dict) -> float:
+    """
+    Compute the overall deadline (seconds) by summing every stage duration across
+    all DAGs and scaling with RunningTimeFactor. The values in the configs are in
+    milliseconds, so convert to seconds at the end to stay consistent with
+    wall-clock timings from time.time().
+    """
+    dag_list = config.get("dag_list", [])
+    running_time_factor = config.get("RunningTimeFactor", 1)
+
+    total_ms = 0
+    for dag in dag_list:
+        if not isinstance(dag, list):
+            continue
+        for stage in dag:
+            total_ms += _stage_duration_ms(stage)
+
+    return (total_ms * running_time_factor) / 1000.0
+
+
 def statistics_compution(task_statistics, task_config_path='task_config.json', now_time = 0, task_start_time = 0):
     """
     Calculate the statistics of tasks, including: missing deadline rate, finished time
@@ -102,18 +173,19 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics1 = 1
     metrics2 = 0
     metrics3 = 0
+    deadline_time = math.inf
     # matrics calculation
-    config_load_path = './TaskConfigs/simo'
-    with open(f"{config_load_path}/{task_config_path}", "r") as f:
-        config = json.load(f)
-        dag_list = config["dag_list"]
-        running_time_factor = 1
-        if("RunningTimeFactor" in config):
-            running_time_factor = config["RunningTimeFactor"]
-        # hard-code to calculate the deadline
-        deadline_time = dag_list[0][0]["RunningTime"]*running_time_factor + dag_list[1][0]["RunningTime"]*running_time_factor
-        finished_time = now_time - task_start_time
-        print('metrics finished time', finished_time, deadline_time)
+    try:
+        config_path = _resolve_task_config(task_config_path)
+        with open(config_path, "r") as f:
+            config = json.load(f)
+        deadline_time = _overall_deadline_seconds(config)
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        print(f"[WARN] Failed to load task config '{task_config_path}' for metrics: {exc}")
+
+    finished_time = now_time - task_start_time
+    print('metrics finished time', finished_time, deadline_time)
+    if deadline_time > 0:
         metrics2 = RTscore([finished_time], [deadline_time])
         metrics3 = QoEScore([finished_time], [deadline_time])
         

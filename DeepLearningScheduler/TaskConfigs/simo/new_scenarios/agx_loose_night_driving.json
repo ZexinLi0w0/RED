@@ -1,0 +1,44 @@
+{
+  "dag_list": [
+    [
+      {
+        "TaskName": "S5_Stage1_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 1944,
+        "WorstRunningTime": 60
+      },
+      {
+        "TaskName": "S5_Stage2_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 1944,
+        "WorstRunningTime": 60
+      },
+      {
+        "TaskName": "S5_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 1944,
+        "WorstRunningTime": 60
+      }
+    ]
+  ],
+  "RunningTimeFactor": 1.5
+}
