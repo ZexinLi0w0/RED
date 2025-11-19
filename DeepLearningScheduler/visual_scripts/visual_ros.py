@@ -146,7 +146,7 @@ def performance_analysis(deadline_missing_rate):
 print(f'Missing Deadline Rate Decrease', (performance_analysis(deadline_0) + performance_analysis(deadline_1) + performance_analysis(deadline_2))/3)
 
 def QoE(time_to_complete):
-    lambda_param = 10
+    lambda_param = 0.05
     return 1/(1 + math.pow(math.e, lambda_param) * max(0, time_to_complete))
 
 def get_QoE_metrics_dict(latency_dict, deadline_dict, overall_deadline_time):
