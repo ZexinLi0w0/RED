@@ -122,6 +122,19 @@ python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_bu
 ## Fine-grained Approach(RED-FG)
 python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_burst.json --approach fine-grained --burst-config burst_config.json
 
+## Nano Experiment
+## Baseline Approach(EDF)
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_burst.json --approach baseline --burst-config burst_config.json
+
+## Fine-grained Approach(RED-FG)
+python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_burst.json --approach fine-grained --burst-config burst_config.json
+
+## AGX Experiment
+## Baseline Approach(EDF)
+python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_burst.json --approach baseline --burst-config burst_config.json
+
+## Fine-grained Approach(RED-FG)
+python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_burst.json --approach fine-grained --burst-config burst_config.json
 ```
 
 ### 2. Testing Burst Functionality

@@ -130,6 +130,202 @@ INFO     [CTRL] SubTask Average finished time: 0.08265920877456664
 INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
 ```
 
+### AGX Burst tasks 0%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_baseline_2025-11-18-20-23-03.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_baseline_2025-11-18-20-23-03.pkl
+INFO     [CTRL] Task End to End Finished time: 31.599855184555054
+metrics finished time 31.599855184555054 17062.5
+[DEBUG] QoE score calculation, finished_times:  [31.599855184555054] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3310242921113968
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Burst tasks 0%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_fine-grained_2025-11-18-20-25-08.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_fine-grained_2025-11-18-20-25-08.pkl
+INFO     [CTRL] Task End to End Finished time: 26.67792534828186
+metrics finished time 26.67792534828186 17062.5
+[DEBUG] QoE score calculation, finished_times:  [26.67792534828186] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3438823938369751
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Burst tasks 50%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_baseline_2025-11-18-20-28-41.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_baseline_2025-11-18-20-28-41.pkl
+INFO     [CTRL] Task End to End Finished time: 46.337080001831055
+metrics finished time 46.337080001831055 17062.5
+[DEBUG] QoE score calculation, finished_times:  [46.337080001831055] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.33040637175242105
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Burst tasks 50%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_fine-grained_2025-11-18-20-30-13.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_fine-grained_2025-11-18-20-30-13.pkl
+INFO     [CTRL] Task End to End Finished time: 25.61315608024597
+metrics finished time 25.61315608024597 17062.5
+[DEBUG] QoE score calculation, finished_times:  [25.61315608024597] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3494880477587382
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Burst tasks 100%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_baseline_2025-11-18-20-32-39.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_baseline_2025-11-18-20-32-39.pkl
+INFO     [CTRL] Task End to End Finished time: 58.43045997619629
+metrics finished time 58.43045997619629 17062.5
+[DEBUG] QoE score calculation, finished_times:  [58.43045997619629] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.3281223773956299
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### AGX Burst tasks 100%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_agx_loose_burst_fine-grained_2025-11-18-20-34-52.txt
+INFO     [CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_agx_loose_burst_fine-grained_2025-11-18-20-34-52.pkl
+INFO     [CTRL] Task End to End Finished time: 27.30087924003601
+metrics finished time 27.30087924003601 17062.5
+[DEBUG] QoE score calculation, finished_times:  [27.30087924003601] deadlines:  [17062.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.34927869637807213
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 0%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_baseline_2025-11-18-20-24-53.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_baseline_2025-11-18-20-24-53.pkl
+INFO     [CTRL] Task End to End Finished time: 48.83379054069519
+metrics finished time 48.83379054069519 39637.5
+[DEBUG] QoE score calculation, finished_times:  [48.83379054069519] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.520534685254097
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 0%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_fine-grained_2025-11-18-20-26-50.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_fine-grained_2025-11-18-20-26-50.pkl
+INFO     [CTRL] Task End to End Finished time: 46.456401109695435
+metrics finished time 46.456401109695435 39637.5
+[DEBUG] QoE score calculation, finished_times:  [46.456401109695435] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.6009959618250529
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 50%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_baseline_2025-11-18-20-29-49.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_baseline_2025-11-18-20-29-49.pkl
+INFO     [CTRL] Task End to End Finished time: 59.58103942871094
+metrics finished time 59.58103942871094 39637.5
+[DEBUG] QoE score calculation, finished_times:  [59.58103942871094] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.9916666666666667
+INFO     [CTRL] SubTask Average finished time: 0.43872732321421304
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 50%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_fine-grained_2025-11-18-20-31-40.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_fine-grained_2025-11-18-20-31-40.pkl
+INFO     [CTRL] Task End to End Finished time: 46.26708269119263
+metrics finished time 46.26708269119263 39637.5
+[DEBUG] QoE score calculation, finished_times:  [46.26708269119263] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.6019382357597352
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 100%, EDF
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_baseline_2025-11-18-20-34-06.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_baseline_2025-11-18-20-34-06.pkl
+INFO     [CTRL] Task End to End Finished time: 75.34471487998962
+metrics finished time 75.34471487998962 39637.5
+[DEBUG] QoE score calculation, finished_times:  [75.34471487998962] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 0.99375
+INFO     [CTRL] SubTask Average finished time: 0.4298513576388359
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+### Nano Burst tasks 100%, RED
+```
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [CTRL] Saved end2end time to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/end2endtime_nano_loose_burst_fine-grained_2025-11-18-20-35-42.txt
+INFO     [CTRL] Saved statistics to: /home/zexin/ATC23/DeepLearningScheduler/taskdata/statistics_nano_loose_burst_fine-grained_2025-11-18-20-35-42.pkl
+INFO     [CTRL] Task End to End Finished time: 46.24245309829712
+metrics finished time 46.24245309829712 39637.5
+[DEBUG] QoE score calculation, finished_times:  [46.24245309829712] deadlines:  [39637.5] lambda_param:  10 QoE Score:  1.0
+INFO     [CTRL] SubTask Missing deadline rate: 1.0
+INFO     [CTRL] SubTask Average finished time: 0.6000927925109864
+INFO     [CTRL] Task Metrics: (1, 1.0, 1.0)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Nonpartitional Task Experiment
 
 Non-partitionable 不需要 tight/loose, 只需要跑一个 bench
