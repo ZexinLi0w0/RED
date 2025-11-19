@@ -1,0 +1,59 @@
+{
+  "dag_list": [
+    [
+      {
+        "TaskName": "S4_Stage1_Object_Detection",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          4
+        ],
+        "RunningTime": 5670,
+        "WorstRunningTime": 187.5
+      },
+      [
+        {
+          "TaskName": "S4_Stage2_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            4
+          ],
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 8127,
+          "WorstRunningTime": 165
+        },
+        {
+          "TaskName": "S4_Stage2_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            4
+          ],
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 8127,
+          "WorstRunningTime": 172.5
+        }
+      ],
+      {
+        "TaskName": "S4_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          1,
+          3
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 6615,
+        "WorstRunningTime": 135
+      }
+    ]
+  ]
+}

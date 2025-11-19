@@ -103,7 +103,7 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics2 = 0
     metrics3 = 0
     # matrics calculation
-    config_load_path = './TaskConfigs/simo'
+    config_load_path = './TaskConfigs/simo/new_scenarios/'
     with open(f"{config_load_path}/{task_config_path}", "r") as f:
         config = json.load(f)
         dag_list = config["dag_list"]
