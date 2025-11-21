@@ -1,0 +1,123 @@
+# New Scenarios Metrics Extraction
+
+This directory contains scripts for extracting and analyzing metrics from new scenarios experiment log files.
+
+## Scripts
+
+### 1. `extract_new_scenarios_metrics.py`
+
+Extracts three key metrics from log files:
+- **Missing deadline rate**: Percentage of tasks that missed their deadlines
+- **Average finished time**: Average time taken to complete tasks
+- **QoE score**: Quality of Experience score
+
+**Usage:**
+```bash
+# Extract metrics and display as table
+python3 extract_new_scenarios_metrics.py <log_file> --format table
+
+# Extract metrics and save to CSV
+python3 extract_new_scenarios_metrics.py <log_file> --format csv
+
+# Extract metrics and do both
+python3 extract_new_scenarios_metrics.py <log_file> --format both
+
+# Specify custom output file
+python3 extract_new_scenarios_metrics.py <log_file> --output custom_name.csv
+```
+
+**Examples:**
+```bash
+# Extract from Mac log
+python3 extract_new_scenarios_metrics.py ../mac_new_scenarios.log --format both
+
+# Extract from Nano log (on remote server)
+python3 extract_new_scenarios_metrics.py ../nano_new_scenarios.log --format csv
+```
+
+### 2. `extract_all_metrics.sh`
+
+Batch script to extract metrics from all device log files at once.
+
+**Usage:**
+```bash
+./extract_all_metrics.sh
+```
+
+This will:
+- Process `mac_new_scenarios.log`
+- Process `nano_new_scenarios.log`
+- Process `agx_new_scenarios.log`
+- Generate corresponding `*_new_scenarios_metrics.csv` files
+
+### 3. `combine_metrics.py`
+
+Combines metrics from multiple device CSV files into a single summary file.
+
+**Usage:**
+```bash
+# Auto-detect and combine all metrics CSV files in current directory
+python3 combine_metrics.py
+
+# Combine specific CSV files
+python3 combine_metrics.py --csv-files mac_metrics.csv nano_metrics.csv agx_metrics.csv
+
+# Specify output file
+python3 combine_metrics.py --output combined_results.csv
+
+# Search in specific directory
+python3 combine_metrics.py --dir /path/to/logs
+```
+
+## Workflow Example
+
+1. **Run experiments** (on respective devices):
+   ```bash
+   # On Mac
+   ./run_mac_new_scenarios.sh
+   
+   # On Nano (via SSH)
+   ./run_nano_new_scenarios.sh
+   
+   # On AGX (via SSH)
+   ./run_agx_new_scenarios.sh
+   ```
+
+2. **Extract metrics** (on each device or copy logs to one machine):
+   ```bash
+   # Option A: Extract individually
+   python3 extract_new_scenarios_metrics.py mac_new_scenarios.log --format csv
+   python3 extract_new_scenarios.log nano_new_scenarios.log --format csv
+   python3 extract_new_scenarios.log agx_new_scenarios.log --format csv
+   
+   # Option B: Use batch script
+   ./extract_all_metrics.sh
+   ```
+
+3. **Combine results**:
+   ```bash
+   python3 combine_metrics.py --output all_devices_metrics.csv
+   ```
+
+4. **Analyze**:
+   - Open the CSV file in Excel, Google Sheets, or Python pandas
+   - Compare metrics across devices, scenarios, deadlines, and approaches
+
+## Output Format
+
+The CSV files contain the following columns:
+
+- `device`: Device name (Mac, Nano, AGX)
+- `scenario`: Scenario name (Urban navigation, Emergency obstacle avoidance, Night driving)
+- `deadline`: Deadline type (Tight, Loose)
+- `approach`: Scheduling approach (Baseline, RED-IDA, RED-FG, RED)
+- `missing_deadline_rate`: Missing deadline rate (0.0 to 1.0)
+- `avg_finished_time`: Average finished time in seconds
+- `qoe_score`: QoE score (typically 0.0 to 1.0)
+
+## Notes
+
+- The extraction script automatically handles ANSI color codes in log files
+- Missing metrics are marked as 'N/A' in the output
+- Each experiment run should produce 24 results (3 scenarios × 2 deadlines × 4 approaches)
+
