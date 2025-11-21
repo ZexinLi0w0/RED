@@ -75,6 +75,21 @@ def _task_duration_ms(task_node):
     )
 
 
+def _task_worst_duration_ms(task_node):
+    """
+    Extract WorstRunningTime (ms) from a task node for deadline calculation.
+    This matches how subtask deadlines are calculated in task_generator.py.
+    Falls back to RunningTime if WorstRunningTime is missing.
+    """
+    if not isinstance(task_node, dict):
+        return 0
+    return (
+        task_node.get("WorstRunningTime")
+        or task_node.get("RunningTime")
+        or 0
+    )
+
+
 def _stage_duration_ms(stage_node):
     """
     Calculate the duration of a stage. A stage can be a single task dict or
@@ -86,22 +101,44 @@ def _stage_duration_ms(stage_node):
     return _task_duration_ms(stage_node)
 
 
+def _stage_worst_duration_ms(stage_node):
+    """
+    Calculate the worst-case duration of a stage for deadline calculation.
+    For parallel tasks, we take the maximum (not sum) because parallel tasks
+    execute concurrently, matching the logic in task_generator.py where
+    parallel tasks share the same start_time.
+    """
+    if isinstance(stage_node, list):
+        # For parallel tasks, take the maximum worst time (they run concurrently)
+        return max(_task_worst_duration_ms(task) for task in stage_node)
+    return _task_worst_duration_ms(stage_node)
+
+
 def _overall_deadline_seconds(config: dict) -> float:
     """
-    Compute the overall deadline (seconds) by summing every stage duration across
-    all DAGs and scaling with RunningTimeFactor. The values in the configs are in
-    milliseconds, so convert to seconds at the end to stay consistent with
-    wall-clock timings from time.time().
+    Compute the overall deadline (seconds) by summing every stage worst-case duration
+    across all DAGs, multiplying by the number of DAG periods (DagRepeatedTimes=10),
+    and scaling with RunningTimeFactor. This matches how subtask deadlines are 
+    calculated using WorstRunningTime in task_generator.py.
+    
+    The values in the configs are in milliseconds, so convert to seconds at the end
+    to stay consistent with wall-clock timings from time.time().
     """
     dag_list = config.get("dag_list", [])
     running_time_factor = config.get("RunningTimeFactor", 1)
+    dag_repeated_times = 10  # Matches DagRepeatedTimes in task_generator.py
 
-    total_ms = 0
+    # Calculate single DAG worst-case duration
+    single_dag_ms = 0
     for dag in dag_list:
         if not isinstance(dag, list):
             continue
         for stage in dag:
-            total_ms += _stage_duration_ms(stage)
+            single_dag_ms += _stage_worst_duration_ms(stage)
+
+    # Overall deadline = single DAG deadline * number of periods
+    # (Each period's deadline is cumulative, so the last period's deadline is the overall deadline)
+    total_ms = single_dag_ms * dag_repeated_times
 
     return (total_ms * running_time_factor) / 1000.0
 
