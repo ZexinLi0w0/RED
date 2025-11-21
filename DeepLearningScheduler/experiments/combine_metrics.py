@@ -73,13 +73,20 @@ def main():
     parser.add_argument(
         '--dir',
         type=str,
-        default='.',
-        help='Directory to search for CSV files (default: current directory)'
+        default=None,
+        help='Directory to search for CSV files (default: taskdata/new_scenarios)'
     )
     
     args = parser.parse_args()
     
-    search_dir = Path(args.dir)
+    # Default to taskdata/new_scenarios if not specified
+    if args.dir is None:
+        script_dir = Path(__file__).parent
+        root_dir = script_dir.parent
+        search_dir = root_dir / 'taskdata' / 'new_scenarios'
+    else:
+        search_dir = Path(args.dir)
+    
     output_file = Path(args.output)
     
     # Find CSV files

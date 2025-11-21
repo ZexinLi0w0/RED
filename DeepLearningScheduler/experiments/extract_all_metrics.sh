@@ -8,8 +8,8 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 EXTRACT_SCRIPT="${SCRIPT_DIR}/extract_new_scenarios_metrics.py"
 
 # Default log files location
-LOG_DIR="${ROOT_DIR}"
-OUTPUT_DIR="${ROOT_DIR}"
+LOG_DIR="${ROOT_DIR}/taskdata/new_scenarios"
+OUTPUT_DIR="${ROOT_DIR}/taskdata/new_scenarios"
 
 # Process all log files
 for device in mac nano agx; do
@@ -22,7 +22,7 @@ for device in mac nano agx; do
     
     echo "Processing ${device} log file..."
     python3 "${EXTRACT_SCRIPT}" "${log_file}" --format csv --output "${OUTPUT_DIR}/${device}_new_scenarios_metrics.csv"
-    echo "  -> Generated ${device}_new_scenarios_metrics.csv"
+    echo "  -> Generated ${OUTPUT_DIR}/${device}_new_scenarios_metrics.csv"
 done
 
 echo ""

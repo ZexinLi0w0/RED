@@ -29,10 +29,10 @@ python3 extract_new_scenarios_metrics.py <log_file> --output custom_name.csv
 **Examples:**
 ```bash
 # Extract from Mac log
-python3 extract_new_scenarios_metrics.py ../mac_new_scenarios.log --format both
+python3 extract_new_scenarios_metrics.py ../taskdata/new_scenarios/mac_new_scenarios.log --format both
 
 # Extract from Nano log (on remote server)
-python3 extract_new_scenarios_metrics.py ../nano_new_scenarios.log --format csv
+python3 extract_new_scenarios_metrics.py ../taskdata/new_scenarios/nano_new_scenarios.log --format csv
 ```
 
 ### 2. `extract_all_metrics.sh`
@@ -45,10 +45,10 @@ Batch script to extract metrics from all device log files at once.
 ```
 
 This will:
-- Process `mac_new_scenarios.log`
-- Process `nano_new_scenarios.log`
-- Process `agx_new_scenarios.log`
-- Generate corresponding `*_new_scenarios_metrics.csv` files
+- Process `taskdata/new_scenarios/mac_new_scenarios.log`
+- Process `taskdata/new_scenarios/nano_new_scenarios.log`
+- Process `taskdata/new_scenarios/agx_new_scenarios.log`
+- Generate corresponding `*_new_scenarios_metrics.csv` files in `taskdata/new_scenarios/`
 
 ### 3. `combine_metrics.py`
 
@@ -86,9 +86,9 @@ python3 combine_metrics.py --dir /path/to/logs
 2. **Extract metrics** (on each device or copy logs to one machine):
    ```bash
    # Option A: Extract individually
-   python3 extract_new_scenarios_metrics.py mac_new_scenarios.log --format csv
-   python3 extract_new_scenarios.log nano_new_scenarios.log --format csv
-   python3 extract_new_scenarios.log agx_new_scenarios.log --format csv
+   python3 extract_new_scenarios_metrics.py taskdata/new_scenarios/mac_new_scenarios.log --format csv
+   python3 extract_new_scenarios_metrics.py taskdata/new_scenarios/nano_new_scenarios.log --format csv
+   python3 extract_new_scenarios_metrics.py taskdata/new_scenarios/agx_new_scenarios.log --format csv
    
    # Option B: Use batch script
    ./extract_all_metrics.sh
