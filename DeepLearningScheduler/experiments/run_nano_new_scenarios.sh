@@ -9,8 +9,8 @@ TASK_DIR="${ROOT}/TaskConfigs/simo/new_scenarios"
 LOG_FILE="${ROOT}/taskdata/new_scenarios/nano_new_scenarios.log"
 DEVICE_ID="nano"
 DEVICE_LABEL="Nano"
-DEADLINE_PROFILES=("tight" "loose")
-DEADLINE_LABELS=("Tight" "Loose")
+DEADLINE_PROFILES=("loose")
+DEADLINE_LABELS=("Loose")
 
 SCENARIOS=("urban_navigation" "emergency_obstacle_avoidance" "night_driving")
 SCENARIO_LABELS=("Urban navigation" "Emergency obstacle avoidance" "Night driving")
@@ -38,21 +38,27 @@ run_case() {
 
   # Check if task file exists
   if [[ ! -f "${task_file}" ]]; then
-    echo "ERROR: Task file not found: ${task_file}" >> "${LOG_FILE}"
-    echo "Skipping experiment: ${scenario_label}, ${deadline_label}, ${approach_label}" >> "${LOG_FILE}"
+    echo "ERROR: Task file not found: ${task_file}" | tee -a "${LOG_FILE}"
+    echo "Skipping experiment: ${scenario_label}, ${deadline_label}, ${approach_label}" | tee -a "${LOG_FILE}"
     echo >> "${LOG_FILE}"
     return 1
   fi
 
-  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${deadline_label}, ${approach_label}" >> "${LOG_FILE}"
-  echo "Running: ${task_file} with approach ${approach}" >> "${LOG_FILE}"
+  # Build the command string
+  local cmd="python3 ${PROJECT_ENTRY} --config ${CONFIG_FILE} --task ${task_file} --approach ${approach}"
+  
+  # Output to terminal and log
+  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${deadline_label}, ${approach_label}" | tee -a "${LOG_FILE}"
+  echo "Command: ${cmd}" | tee -a "${LOG_FILE}"
+  
+  # Execute the command
   python3 "${PROJECT_ENTRY}" \
     --config "${CONFIG_FILE}" \
     --task "${task_file}" \
     --approach "${approach}" >> "${LOG_FILE}" 2>&1
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
-    echo "ERROR: Experiment failed with exit code ${exit_code}" >> "${LOG_FILE}"
+    echo "ERROR: Experiment failed with exit code ${exit_code}" | tee -a "${LOG_FILE}"
   fi
   echo >> "${LOG_FILE}"
   return $exit_code
@@ -70,14 +76,14 @@ for idx in "${!SCENARIOS[@]}"; do
       approach="${APPROACHES[$jdx]}"
       approach_label="${APPROACH_LABELS[$jdx]}"
       experiment_count=$((experiment_count + 1))
-      echo "[${experiment_count}/24] Running: ${scenario_label}, ${deadline_label}, ${approach_label}" >> "${LOG_FILE}"
+      echo "[${experiment_count}/12] Running: ${scenario_label}, ${deadline_label}, ${approach_label}" | tee -a "${LOG_FILE}"
       # Continue even if run_case fails
       if ! run_case "${scenario}" "${scenario_label}" "${deadline_profile}" "${deadline_label}" "${approach}" "${approach_label}"; then
         failed_count=$((failed_count + 1))
-        echo "WARNING: Experiment failed, continuing with next experiment..." >> "${LOG_FILE}"
+        echo "WARNING: Experiment failed, continuing with next experiment..." | tee -a "${LOG_FILE}"
       fi
     done
   done
 done
-echo "All experiments completed. Total: ${experiment_count}, Failed: ${failed_count}" >> "${LOG_FILE}"
+echo "All experiments completed. Total: ${experiment_count}, Failed: ${failed_count}" | tee -a "${LOG_FILE}"
 

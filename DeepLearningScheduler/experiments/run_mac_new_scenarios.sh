@@ -8,8 +8,8 @@ TASK_DIR="${ROOT}/TaskConfigs/simo/new_scenarios"
 LOG_FILE="${ROOT}/taskdata/new_scenarios/mac_new_scenarios.log"
 DEVICE_ID="mac"
 DEVICE_LABEL="Mac"
-DEADLINE_PROFILES=("tight" "loose")
-DEADLINE_LABELS=("Tight" "Loose")
+DEADLINE_PROFILES=("loose")
+DEADLINE_LABELS=("Loose")
 
 SCENARIOS=("urban_navigation" "emergency_obstacle_avoidance" "night_driving")
 SCENARIO_LABELS=("Urban navigation" "Emergency obstacle avoidance" "Night driving")
@@ -17,6 +17,7 @@ APPROACHES=("baseline" "feedback" "fine-grained" "feedback-fine-grained")
 APPROACH_LABELS=("Baseline" "RED-IDA" "RED-FG" "RED")
 
 cd "${ROOT}"
+mkdir -p "$(dirname "${LOG_FILE}")"
 : > "${LOG_FILE}"
 echo "Writing Mac experiment outputs to ${LOG_FILE}"
 
@@ -29,7 +30,14 @@ run_case() {
   local approach_label="$6"
   local task_file="${TASK_DIR}/${DEVICE_ID}_${deadline_profile}_${scenario}.json"
 
-  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${deadline_label}, ${approach_label}" >> "${LOG_FILE}"
+  # Build the command string
+  local cmd="python3 ${PROJECT_ENTRY} --config ${CONFIG_FILE} --task ${task_file} --approach ${approach}"
+  
+  # Output to terminal and log
+  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${deadline_label}, ${approach_label}" | tee -a "${LOG_FILE}"
+  echo "Command: ${cmd}" | tee -a "${LOG_FILE}"
+  
+  # Execute the command
   python3 "${PROJECT_ENTRY}" \
     --config "${CONFIG_FILE}" \
     --task "${task_file}" \

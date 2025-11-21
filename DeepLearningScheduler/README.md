@@ -185,3 +185,34 @@ python main.py -c "./overhead-handler.json" -t "./TaskConfigs/overhead-measure.j
 ```shell
 rm taskdata/statistics_*
 ```
+
+### New Scenario Experiment
+
+```
+## AGX
+### Urban Navigation
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/agx_loose_urban_navigation.json" -a "baseline"
+
+### Emergency Obstacle Avoidance
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/agx_loose_emergency_obstacle_avoidance.json" -a "baseline"
+
+### Night Driving
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/agx_loose_night_driving.json" -a "baseline"
+
+## Nano
+
+### Urban Navigation
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/nano_loose_urban_navigation.json" -a "baseline"
+
+### Emergency Obstacle Avoidance
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/nano_loose_emergency_obstacle_avoidance.json" -a "baseline"
+
+### Night Driving
+
+python main.py -c "./handler-config.json" -t "./TaskConfigs/simo/new_scenarios/nano_loose_night_driving.json" -a "baseline"
+```

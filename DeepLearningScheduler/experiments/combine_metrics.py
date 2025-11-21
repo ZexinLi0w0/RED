@@ -42,7 +42,7 @@ def combine_metrics(csv_files: List[Path], output_file: Path):
     
     # Write combined results
     fieldnames = ['device', 'scenario', 'deadline', 'approach', 
-                  'missing_deadline_rate', 'avg_finished_time', 'qoe_score']
+                  'missing_deadline_rate', 'finished_time', 'deadline_time', 'qoe_score']
     
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

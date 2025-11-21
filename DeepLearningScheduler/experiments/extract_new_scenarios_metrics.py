@@ -4,7 +4,8 @@ Extract metrics from new scenarios log files.
 
 Extracts:
 - Missing deadline rate
-- Average finished time
+- Task End to End Finished time
+- Deadline time (from QoE calculation)
 - QoE score
 
 Usage:
@@ -35,7 +36,8 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
     - deadline: Deadline type (Tight/Loose)
     - approach: Approach name
     - missing_deadline_rate: Missing deadline rate (float)
-    - avg_finished_time: Average finished time (float)
+    - finished_time: Task End to End Finished time (float)
+    - deadline_time: Deadline time from QoE calculation (float)
     - qoe_score: QoE score (float)
     """
     results = []
@@ -60,10 +62,10 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
                     deadline = parts[2]
                     approach = parts[3]
                 else:
-                    # Old format: try to infer deadline from next line (config file path)
+                    # Old format: try to infer deadline from next line (config file path or Command line)
                     deadline = 'Unknown'
                     approach = parts[2]
-                    # Try to infer deadline from the next line if it contains config file path
+                    # Try to infer deadline from the next line if it contains config file path or Command
                     if i + 1 < len(lines):
                         next_line = strip_ansi_codes(lines[i + 1]).strip()
                         if 'tight' in next_line.lower():
@@ -73,7 +75,8 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
                 
                 # Look for metrics in the following lines
                 missing_rate = None
-                avg_time = None
+                finished_time = None
+                deadline_time = None
                 qoe_score = None
                 
                 # Search within the next 100 lines for this experiment's metrics
@@ -86,17 +89,19 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
                         if match:
                             missing_rate = float(match.group(1))
                     
-                    # Extract average finished time
-                    if avg_time is None:
-                        match = re.search(r'SubTask Average finished time:\s*([\d.]+)', metric_line)
+                    # Extract Task End to End Finished time (this is the total finished time)
+                    if finished_time is None:
+                        match = re.search(r'Task End to End Finished time:\s*([\d.]+)', metric_line)
                         if match:
-                            avg_time = float(match.group(1))
+                            finished_time = float(match.group(1))
                     
-                    # Extract QoE score
-                    if qoe_score is None:
-                        match = re.search(r'QoE Score:\s*([\d.]+)', metric_line)
+                    # Extract deadline time and QoE score from QoE calculation line
+                    if deadline_time is None or qoe_score is None:
+                        # Pattern: [DEBUG] QoE score calculation, finished_times:  [13.285441398620605] deadlines:  [25.6365] lambda_param:  0.05 QoE Score:  1.0
+                        match = re.search(r'QoE score calculation.*?deadlines:\s*\[([\d.]+)\].*?QoE Score:\s*([\d.]+)', metric_line)
                         if match:
-                            qoe_score = float(match.group(1))
+                            deadline_time = float(match.group(1))
+                            qoe_score = float(match.group(2))
                     
                     # Stop if we hit the next experiment marker
                     if j < len(lines) - 1:
@@ -105,14 +110,15 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
                             break
                 
                 # Only add if we found at least one metric
-                if missing_rate is not None or avg_time is not None or qoe_score is not None:
+                if missing_rate is not None or finished_time is not None or qoe_score is not None:
                     results.append({
                         'device': device,
                         'scenario': scenario,
                         'deadline': deadline,
                         'approach': approach,
                         'missing_deadline_rate': missing_rate if missing_rate is not None else 'N/A',
-                        'avg_finished_time': avg_time if avg_time is not None else 'N/A',
+                        'finished_time': finished_time if finished_time is not None else 'N/A',
+                        'deadline_time': deadline_time if deadline_time is not None else 'N/A',
                         'qoe_score': qoe_score if qoe_score is not None else 'N/A'
                     })
         
@@ -128,7 +134,7 @@ def write_csv(results: List[Dict[str, any]], output_file: Path):
         return
     
     fieldnames = ['device', 'scenario', 'deadline', 'approach', 
-                  'missing_deadline_rate', 'avg_finished_time', 'qoe_score']
+                  'missing_deadline_rate', 'finished_time', 'deadline_time', 'qoe_score']
     
     with open(output_file, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -146,7 +152,7 @@ def print_table(results: List[Dict[str, any]]):
     
     # Calculate column widths
     headers = ['Device', 'Scenario', 'Deadline', 'Approach', 
-               'Missing Deadline Rate', 'Avg Finished Time', 'QoE Score']
+               'Missing Deadline Rate', 'Finished Time', 'Deadline Time', 'QoE Score']
     col_widths = [len(h) for h in headers]
     
     for result in results:
@@ -155,8 +161,9 @@ def print_table(results: List[Dict[str, any]]):
         col_widths[2] = max(col_widths[2], len(str(result['deadline'])))
         col_widths[3] = max(col_widths[3], len(str(result['approach'])))
         col_widths[4] = max(col_widths[4], len(str(result['missing_deadline_rate'])))
-        col_widths[5] = max(col_widths[5], len(str(result['avg_finished_time'])))
-        col_widths[6] = max(col_widths[6], len(str(result['qoe_score'])))
+        col_widths[5] = max(col_widths[5], len(str(result['finished_time'])))
+        col_widths[6] = max(col_widths[6], len(str(result['deadline_time'])))
+        col_widths[7] = max(col_widths[7], len(str(result['qoe_score'])))
     
     # Print header
     header_row = ' | '.join(h.ljust(w) for h, w in zip(headers, col_widths))
@@ -171,8 +178,9 @@ def print_table(results: List[Dict[str, any]]):
             str(result['deadline']).ljust(col_widths[2]),
             str(result['approach']).ljust(col_widths[3]),
             str(result['missing_deadline_rate']).ljust(col_widths[4]),
-            str(result['avg_finished_time']).ljust(col_widths[5]),
-            str(result['qoe_score']).ljust(col_widths[6])
+            str(result['finished_time']).ljust(col_widths[5]),
+            str(result['deadline_time']).ljust(col_widths[6]),
+            str(result['qoe_score']).ljust(col_widths[7])
         ])
         print(row)
 
