@@ -8,7 +8,8 @@ TASK_DIR="${ROOT}/TaskConfigs/simo/new_scenarios"
 LOG_FILE="${ROOT}/nano_new_scenarios.log"
 DEVICE_ID="nano"
 DEVICE_LABEL="Nano"
-DEADLINE_PROFILE="loose"
+DEADLINE_PROFILES=("tight" "loose")
+DEADLINE_LABELS=("Tight" "Loose")
 
 SCENARIOS=("urban_navigation" "emergency_obstacle_avoidance" "night_driving")
 SCENARIO_LABELS=("Urban navigation" "Emergency obstacle avoidance" "Night driving")
@@ -22,11 +23,13 @@ echo "Writing Nano experiment outputs to ${LOG_FILE}"
 run_case() {
   local scenario="$1"
   local scenario_label="$2"
-  local approach="$3"
-  local approach_label="$4"
-  local task_file="${TASK_DIR}/${DEVICE_ID}_${DEADLINE_PROFILE}_${scenario}.json"
+  local deadline_profile="$3"
+  local deadline_label="$4"
+  local approach="$5"
+  local approach_label="$6"
+  local task_file="${TASK_DIR}/${DEVICE_ID}_${deadline_profile}_${scenario}.json"
 
-  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${approach_label}" >> "${LOG_FILE}"
+  echo "# ${DEVICE_LABEL}, ${scenario_label}, ${deadline_label}, ${approach_label}" >> "${LOG_FILE}"
   python3 "${PROJECT_ENTRY}" \
     --config "${CONFIG_FILE}" \
     --task "${task_file}" \
@@ -37,10 +40,14 @@ run_case() {
 for idx in "${!SCENARIOS[@]}"; do
   scenario="${SCENARIOS[$idx]}"
   scenario_label="${SCENARIO_LABELS[$idx]}"
-  for jdx in "${!APPROACHES[@]}"; do
-    approach="${APPROACHES[$jdx]}"
-    approach_label="${APPROACH_LABELS[$jdx]}"
-    run_case "${scenario}" "${scenario_label}" "${approach}" "${approach_label}"
+  for kdx in "${!DEADLINE_PROFILES[@]}"; do
+    deadline_profile="${DEADLINE_PROFILES[$kdx]}"
+    deadline_label="${DEADLINE_LABELS[$kdx]}"
+    for jdx in "${!APPROACHES[@]}"; do
+      approach="${APPROACHES[$jdx]}"
+      approach_label="${APPROACH_LABELS[$jdx]}"
+      run_case "${scenario}" "${scenario_label}" "${deadline_profile}" "${deadline_label}" "${approach}" "${approach_label}"
+    done
   done
 done
 
