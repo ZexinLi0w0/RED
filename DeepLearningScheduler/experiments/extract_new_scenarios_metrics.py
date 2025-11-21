@@ -50,13 +50,26 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
         
         # Check if this is an experiment marker line
         if line.startswith('#'):
-            # Parse experiment header: "# Device, Scenario, Deadline, Approach"
+            # Parse experiment header: "# Device, Scenario, Deadline, Approach" or "# Device, Scenario, Approach" (old format)
             parts = [p.strip() for p in line[1:].split(',')]
-            if len(parts) >= 4:
+            if len(parts) >= 3:
                 device = parts[0]
                 scenario = parts[1]
-                deadline = parts[2]
-                approach = parts[3]
+                # Handle both old format (3 fields) and new format (4 fields)
+                if len(parts) >= 4:
+                    deadline = parts[2]
+                    approach = parts[3]
+                else:
+                    # Old format: try to infer deadline from next line (config file path)
+                    deadline = 'Unknown'
+                    approach = parts[2]
+                    # Try to infer deadline from the next line if it contains config file path
+                    if i + 1 < len(lines):
+                        next_line = strip_ansi_codes(lines[i + 1]).strip()
+                        if 'tight' in next_line.lower():
+                            deadline = 'Tight'
+                        elif 'loose' in next_line.lower():
+                            deadline = 'Loose'
                 
                 # Look for metrics in the following lines
                 missing_rate = None
