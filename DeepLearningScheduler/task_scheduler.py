@@ -82,6 +82,8 @@ class TaskSchedule:
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
         TaskStartTime = time.time()
+        # Set self.TaskStartTime early so it's available for fine_grained_adjust()
+        self.TaskStartTime = TaskStartTime
         if self.burst_enabled and self.burst_manager and self.burst_task_ratio > 0 and not self._burst_tasks_augmented:
             extra_tasks = self.burst_manager.generate_burst_tasks(self.tasks, self.burst_task_ratio)
             if extra_tasks:
@@ -124,7 +126,6 @@ class TaskSchedule:
         
         self.task_num = len(self.TaskQueue)
         self.init_task_statistics()
-        self.TaskStartTime = TaskStartTime
         # logger.debug(f'[CTRL] Tasks: {TaskQueue}')
         logger.info(f"[CTRL] Tasks generated, start time: {TaskStartTime}, finished time: {time.time()}")
         # logger.debug(f"[DEBUG] edf scheduler, TaskQueue: {self.TaskQueue}")

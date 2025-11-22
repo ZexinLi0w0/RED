@@ -43,6 +43,9 @@ run_case() {
     --task "${task_file}" \
     --approach "${approach}" >> "${LOG_FILE}" 2>&1
   echo >> "${LOG_FILE}"
+
+  echo "Sleeping 3 seconds before next experiment..." | tee -a "${LOG_FILE}"
+  sleep 3
 }
 
 for idx in "${!SCENARIOS[@]}"; do

@@ -61,6 +61,8 @@ run_case() {
     echo "ERROR: Experiment failed with exit code ${exit_code}" | tee -a "${LOG_FILE}"
   fi
   echo >> "${LOG_FILE}"
+  echo "Sleeping 3 seconds before next experiment..." | tee -a "${LOG_FILE}"
+  sleep 3
   return $exit_code
 }
 
