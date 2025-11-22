@@ -79,8 +79,9 @@ def parse_log_file(log_file: Path) -> List[Dict[str, any]]:
                 deadline_time = None
                 qoe_score = None
                 
-                # Search within the next 100 lines for this experiment's metrics
-                for j in range(i + 1, min(i + 100, len(lines))):
+                # Search within the next 150 lines for this experiment's metrics
+                # (Increased from 100 to ensure we capture QoE calculation lines that may appear later)
+                for j in range(i + 1, min(i + 150, len(lines))):
                     metric_line = strip_ansi_codes(lines[j]).strip()
                     
                     # Extract missing deadline rate
