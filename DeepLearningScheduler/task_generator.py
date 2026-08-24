@@ -1,4 +1,6 @@
 import json
+from dataclasses import dataclass
+
 from nanoid import generate
 
 # Required Attributes for TaskConfigObject
@@ -6,6 +8,79 @@ TaskConfigAttributes = ["HandlerId", "Period", "Deadline", "RunningTime", "Prior
 
 # Optional Attributes for Burst Task Support
 BurstTaskAttributes = ["BurstPriority", "CriticalityWeight", "DropThreshold"]
+
+
+@dataclass(frozen=True)
+class DagTimingConfig:
+    """Timing controls for generated DAG instances.
+
+    ``deadline_factor`` scales each node's relative deadline budget, while
+    ``arrival_scale`` independently scales the nominal release timeline.
+    Parallel stages follow the application-DAG critical path by default.
+    """
+
+    deadline_factor: float = 1.0
+    arrival_scale: float = 1.0
+    dag_repeated_times: int = 10
+    parallel_stage_policy: str = "max"
+
+
+def _positive_number(value, field_name):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        raise ValueError(f"{field_name} must be a positive number")
+    return float(value)
+
+
+def timing_config_from_mapping(config):
+    """Parse explicit timing controls, with a compatibility path for old JSON."""
+    has_legacy_factor = "RunningTimeFactor" in config
+    explicit_fields = {"DeadlineFactor", "ArrivalScale"}
+    present_explicit_fields = explicit_fields.intersection(config)
+
+    if has_legacy_factor and present_explicit_fields:
+        raise ValueError(
+            "RunningTimeFactor cannot be combined with DeadlineFactor or ArrivalScale"
+        )
+    if present_explicit_fields and present_explicit_fields != explicit_fields:
+        missing = sorted(explicit_fields - present_explicit_fields)
+        raise ValueError(
+            "split timing configuration requires both DeadlineFactor and "
+            f"ArrivalScale; missing {missing}"
+        )
+
+    if has_legacy_factor:
+        legacy_factor = _positive_number(
+            config["RunningTimeFactor"], "RunningTimeFactor"
+        )
+        deadline_factor = legacy_factor
+        arrival_scale = legacy_factor
+    elif present_explicit_fields:
+        deadline_factor = _positive_number(
+            config["DeadlineFactor"], "DeadlineFactor"
+        )
+        arrival_scale = _positive_number(config["ArrivalScale"], "ArrivalScale")
+    else:
+        deadline_factor = 1.0
+        arrival_scale = 1.0
+
+    dag_repeated_times = config.get("DagRepeatedTimes", 10)
+    if (
+        isinstance(dag_repeated_times, bool)
+        or not isinstance(dag_repeated_times, int)
+        or dag_repeated_times <= 0
+    ):
+        raise ValueError("DagRepeatedTimes must be a positive integer")
+
+    parallel_stage_policy = config.get("ParallelStagePolicy", "max")
+    if parallel_stage_policy not in {"max", "sum"}:
+        raise ValueError("ParallelStagePolicy must be either 'max' or 'sum'")
+
+    return DagTimingConfig(
+        deadline_factor=deadline_factor,
+        arrival_scale=arrival_scale,
+        dag_repeated_times=dag_repeated_times,
+        parallel_stage_policy=parallel_stage_policy,
+    )
 
 def validate_task_config(task_config):
     """
@@ -85,6 +160,67 @@ def load_task_config(task_config_path):
     
     return task_config
 
+def _load_dag_config_mapping(dag_config_path):
+    try:
+        with open(dag_config_path, "r") as config_file:
+            config = json.load(config_file)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON in DAG config {dag_config_path}") from exc
+
+    if "dag_list" not in config:
+        raise ValueError("missing `dag_list` in DAG config")
+    if not isinstance(config["dag_list"], list):
+        raise ValueError("`dag_list` must be a list")
+
+    return config
+
+
+def _non_partitionable_config_from_mapping(config):
+    non_partitionable_percentage = config.get("NonPartitionablePercentage", 0)
+    if (
+        isinstance(non_partitionable_percentage, bool)
+        or not isinstance(non_partitionable_percentage, (int, float))
+        or not 0 <= non_partitionable_percentage <= 100
+    ):
+        raise ValueError("NonPartitionablePercentage must be between 0 and 100")
+
+    non_partitionable_config = config.get("NonPartitionableConfig")
+    if non_partitionable_config is not None and not isinstance(
+        non_partitionable_config, dict
+    ):
+        raise ValueError("NonPartitionableConfig must be a dictionary")
+
+    return float(non_partitionable_percentage), non_partitionable_config
+
+
+def _burst_ratio_from_mapping(config):
+    burst_task_ratio = config.get("BurstTaskRatio", 0)
+    if (
+        isinstance(burst_task_ratio, bool)
+        or not isinstance(burst_task_ratio, (int, float))
+        or not 0 <= burst_task_ratio <= 100
+    ):
+        raise ValueError("BurstTaskRatio must be between 0 and 100")
+    return float(burst_task_ratio)
+
+
+def load_dag_experiment_config(dag_config_path):
+    """Load the complete, explicit experiment configuration."""
+    config = _load_dag_config_mapping(dag_config_path)
+    timing_config = timing_config_from_mapping(config)
+    non_partitionable_percentage, non_partitionable_config = (
+        _non_partitionable_config_from_mapping(config)
+    )
+    burst_task_ratio = _burst_ratio_from_mapping(config)
+    return (
+        config["dag_list"],
+        timing_config,
+        non_partitionable_percentage,
+        non_partitionable_config,
+        burst_task_ratio,
+    )
+
+
 def load_dag_config(dag_config_path):
     """
     Load a dag config from a JSON file.
@@ -107,50 +243,33 @@ def load_dag_config(dag_config_path):
     WorstRunningTime: Wrost running time for this task (ms)
 
     """
-     # Load the handlers from the handler config file
+    # Legacy loader retained for old scripts. New experiment runners must use
+    # load_dag_experiment_config so deadline and arrival scaling stay separate.
     try:
-        with open(dag_config_path, "r") as f:
-            config = json.load(f)
-    except json.JSONDecodeError:
-        print("Error: Invalid JSON file")
+        config = _load_dag_config_mapping(dag_config_path)
+        timing_config = timing_config_from_mapping(config)
+        non_partitionable_percentage, non_partitionable_config = (
+            _non_partitionable_config_from_mapping(config)
+        )
+        burst_task_ratio = _burst_ratio_from_mapping(config)
+    except (OSError, ValueError) as exc:
+        print(f"Error: {exc}")
         return
-    
-    # Check if the config file has a handler list
-    if "dag_list" not in config:
-        print("Error: Missing `dag_list` in config file")
+
+    if timing_config.deadline_factor != timing_config.arrival_scale:
+        print(
+            "Error: legacy load_dag_config cannot represent distinct "
+            "DeadlineFactor and ArrivalScale"
+        )
         return
-    
-    # Check if the handler list is a list
-    if not isinstance(config["dag_list"], list):
-        print("Error: `dag_list` must be a list")
-        return
-    
-    dag_config = config["dag_list"]
-    running_time_factor = 1
-    if("RunningTimeFactor" in config):
-        running_time_factor = config["RunningTimeFactor"]
-    
-    # Load non-partitionable task configuration
-    non_partitionable_percentage = 0
-    non_partitionable_config = None
-    if("NonPartitionablePercentage" in config):
-        non_partitionable_percentage = config["NonPartitionablePercentage"]
-        if not isinstance(non_partitionable_percentage, (int, float)) or non_partitionable_percentage < 0 or non_partitionable_percentage > 100:
-            print("Error: NonPartitionablePercentage must be a number between 0 and 100")
-            return
-    
-    if("NonPartitionableConfig" in config):
-        non_partitionable_config = config["NonPartitionableConfig"]
-        if not isinstance(non_partitionable_config, dict):
-            print("Error: NonPartitionableConfig must be a dictionary")
-            return
-    
-    burst_task_ratio = config.get("BurstTaskRatio", 0)
-    if not isinstance(burst_task_ratio, (int, float)) or burst_task_ratio < 0 or burst_task_ratio > 100:
-        print("Error: BurstTaskRatio must be a number between 0 and 100")
-        return
-    
-    return dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config, burst_task_ratio
+
+    return (
+        config["dag_list"],
+        timing_config.deadline_factor,
+        non_partitionable_percentage,
+        non_partitionable_config,
+        burst_task_ratio,
+    )
 
 def generate_tasks(task_config):
     """
@@ -181,7 +300,78 @@ def generate_tasks(task_config):
                 tasks.append(task)
     return tasks
 
-def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percentage=0.0, non_partitionable_config=None):
+def _worst_running_time_ms(task_config):
+    try:
+        worst_running_time = task_config["WorstRunningTime"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("every DAG task must define WorstRunningTime") from exc
+    return _positive_number(worst_running_time, "WorstRunningTime")
+
+
+def _stage_duration_ms(stage_config, parallel_stage_policy):
+    if isinstance(stage_config, list):
+        if not stage_config:
+            raise ValueError("parallel DAG stages cannot be empty")
+        durations = [_worst_running_time_ms(task) for task in stage_config]
+        return max(durations) if parallel_stage_policy == "max" else sum(durations)
+    return _worst_running_time_ms(stage_config)
+
+
+def _resolve_generation_timing(
+    *,
+    time_factor,
+    deadline_factor,
+    arrival_scale,
+    dag_repeated_times,
+    parallel_stage_policy,
+):
+    if time_factor is not None:
+        if deadline_factor is not None or arrival_scale is not None:
+            raise ValueError(
+                "legacy time_factor cannot be combined with deadline_factor or "
+                "arrival_scale"
+            )
+        legacy_factor = _positive_number(time_factor, "time_factor")
+        deadline_factor = legacy_factor
+        arrival_scale = legacy_factor
+    else:
+        deadline_factor = _positive_number(
+            1.0 if deadline_factor is None else deadline_factor,
+            "deadline_factor",
+        )
+        arrival_scale = _positive_number(
+            1.0 if arrival_scale is None else arrival_scale,
+            "arrival_scale",
+        )
+
+    timing_config = DagTimingConfig(
+        deadline_factor=deadline_factor,
+        arrival_scale=arrival_scale,
+        dag_repeated_times=dag_repeated_times,
+        parallel_stage_policy=parallel_stage_policy,
+    )
+    # Reuse mapping validation for integer repetition count and stage policy.
+    return timing_config_from_mapping(
+        {
+            "DeadlineFactor": timing_config.deadline_factor,
+            "ArrivalScale": timing_config.arrival_scale,
+            "DagRepeatedTimes": timing_config.dag_repeated_times,
+            "ParallelStagePolicy": timing_config.parallel_stage_policy,
+        }
+    )
+
+
+def generate_tasks_from_dag(
+    dag_config,
+    time_factor=None,
+    non_partitionable_percentage=0.0,
+    non_partitionable_config=None,
+    *,
+    deadline_factor=None,
+    arrival_scale=None,
+    dag_repeated_times=10,
+    parallel_stage_policy="max",
+):
     """
     Generate tasks queue from the task config.
     Task Attributes:
@@ -197,28 +387,40 @@ def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percent
     IsNonPartitionable: flag indicating if task is non-partitionable
     """
     import random
-    
+
+    timing_config = _resolve_generation_timing(
+        time_factor=time_factor,
+        deadline_factor=deadline_factor,
+        arrival_scale=arrival_scale,
+        dag_repeated_times=dag_repeated_times,
+        parallel_stage_policy=parallel_stage_policy,
+    )
     tasks = []
-    DagRepeatedTimes = 10
-    start_time = 0
-    
+    start_time_ms = 0.0
+
     def generate_task_obj(config, start_time, period, is_non_partitionable=False):
+        worst_running_time_ms = _worst_running_time_ms(config)
         task = {
             "TaskId": f"{config['TaskName']}_[{period}]_{generate(size=7)}",
             "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
-            "Deadline": (start_time + config["WorstRunningTime"]*time_factor) / 1000, # deadline won't extend for ReleaseTimeDelay
+            "Deadline": (
+                start_time
+                + worst_running_time_ms * timing_config.deadline_factor
+            )
+            / 1000,
             "Priority": config["Priority"],
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
             "IsNonPartitionable": is_non_partitionable
         }
-        return task, config["WorstRunningTime"]*time_factor
+        return task
+
     # Calculate total number of tasks to determine how many should be non-partitionable
     total_tasks = 0
     for dag in dag_config:
-        for i in range(DagRepeatedTimes):
+        for _ in range(timing_config.dag_repeated_times):
             for config in dag:
                 if isinstance(config, list):
                     total_tasks += len(config)
@@ -231,10 +433,10 @@ def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percent
     all_task_positions = []
     task_index = 0
     for dag_idx, dag in enumerate(dag_config):
-        for period in range(DagRepeatedTimes):
+        for period in range(timing_config.dag_repeated_times):
             for config_idx, config in enumerate(dag):
                 if isinstance(config, list):
-                    for sub_idx, subconfig in enumerate(config):
+                    for sub_idx, _ in enumerate(config):
                         all_task_positions.append((dag_idx, period, config_idx, sub_idx, task_index))
                         task_index += 1
                 else:
@@ -248,34 +450,99 @@ def generate_tasks_from_dag(dag_config, time_factor=1, non_partitionable_percent
         non_partitionable_positions = {(pos[0], pos[1], pos[2], pos[3]) for pos in selected_positions}
     
     # Generate tasks with non-partitionable selection
-    task_index = 0
     for dag_idx, dag in enumerate(dag_config):
-        for i in range(DagRepeatedTimes):
-            for config_idx, config in enumerate(dag):                
+        for period in range(timing_config.dag_repeated_times):
+            for config_idx, config in enumerate(dag):
+                stage_start_ms = start_time_ms
                 if isinstance(config, list):
-                    # for sub dag structure
-                    parellel_running_time = 0
                     for sub_idx, subconfig in enumerate(config):
-                        is_non_partitionable = (dag_idx, i, config_idx, sub_idx) in non_partitionable_positions
-                        task, running_time = generate_task_obj(subconfig, start_time, i, is_non_partitionable)
-                        # print('[debug] subconfig', task, start_time, i, subconfig['WorstRunningTime'])
+                        is_non_partitionable = (
+                            dag_idx,
+                            period,
+                            config_idx,
+                            sub_idx,
+                        ) in non_partitionable_positions
+                        task = generate_task_obj(
+                            subconfig,
+                            stage_start_ms,
+                            period,
+                            is_non_partitionable,
+                        )
                         tasks.append(task)
-                        parellel_running_time += running_time
-                    start_time += parellel_running_time
                 else:
-                    is_non_partitionable = (dag_idx, i, config_idx, None) in non_partitionable_positions
-                    task, running_time = generate_task_obj(config, start_time, i, is_non_partitionable)
+                    is_non_partitionable = (
+                        dag_idx,
+                        period,
+                        config_idx,
+                        None,
+                    ) in non_partitionable_positions
+                    task = generate_task_obj(
+                        config,
+                        stage_start_ms,
+                        period,
+                        is_non_partitionable,
+                    )
                     tasks.append(task)
-                    start_time += running_time
+
+                start_time_ms += (
+                    _stage_duration_ms(
+                        config, timing_config.parallel_stage_policy
+                    )
+                    * timing_config.arrival_scale
+                )
     return tasks
 
 
+def overall_deadline_seconds(dag_config, timing_config):
+    """Return the maximum absolute node deadline in the generated run."""
+    timing_config = _resolve_generation_timing(
+        time_factor=None,
+        deadline_factor=timing_config.deadline_factor,
+        arrival_scale=timing_config.arrival_scale,
+        dag_repeated_times=timing_config.dag_repeated_times,
+        parallel_stage_policy=timing_config.parallel_stage_policy,
+    )
+    start_time_ms = 0.0
+    maximum_deadline_ms = 0.0
+
+    for dag in dag_config:
+        for _ in range(timing_config.dag_repeated_times):
+            for stage_config in dag:
+                stage_tasks = (
+                    stage_config if isinstance(stage_config, list) else [stage_config]
+                )
+                for task_config in stage_tasks:
+                    maximum_deadline_ms = max(
+                        maximum_deadline_ms,
+                        start_time_ms
+                        + _worst_running_time_ms(task_config)
+                        * timing_config.deadline_factor,
+                    )
+                start_time_ms += (
+                    _stage_duration_ms(
+                        stage_config, timing_config.parallel_stage_policy
+                    )
+                    * timing_config.arrival_scale
+                )
+
+    return maximum_deadline_ms / 1000.0
+
+
 if __name__ == "__main__":
-    result = load_dag_config("TaskConfigs/simo/agx_tight.json")
-    if result is None:
-        print("Error: Failed to load DAG config")
-        exit(1)
-    dag_config, running_time_factor, non_partitionable_percentage, non_partitionable_config = result
-    tasks = generate_tasks_from_dag(dag_config, time_factor=running_time_factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
-    # print(tasks)
-    assert(len(tasks) == 70)
+    (
+        dag_config,
+        timing_config,
+        non_partitionable_percentage,
+        non_partitionable_config,
+        _,
+    ) = load_dag_experiment_config("TaskConfigs/simo/agx_tight.json")
+    tasks = generate_tasks_from_dag(
+        dag_config,
+        deadline_factor=timing_config.deadline_factor,
+        arrival_scale=timing_config.arrival_scale,
+        dag_repeated_times=timing_config.dag_repeated_times,
+        parallel_stage_policy=timing_config.parallel_stage_policy,
+        non_partitionable_percentage=non_partitionable_percentage,
+        non_partitionable_config=non_partitionable_config,
+    )
+    print(f"Generated {len(tasks)} DAG tasks")

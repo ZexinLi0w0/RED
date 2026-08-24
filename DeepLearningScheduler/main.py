@@ -15,7 +15,12 @@ from logging_config import logging_basic_setting
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from controller_signaling import send_heart_ping, controller_signaling, controller_signaling_SIMO
 from handler_signaling import handle_signaling, handle_signaling_SIMO
-from task_generator import generate_tasks, load_task_config, load_dag_config, generate_tasks_from_dag
+from task_generator import (
+    generate_tasks,
+    generate_tasks_from_dag,
+    load_dag_experiment_config,
+    load_task_config,
+)
 
 def create_subprocess(control_queue, base_time, config=()):
     """
@@ -132,11 +137,19 @@ def parseArguments():
     except ValueError as e:
         print(e)
     # for dag config
-    result = load_dag_config(args.task)
+    result = load_dag_experiment_config(args.task)
     if result is None:
         raise Exception("Error: Failed to load DAG config")
-    task_config, factor, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
-    tasks_list = generate_tasks_from_dag(task_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
+    task_config, timing, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
+    tasks_list = generate_tasks_from_dag(
+        task_config,
+        deadline_factor=timing.deadline_factor,
+        arrival_scale=timing.arrival_scale,
+        dag_repeated_times=timing.dag_repeated_times,
+        parallel_stage_policy=timing.parallel_stage_policy,
+        non_partitionable_percentage=non_partitionable_percentage,
+        non_partitionable_config=non_partitionable_config,
+    )
 
     # get filename of taskconfig
     task_file_path = args.task[::-1]
