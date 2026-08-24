@@ -62,6 +62,13 @@ def test_completed_run_writes_machine_readable_summary(tmp_path) -> None:
     assert summary["outcome_counts"] == {"success": 1}
     assert summary["xrbench_rt_k_per_second"] == 15.0
     assert summary["valid_output_rate"] == 1.0
+    assert summary["atomic_node_statistics"]["atomic_offered_ratio"] == 0.0
+    assert summary["atomic_node_statistics"]["atomic"][
+        "offered_node_count"
+    ] == 0
+    assert summary["atomic_node_statistics"]["partitionable"][
+        "offered_node_count"
+    ] == 1
     assert "XRBench" in summary["qoe_score_definition"]
     assert len(summary["offered_task_stream_sha256"]) == 64
     assert (output_dir / "task_statistics.pkl").is_file()

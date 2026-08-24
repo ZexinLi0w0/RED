@@ -6,7 +6,11 @@ import pickle
 from collections import Counter, defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
-from visual_scripts.visual_task import statistics_compution, task_scatter3
+from visual_scripts.visual_task import (
+    statistics_compution,
+    task_population_metrics,
+    task_scatter3,
+)
 import logging
 from copy import deepcopy
 from burst_task_manager import BurstTaskManager
@@ -422,6 +426,16 @@ class TaskSchedule:
         valid_output_count = sum(
             outcome_counts[outcome] for outcome in VALID_OUTPUT_OUTCOMES
         )
+        atomic_records = [
+            task
+            for task in task_statistics.values()
+            if task.get("is_non_partitionable", False)
+        ]
+        partitionable_records = [
+            task
+            for task in task_statistics.values()
+            if not task.get("is_non_partitionable", False)
+        ]
         summary = {
             "schema_version": 1,
             "run_id": self.run_id,
@@ -447,6 +461,18 @@ class TaskSchedule:
             ),
             "xrbench_rt_k_per_second": DEFAULT_XRBENCH_RT_K,
             "valid_output_rate": valid_output_count / len(task_statistics),
+            "atomic_node_statistics": {
+                "semantics": (
+                    "offered scheduling nodes marked indivisible for "
+                    "MIMONet-aware merge; not intra-kernel partitioning"
+                ),
+                "atomic_offered_ratio": len(atomic_records)
+                / len(task_statistics),
+                "atomic": task_population_metrics(atomic_records),
+                "partitionable": task_population_metrics(
+                    partitionable_records
+                ),
+            },
             "burst_statistics": burst_stats,
         }
         temporary_summary_path = f"{summary_path}.tmp"

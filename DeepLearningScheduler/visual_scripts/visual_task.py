@@ -78,6 +78,38 @@ def _overall_deadline_seconds(config: dict) -> float:
     )
 
 
+def task_population_metrics(task_records):
+    """Summarize one offered-node population using the headline definitions."""
+    records = list(task_records)
+    if not records:
+        return {
+            "offered_node_count": 0,
+            "outcome_counts": {},
+            "deadline_missing_rate": None,
+            "qoe_score": None,
+            "valid_output_rate": None,
+        }
+
+    outcome_counts = defaultdict(int)
+    for record in records:
+        outcome_counts[record["res"]] += 1
+    outcomes = [record["res"] for record in records]
+    valid_output_count = sum(
+        count
+        for outcome, count in outcome_counts.items()
+        if outcome in {"success", "failure"}
+    )
+    return {
+        "offered_node_count": len(records),
+        "outcome_counts": dict(sorted(outcome_counts.items())),
+        "deadline_missing_rate": deadline_miss_rate_from_outcomes(outcomes),
+        "qoe_score": timeliness_qoe_score(
+            records, k=DEFAULT_XRBENCH_RT_K
+        ),
+        "valid_output_rate": valid_output_count / len(records),
+    }
+
+
 def statistics_compution(task_statistics, task_config_path='task_config.json', now_time = 0, task_start_time = 0):
     """
     Calculate the statistics of tasks, including: missing deadline rate, finished time

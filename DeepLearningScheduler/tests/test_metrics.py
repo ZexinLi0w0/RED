@@ -8,7 +8,7 @@ from matrics import (
     timeliness_qoe_score,
     xrbench_realtime_score,
 )
-from visual_scripts.visual_task import statistics_compution
+from visual_scripts.visual_task import statistics_compution, task_population_metrics
 
 
 def test_qoe_honors_the_requested_lambda() -> None:
@@ -115,3 +115,42 @@ def test_statistics_excludes_nonexecuted_work_from_latency(tmp_path) -> None:
     assert set(missing_info) == {"failure", "skip", "burst_drop"}
     assert average_latency == pytest.approx(0.15)
     assert set(finished_info) == {"success", "failure"}
+
+
+def test_task_population_metrics_uses_the_offered_subgroup_denominator() -> None:
+    records = [
+        {
+            "res": "success",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 0.5,
+        },
+        {
+            "res": "skip",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 0.0,
+        },
+    ]
+
+    metrics = task_population_metrics(records)
+
+    assert metrics["offered_node_count"] == 2
+    assert metrics["outcome_counts"] == {"skip": 1, "success": 1}
+    assert metrics["deadline_missing_rate"] == pytest.approx(0.5)
+    assert metrics["valid_output_rate"] == pytest.approx(0.5)
+    assert metrics["qoe_score"] == pytest.approx(
+        0.5 / (1.0 + math.exp(-7.5))
+    )
+
+
+def test_empty_task_population_metrics_are_explicitly_undefined() -> None:
+    metrics = task_population_metrics([])
+
+    assert metrics == {
+        "offered_node_count": 0,
+        "outcome_counts": {},
+        "deadline_missing_rate": None,
+        "qoe_score": None,
+        "valid_output_rate": None,
+    }
