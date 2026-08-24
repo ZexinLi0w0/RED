@@ -36,6 +36,19 @@ an unavailable accelerator fails rather than silently changing the evaluated
 platform. CUDA/MPS completion is synchronized before the handler reports a
 task end time.
 
+Before calibrating a new platform/backend, profile synchronized SIMONet costs:
+
+```bash
+python experiments/profile_simo_runtime.py \
+  --output taskdata/profiles/mac-mps.json \
+  --torch-device mps \
+  --power-mode mps-default-ac-power
+```
+
+The default bound policy uses 20 warmups, 200 retained samples, and the
+observed maximum plus a predeclared 10% margin. Profile output is immutable and
+contains every retained sample plus code/runtime provenance.
+
 For EDF-only calibration, use calibration profile names/config files and only
 the `baseline` method. Do not include or inspect the proposed method until the
 selected Tight/Loose configurations have been committed and hashed.
