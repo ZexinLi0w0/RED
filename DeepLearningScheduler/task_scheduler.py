@@ -1,13 +1,16 @@
 import time, datetime
 import hashlib
+import json
+import os
 import pickle
-from collections import defaultdict
+from collections import Counter, defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from visual_scripts.visual_task import statistics_compution, task_scatter3
 import logging
 from copy import deepcopy
 from burst_task_manager import BurstTaskManager
+from task_generator import task_stream_sha256
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -73,7 +76,7 @@ def merge_tasks(first, second):
 
 
 class TaskSchedule:
-    def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0):
+    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -82,8 +85,11 @@ class TaskSchedule:
         self.approach_module = approach_module
         # record the task config name for generate the naem of data file to save
         self.task_filename = task_filename
+        self.task_config_path = task_config_path or f"{task_filename}.json"
+        self.output_dir = output_dir or os.path.join(os.getcwd(), 'taskdata')
+        self.run_id = run_id
         # control queue of signaling
-        self.control_queue = control_queue
+        self.control_queue = [] if control_queue is None else control_queue
         # start time of generating tasks
         self.TaskStartTime = time.time()
         # Task Queue
@@ -98,7 +104,7 @@ class TaskSchedule:
         self.task_dependency = defaultdict(int)
 
         # handler status to decide how to schedule
-        self.handler_status = handler_status
+        self.handler_status = {} if handler_status is None else handler_status
         
         # scheduler
         self.default_scheduler = ['rr', 'priority', 'fcfs', 'fcls', 'edf']
@@ -136,6 +142,7 @@ class TaskSchedule:
             self.burst_manager = None
         self.burst_task_ratio = burst_task_ratio or 0
         self._burst_tasks_augmented = False
+        self.offered_task_stream_hash = task_stream_sha256(tasks)
     
     def generate_task_list(self):
         TaskQueue = self.TaskQueue
@@ -154,6 +161,7 @@ class TaskSchedule:
         self.offered_tasks_by_id = {
             task["TaskId"]: deepcopy(task) for task in tasks_list
         }
+        self.offered_task_stream_hash = task_stream_sha256(tasks_list)
         logger = self.logger
 
         for task in tasks_list:
@@ -270,22 +278,34 @@ class TaskSchedule:
         logger.info(f"[CTRL] All tasks finished")
         now = time.time()
         relative_end2end_runtime = now - self.TaskStartTime
-        
+
+        burst_stats = None
         # Log burst statistics if enabled
         if self.burst_enabled and self.burst_manager:
             burst_stats = self.burst_manager.get_burst_statistics()
             # Stop burst monitoring
             self.burst_manager.stop_monitoring()
-        
-        # use pickle to save the taks_statistics
-        # get now time format like 2021-04-01-12-00-00
-        import os
+
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        # Always use relative ./taskdata under the runtime root
-        raw_data_save_path = os.path.join(os.getcwd(), 'taskdata')
+        raw_data_save_path = self.output_dir
         os.makedirs(raw_data_save_path, exist_ok=True)
-        end2end_path = os.path.join(raw_data_save_path, f"end2endtime_{self.task_filename}_{self.approach_module}_{now_time_string}.txt")
-        stats_path = os.path.join(raw_data_save_path, f"statistics_{self.task_filename}_{self.approach_module}_{now_time_string}.pkl")
+        if self.run_id:
+            end2end_path = os.path.join(raw_data_save_path, "end2end_time.txt")
+            stats_path = os.path.join(raw_data_save_path, "task_statistics.pkl")
+            summary_path = os.path.join(raw_data_save_path, "summary.json")
+        else:
+            artifact_stem = (
+                f"{self.task_filename}_{self.approach_module}_{now_time_string}"
+            )
+            end2end_path = os.path.join(
+                raw_data_save_path, f"end2endtime_{artifact_stem}.txt"
+            )
+            stats_path = os.path.join(
+                raw_data_save_path, f"statistics_{artifact_stem}.pkl"
+            )
+            summary_path = os.path.join(
+                raw_data_save_path, f"summary_{artifact_stem}.json"
+            )
         with open(end2end_path, "w") as f:
             f.write(str(relative_end2end_runtime))
         with open(stats_path, "wb") as f:
@@ -293,13 +313,42 @@ class TaskSchedule:
         logger.info(f"[CTRL] Saved end2end time to: {end2end_path}")
         logger.info(f"[CTRL] Saved statistics to: {stats_path}")
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
-        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(task_statistics, task_config_path = f"{self.task_filename}.json", now_time = now, task_start_time = self.TaskStartTime)
+        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(
+            task_statistics,
+            task_config_path=self.task_config_path,
+            now_time=now,
+            task_start_time=self.TaskStartTime,
+        )
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
         logger.info(f"[CTRL] SubTask Average finished time: {avg_finished_time}")
         logger.info(f"[CTRL] Task Metrics: {metrics}")
 
-        # task_scatter3(task_statistics, datafile=f"task_statistics_{now_time_string}.pkl")
-        # break the outer loop and exit
+        outcome_counts = Counter(
+            task["res"] for task in task_statistics.values()
+        )
+        summary = {
+            "schema_version": 1,
+            "run_id": self.run_id,
+            "method": self.approach_module,
+            "task_config_path": self.task_config_path,
+            "offered_task_stream_sha256": self.offered_task_stream_hash,
+            "offered_task_count": len(task_statistics),
+            "execution_task_count": self.task_num,
+            "finished_execution_task_count": self.finished_task_num,
+            "outcome_counts": dict(sorted(outcome_counts.items())),
+            "end_to_end_latency_seconds": relative_end2end_runtime,
+            "deadline_missing_rate": missing_deadline_rate,
+            "average_executed_node_latency_seconds": avg_finished_time,
+            "overall_deadline_hit": metrics[1],
+            "qoe_score": metrics[2],
+            "burst_statistics": burst_stats,
+        }
+        temporary_summary_path = f"{summary_path}.tmp"
+        with open(temporary_summary_path, "w", encoding="utf-8") as summary_file:
+            json.dump(summary, summary_file, indent=2, sort_keys=True)
+            summary_file.write("\n")
+        os.replace(temporary_summary_path, summary_path)
+        logger.info(f"[CTRL] Saved run summary to: {summary_path}")
         return
 
     def dependencies_met(self, task):
