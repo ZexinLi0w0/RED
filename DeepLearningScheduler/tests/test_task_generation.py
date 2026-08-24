@@ -80,6 +80,7 @@ def test_legacy_factor_maps_to_both_explicit_dimensions() -> None:
         dag_repeated_times=10,
         parallel_stage_policy="max",
         task_seed=0,
+        merge_threshold_ms=20.0,
     )
 
 
@@ -92,6 +93,17 @@ def test_mixed_legacy_and_explicit_timing_is_rejected() -> None:
                 "ArrivalScale": 1.0,
             }
         )
+
+
+def test_merge_threshold_is_loaded_from_the_experiment_config() -> None:
+    timing = timing_config_from_mapping(
+        {
+            "DeadlineFactor": 1.0,
+            "ArrivalScale": 1.0,
+            "MergeThresholdMs": 100,
+        }
+    )
+    assert timing.merge_threshold_ms == pytest.approx(100.0)
 
 
 def test_generated_stream_is_deterministic_for_a_seed() -> None:

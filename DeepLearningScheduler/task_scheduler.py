@@ -76,7 +76,7 @@ def merge_tasks(first, second):
 
 
 class TaskSchedule:
-    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None):
+    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -88,6 +88,9 @@ class TaskSchedule:
         self.task_config_path = task_config_path or f"{task_filename}.json"
         self.output_dir = output_dir or os.path.join(os.getcwd(), 'taskdata')
         self.run_id = run_id
+        if merge_tick_seconds < 0:
+            raise ValueError("merge_tick_seconds cannot be negative")
+        self.merge_tick_seconds = float(merge_tick_seconds)
         # control queue of signaling
         self.control_queue = [] if control_queue is None else control_queue
         # start time of generating tasks
@@ -186,7 +189,7 @@ class TaskSchedule:
         
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
-            self.fine_grained_adjust()
+            self.fine_grained_adjust(merge_tick=self.merge_tick_seconds)
         # offline Task schedule algorithm (baseline only)
         if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
             # Call the scheduler method directly
@@ -330,6 +333,7 @@ class TaskSchedule:
             "schema_version": 1,
             "run_id": self.run_id,
             "method": self.approach_module,
+            "merge_threshold_ms": self.merge_tick_seconds * 1000.0,
             "task_config_path": self.task_config_path,
             "offered_task_stream_sha256": self.offered_task_stream_hash,
             "offered_task_count": len(task_statistics),

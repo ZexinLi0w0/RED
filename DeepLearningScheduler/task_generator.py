@@ -25,6 +25,7 @@ class DagTimingConfig:
     dag_repeated_times: int = 10
     parallel_stage_policy: str = "max"
     task_seed: int = 0
+    merge_threshold_ms: float = 20.0
 
 
 def _positive_number(value, field_name):
@@ -81,12 +82,21 @@ def timing_config_from_mapping(config):
     if isinstance(task_seed, bool) or not isinstance(task_seed, int) or task_seed < 0:
         raise ValueError("TaskSeed must be a non-negative integer")
 
+    merge_threshold_ms = config.get("MergeThresholdMs", 20.0)
+    if (
+        isinstance(merge_threshold_ms, bool)
+        or not isinstance(merge_threshold_ms, (int, float))
+        or merge_threshold_ms < 0
+    ):
+        raise ValueError("MergeThresholdMs must be a non-negative number")
+
     return DagTimingConfig(
         deadline_factor=deadline_factor,
         arrival_scale=arrival_scale,
         dag_repeated_times=dag_repeated_times,
         parallel_stage_policy=parallel_stage_policy,
         task_seed=task_seed,
+        merge_threshold_ms=float(merge_threshold_ms),
     )
 
 def validate_task_config(task_config):
