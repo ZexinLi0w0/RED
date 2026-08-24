@@ -2,6 +2,7 @@
 """Select Tight/Loose configs from completed EDF-only calibration runs."""
 
 import argparse
+import hashlib
 import json
 import os
 import statistics
@@ -68,6 +69,7 @@ def _load_index(index_path):
 def _load_completed_edf_runs(runs_root, index_entries):
     grouped_runs = defaultdict(list)
     observed_commits = set()
+    observed_torch_devices = set()
     non_edf_runs = []
 
     for manifest_path in sorted(runs_root.rglob("manifest.json")):
@@ -103,9 +105,11 @@ def _load_completed_edf_runs(runs_root, index_entries):
                 "deadline_missing_rate": summary["deadline_missing_rate"],
                 "run_id": manifest["run_id"],
                 "power_mode": manifest["power_mode"],
+                "torch_device": manifest["torch_runtime"]["resolved"],
             }
         )
         observed_commits.add(manifest["git_commit"])
+        observed_torch_devices.add(manifest["torch_runtime"]["resolved"])
 
     if non_edf_runs:
         raise ValueError(
@@ -116,12 +120,23 @@ def _load_completed_edf_runs(runs_root, index_entries):
         raise ValueError(
             f"calibration runs span multiple code commits: {sorted(observed_commits)}"
         )
-    return grouped_runs, sorted(observed_commits)
+    if len(observed_torch_devices) > 1:
+        raise ValueError(
+            "calibration runs span multiple PyTorch devices: "
+            f"{sorted(observed_torch_devices)}"
+        )
+    return (
+        grouped_runs,
+        sorted(observed_commits),
+        sorted(observed_torch_devices),
+    )
 
 
 def build_report(index_path, runs_root, minimum_repetitions=3):
     index, entries = _load_index(index_path)
-    grouped_runs, commits = _load_completed_edf_runs(runs_root, entries)
+    grouped_runs, commits, torch_devices = _load_completed_edf_runs(
+        runs_root, entries
+    )
     points_by_workload = defaultdict(list)
     missing_profiles = []
 
@@ -143,6 +158,11 @@ def build_report(index_path, runs_root, minimum_repetitions=3):
         power_modes = sorted({run["power_mode"] for run in runs})
         if len(power_modes) != 1:
             raise ValueError(f"multiple power modes for calibration point {key}")
+        point_torch_devices = sorted({run["torch_device"] for run in runs})
+        if len(point_torch_devices) != 1:
+            raise ValueError(
+                f"multiple PyTorch devices for calibration point {key}"
+            )
         rates = [float(run["deadline_missing_rate"]) for run in runs]
         points_by_workload[(key[0], key[1])].append(
             {
@@ -154,6 +174,7 @@ def build_report(index_path, runs_root, minimum_repetitions=3):
                 "repetitions": len(runs),
                 "seeds": sorted(seeds),
                 "power_mode": power_modes[0],
+                "torch_device": point_torch_devices[0],
                 "mean_deadline_missing_rate": statistics.fmean(rates),
                 "stdev_deadline_missing_rate": (
                     statistics.stdev(rates) if len(rates) > 1 else 0.0
@@ -205,8 +226,13 @@ def build_report(index_path, runs_root, minimum_repetitions=3):
     return {
         "schema_version": 1,
         "selection_source": "EDF-only completed runs",
-        "calibration_index": str(index_path),
+        "calibration_index": index_path.name,
+        "calibration_index_sha256": hashlib.sha256(
+            index_path.read_bytes()
+        ).hexdigest(),
+        "runs_root_label": runs_root.name,
         "code_commits": commits,
+        "torch_devices": torch_devices,
         "minimum_repetitions": minimum_repetitions,
         "ready_to_freeze": ready_to_freeze,
         "missing_profiles": missing_profiles,

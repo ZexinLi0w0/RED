@@ -1,0 +1,71 @@
+{
+  "DeadlineFactor": 0.9,
+  "ArrivalScale": 1,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "MergeThresholdMs": 20,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      {
+        "TaskName": "S5_Stage1_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "WorstRunningTime": 17.231959
+      },
+      {
+        "TaskName": "S5_Stage2_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "WorstRunningTime": 17.231959
+      },
+      {
+        "TaskName": "S5_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "WorstRunningTime": 17.231959
+      }
+    ]
+  ],
+  "RuntimeProfile": {
+    "profile_file": "mac_mps_profile_v1.json",
+    "profile_sha256": "e4aa7b15b76d69d1a6c420224924d39d0525561fd16ddafa92ae699ea112b546",
+    "torch_device": "mps",
+    "power_mode": "mps-default-ac-power",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1,
+    "cases": [
+      "control_autopilot"
+    ]
+  },
+  "Calibration": {
+    "kind": "edf-only-deadline-factor-grid-extension",
+    "deadline_alpha": 0.9,
+    "source_config": "mac_loose_night_driving.json",
+    "selection_targets": {
+      "tight": 0.5,
+      "loose": 0.1
+    },
+    "extension_reason": "initial EDF-only grid did not contain a preferred Tight/Loose pair"
+  }
+}
