@@ -17,8 +17,8 @@
           "RunArgs": [
             1
           ],
-          "RunningTime": 51.2,
-          "WorstRunningTime": 58.3
+          "RunningTime": 14.287183,
+          "WorstRunningTime": 17.953559
         },
         {
           "TaskName": "S3_Stage1_Object_Detection",
@@ -28,8 +28,8 @@
           "RunArgs": [
             4
           ],
-          "RunningTime": 129.5,
-          "WorstRunningTime": 174.1
+          "RunningTime": 16.460167,
+          "WorstRunningTime": 21.386796
         }
       ],
       [
@@ -44,8 +44,8 @@
           "RunArgs": [
             3
           ],
-          "RunningTime": 53.1,
-          "WorstRunningTime": 64.8
+          "RunningTime": 13.554899,
+          "WorstRunningTime": 17.229667
         },
         {
           "TaskName": "S3_Stage2_Object_Detection",
@@ -58,8 +58,8 @@
           "RunArgs": [
             4
           ],
-          "RunningTime": 129.5,
-          "WorstRunningTime": 174.1
+          "RunningTime": 16.460167,
+          "WorstRunningTime": 21.386796
         }
       ],
       {
@@ -73,9 +73,23 @@
         "RunArgs": [
           2
         ],
-        "RunningTime": 38.6,
-        "WorstRunningTime": 48.2
+        "RunningTime": 13.4531,
+        "WorstRunningTime": 17.231959
       }
     ]
-  ]
+  ],
+  "RuntimeProfile": {
+    "profile_file": "mac_mps_profile_v1.json",
+    "profile_sha256": "e4aa7b15b76d69d1a6c420224924d39d0525561fd16ddafa92ae699ea112b546",
+    "torch_device": "mps",
+    "power_mode": "mps-default-ac-power",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1,
+    "cases": [
+      "control_autopilot",
+      "lane_detection",
+      "object_detection",
+      "segmentation"
+    ]
+  }
 }
