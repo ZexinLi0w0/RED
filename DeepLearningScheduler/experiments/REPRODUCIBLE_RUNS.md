@@ -31,3 +31,16 @@ partial directories require investigation and a new run identity.
 For EDF-only calibration, use calibration profile names/config files and only
 the `baseline` method. Do not include or inspect the proposed method until the
 selected Tight/Loose configurations have been committed and hashed.
+
+The formal core matrix uses these method names:
+
+- `baseline`: EDF on the unmerged offered DAG;
+- `llf-dag`: least-laxity-first with
+  `deadline - now - remaining critical-path profile cost`;
+- `fine-grained`, `feedback`, and `feedback-fine-grained`: the two ablations
+  and complete framework used by the current artifact.
+
+LLF-DAG receives the same offered DAG and per-node profile as EDF. Its
+remaining-cost calculation is confined to the currently admitted DAG instance;
+it does not inspect completion times or arrivals from later DAG instances and
+does not use MIMONet merging.

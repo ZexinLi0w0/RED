@@ -143,8 +143,18 @@ def parseArguments():
 
     approach_module = args.approach
     # check if the approach is valid
-    if approach_module not in ["baseline", "feedback", "fine-grained", "feedback-fine-grained"]:
-        raise Exception("Error: `approach` must be one of the following: baseline, feedback, fine-grained, feedback-fine-grained")
+    valid_approaches = [
+        "baseline",
+        "llf-dag",
+        "feedback",
+        "fine-grained",
+        "feedback-fine-grained",
+    ]
+    if approach_module not in valid_approaches:
+        raise Exception(
+            "Error: `approach` must be one of the following: "
+            + ", ".join(valid_approaches)
+        )
     
     handlers = config["handler_list"]
     

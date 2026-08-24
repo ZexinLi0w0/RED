@@ -446,6 +446,9 @@ def generate_tasks_from_dag(
             "TaskPosition": task_position,
             "MergeKey": merge_key,
             "ConstituentTaskIds": [task_id],
+            "DagIndex": dag_idx,
+            "StageIndex": stage_idx,
+            "BranchIndex": branch_idx,
             "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
@@ -457,6 +460,7 @@ def generate_tasks_from_dag(
             "Priority": config["Priority"],
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
+            "EstimatedExecutionTime": worst_running_time_ms / 1000.0,
             "IsNonPartitionable": is_non_partitionable
         }
         return task

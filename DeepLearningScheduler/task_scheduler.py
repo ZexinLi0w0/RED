@@ -75,6 +75,89 @@ def merge_tasks(first, second):
     }
 
 
+def _task_output_types(task):
+    run_args = task.get("RunArgs", [])
+    if isinstance(run_args, str):
+        values = liststr2list(run_args)
+    else:
+        values = list(run_args)
+    return {int(value) for value in values if str(value).strip()}
+
+
+def remaining_critical_path_costs(tasks):
+    """Compute profiled remaining critical-path cost for each offered DAG node."""
+    task_by_id = {task["TaskId"]: task for task in tasks}
+    if len(task_by_id) != len(tasks):
+        raise ValueError("TaskId values must be unique")
+
+    grouped_tasks = defaultdict(list)
+    for task in tasks:
+        required_fields = {
+            "DagIndex",
+            "DagPeriod",
+            "StageIndex",
+            "EstimatedExecutionTime",
+        }
+        missing = sorted(required_fields - set(task))
+        if missing:
+            raise ValueError(
+                f"task {task['TaskId']} lacks LLF-DAG fields: {missing}"
+            )
+        grouped_tasks[(task["DagIndex"], task["DagPeriod"])].append(task)
+
+    successors = {task_id: set() for task_id in task_by_id}
+    for group in grouped_tasks.values():
+        for task in group:
+            task_stage = task["StageIndex"]
+            for dependency in task.get("Dependencies", []):
+                candidates = [
+                    predecessor
+                    for predecessor in group
+                    if predecessor["StageIndex"] < task_stage
+                    and int(dependency) in _task_output_types(predecessor)
+                ]
+                if not candidates:
+                    continue
+                latest_stage = max(
+                    predecessor["StageIndex"] for predecessor in candidates
+                )
+                for predecessor in candidates:
+                    if predecessor["StageIndex"] == latest_stage:
+                        successors[predecessor["TaskId"]].add(task["TaskId"])
+
+    remaining_costs = {}
+    tasks_by_reverse_stage = sorted(
+        tasks,
+        key=lambda task: (
+            task["DagIndex"],
+            task["DagPeriod"],
+            task["StageIndex"],
+            task["TaskId"],
+        ),
+        reverse=True,
+    )
+    for task in tasks_by_reverse_stage:
+        successor_cost = max(
+            (
+                remaining_costs[successor_id]
+                for successor_id in successors[task["TaskId"]]
+            ),
+            default=0.0,
+        )
+        remaining_costs[task["TaskId"]] = (
+            float(task["EstimatedExecutionTime"]) + successor_cost
+        )
+
+    return remaining_costs
+
+
+def annotate_remaining_critical_path_costs(tasks):
+    costs = remaining_critical_path_costs(tasks)
+    for task in tasks:
+        task["RemainingCriticalPathCost"] = costs[task["TaskId"]]
+    return tasks
+
+
 class TaskSchedule:
     def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
         self.tasks = tasks
@@ -110,7 +193,7 @@ class TaskSchedule:
         self.handler_status = {} if handler_status is None else handler_status
         
         # scheduler
-        self.default_scheduler = ['rr', 'priority', 'fcfs', 'fcls', 'edf']
+        self.default_scheduler = ['rr', 'priority', 'fcfs', 'fcls', 'edf', 'llf_dag']
 
         if(scheduler not in self.default_scheduler and scheduler != 'custom'):
             raise ValueError(f"Scheduler doesn't exist: {scheduler}")
@@ -190,6 +273,8 @@ class TaskSchedule:
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
             self.fine_grained_adjust(merge_tick=self.merge_tick_seconds)
+        if self.scheduler_name == 'llf_dag':
+            annotate_remaining_critical_path_costs(self.TaskQueue)
         # offline Task schedule algorithm (baseline only)
         if hasattr(self, 'scheduler_name') and self.scheduler_name in ['edf', 'priority', 'fcfs', 'fcls']:
             # Call the scheduler method directly
@@ -220,6 +305,10 @@ class TaskSchedule:
         TaskStartTime = self.TaskStartTime
         handler_status = self.handler_status        
         logger = self.logger
+
+        if self.scheduler_name == 'llf_dag':
+            self.llf_dag(now_relative=time.time() - TaskStartTime)
+            TaskQueue = self.TaskQueue
 
         putback = []
         while(len(TaskQueue) > 0):
@@ -602,6 +691,24 @@ class TaskSchedule:
         
         # earliest deadline first
         self.TaskQueue.sort(key=lambda x: (x["Deadline"]))
+
+    def llf_dag(self, now_relative=None):
+        """Least-laxity-first using the profiled remaining DAG critical path."""
+        if now_relative is None:
+            now_relative = max(0.0, time.time() - self.TaskStartTime)
+
+        def llf_key(task):
+            remaining_cost = float(task["RemainingCriticalPathCost"])
+            laxity = float(task["Deadline"]) - now_relative - remaining_cost
+            task["CurrentLaxity"] = laxity
+            return (
+                laxity,
+                float(task["Deadline"]),
+                float(task["ReleaseTime"]),
+                task["TaskId"],
+            )
+
+        self.TaskQueue.sort(key=llf_key)
 
 if __name__ == "__main__":
     # test the task scheduler

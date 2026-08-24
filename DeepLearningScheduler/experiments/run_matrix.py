@@ -106,7 +106,7 @@ def _build_parser():
     )
     parser.add_argument(
         "--methods",
-        default="baseline,feedback,fine-grained,feedback-fine-grained",
+        default="baseline,llf-dag,feedback,fine-grained,feedback-fine-grained",
     )
     parser.add_argument("--seeds", type=_csv_ints, default=[101, 202, 303, 404, 505])
     parser.add_argument("--python", default=sys.executable)

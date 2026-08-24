@@ -141,11 +141,12 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     
     # register task scheduler with edf scheduler
     burst_enabled = burst_config is not None and burst_config.get('burst_enabled', False)
+    scheduler_name = 'llf_dag' if approach_module == 'llf-dag' else 'edf'
     task_scheduler = TaskSchedule(
         tasks_list, 
         handler_status=handler_status, 
         control_queue=control_queue, 
-        scheduler='edf', 
+        scheduler=scheduler_name,
         logger=logger, 
         approach_module=approach_module, 
         task_filename=task_filename,
