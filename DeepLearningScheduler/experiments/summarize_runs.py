@@ -130,6 +130,7 @@ def summarize(input_root, reference_method="baseline"):
     aggregate_groups = defaultdict(list)
     problems = []
     execution_errors = 0
+    atomic_statistics_present = []
     for run in runs:
         manifest = run["manifest"]
         summary = run["summary"]
@@ -145,6 +146,30 @@ def summarize(input_root, reference_method="baseline"):
         execution_errors += summary.get("outcome_counts", {}).get(
             "execution_error", 0
         )
+        atomic_statistics = summary.get("atomic_node_statistics")
+        atomic_statistics_present.append(atomic_statistics is not None)
+        if atomic_statistics is not None:
+            atomic = atomic_statistics["atomic"]
+            partitionable = atomic_statistics["partitionable"]
+            subgroup_count = (
+                atomic["offered_node_count"]
+                + partitionable["offered_node_count"]
+            )
+            if subgroup_count != summary["offered_task_count"]:
+                problems.append(
+                    f"{manifest['run_id']}: atomic subgroup count mismatch"
+                )
+            measured_ratio = (
+                atomic["offered_node_count"] / summary["offered_task_count"]
+            )
+            if not math.isclose(
+                measured_ratio,
+                atomic_statistics["atomic_offered_ratio"],
+                abs_tol=1e-12,
+            ):
+                problems.append(
+                    f"{manifest['run_id']}: atomic ratio mismatch"
+                )
 
     method_set = set(methods)
     for key, group in sorted(paired_groups.items()):
@@ -169,6 +194,8 @@ def summarize(input_root, reference_method="baseline"):
             problems.append(f"{key}: inconsistent torch device")
     if execution_errors:
         problems.append(f"execution_error outcomes={execution_errors}")
+    if any(atomic_statistics_present) and not all(atomic_statistics_present):
+        problems.append("atomic subgroup statistics are present for only some runs")
     if problems:
         raise ValueError("paired-run validation failed:\n" + "\n".join(problems))
 
@@ -252,6 +279,63 @@ def summarize(input_root, reference_method="baseline"):
                 }
             )
 
+    atomic_subgroup_aggregates = []
+    if all(atomic_statistics_present):
+        for key, group in sorted(aggregate_groups.items()):
+            ordered = sorted(group, key=lambda run: run["manifest"]["seed"])
+            ratios = {
+                run["summary"]["atomic_node_statistics"][
+                    "atomic_offered_ratio"
+                ]
+                for run in ordered
+            }
+            semantics = {
+                run["summary"]["atomic_node_statistics"]["semantics"]
+                for run in ordered
+            }
+            if len(ratios) != 1 or len(semantics) != 1:
+                raise ValueError(f"inconsistent atomic metadata for {key}")
+            subgroups = {}
+            for subgroup in ("atomic", "partitionable"):
+                subgroup_records = [
+                    run["summary"]["atomic_node_statistics"][subgroup]
+                    for run in ordered
+                ]
+                subgroup_metrics = {}
+                for metric in (
+                    "offered_node_count",
+                    "deadline_missing_rate",
+                    "qoe_score",
+                    "valid_output_rate",
+                ):
+                    values = [
+                        record[metric]
+                        for record in subgroup_records
+                        if record[metric] is not None
+                    ]
+                    subgroup_metrics[metric] = (
+                        _sample_summary(values) if values else None
+                    )
+                subgroups[subgroup] = {
+                    "n_defined": sum(
+                        record["deadline_missing_rate"] is not None
+                        for record in subgroup_records
+                    ),
+                    "metrics": subgroup_metrics,
+                }
+            atomic_subgroup_aggregates.append(
+                {
+                    "device": key[0],
+                    "profile": key[1],
+                    "scenario": key[2],
+                    "method": key[3],
+                    "n": len(ordered),
+                    "atomic_offered_ratio": next(iter(ratios)),
+                    "semantics": next(iter(semantics)),
+                    "subgroups": subgroups,
+                }
+            )
+
     return {
         "schema_version": 1,
         "input_root": str(input_root),
@@ -273,6 +357,7 @@ def summarize(input_root, reference_method="baseline"):
         },
         "aggregates": aggregates,
         "paired_comparisons": comparisons,
+        "atomic_subgroup_aggregates": atomic_subgroup_aggregates,
     }
 
 
