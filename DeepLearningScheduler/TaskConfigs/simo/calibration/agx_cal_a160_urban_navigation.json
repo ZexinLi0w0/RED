@@ -1,0 +1,90 @@
+{
+  "dag_list": [
+    [
+      [
+        {
+          "TaskName": "S3_Stage1_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 341,
+          "WorstRunningTime": 369
+        },
+        {
+          "TaskName": "S3_Stage1_Object_Detection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 342,
+          "WorstRunningTime": 399
+        }
+      ],
+      [
+        {
+          "TaskName": "S3_Stage2_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            1,
+            4
+          ],
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 337,
+          "WorstRunningTime": 387
+        },
+        {
+          "TaskName": "S3_Stage2_Object_Detection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            1,
+            4
+          ],
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 342,
+          "WorstRunningTime": 399
+        }
+      ],
+      {
+        "TaskName": "S3_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          3,
+          4
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 273,
+        "WorstRunningTime": 314
+      }
+    ]
+  ],
+  "DeadlineFactor": 1.6,
+  "ArrivalScale": 1.5,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "MergeThresholdMs": 20,
+  "QoELambda": 0.05,
+  "Calibration": {
+    "kind": "edf-only-deadline-factor-grid",
+    "deadline_alpha": 1.6,
+    "source_config": "agx_loose_urban_navigation.json",
+    "selection_targets": {
+      "tight": 0.5,
+      "loose": 0.1
+    }
+  }
+}
