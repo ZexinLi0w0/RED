@@ -1,6 +1,6 @@
 import time, datetime
+import hashlib
 import pickle
-import random
 from collections import defaultdict
 from AbstractHandler import HandlerStatus
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
@@ -14,6 +14,64 @@ def liststr2list(s):
 
 def list2str(l):
     return ",".join([str(c) for c in l])
+
+
+def _constituent_task_ids(task):
+    return list(task.get("ConstituentTaskIds", [task["TaskId"]]))
+
+
+def tasks_merge_eligible(first, second, merge_tick):
+    """Return whether two execution nodes represent the same mergeable stage."""
+    if first.get("IsNonPartitionable", False) or second.get(
+        "IsNonPartitionable", False
+    ):
+        return False
+    if first.get("HandlerId") != second.get("HandlerId"):
+        return False
+    if first.get("DagPeriod") != second.get("DagPeriod"):
+        return False
+    if not first.get("MergeKey") or first.get("MergeKey") != second.get(
+        "MergeKey"
+    ):
+        return False
+    return abs(first["ReleaseTime"] - second["ReleaseTime"]) <= merge_tick
+
+
+def merge_tasks(first, second):
+    """Create one execution node while preserving both reporting populations."""
+    if first.get("MergeKey") != second.get("MergeKey"):
+        raise ValueError("cannot merge tasks from different structural stages")
+
+    constituent_ids = sorted(
+        set(_constituent_task_ids(first) + _constituent_task_ids(second))
+    )
+    merged_identity = hashlib.sha256(
+        "\n".join(constituent_ids).encode("utf-8")
+    ).hexdigest()[:16]
+    run_args = sorted(
+        set(liststr2list(first["RunArgs"]) + liststr2list(second["RunArgs"])),
+        key=lambda value: int(value),
+    )
+
+    return {
+        "TaskId": f"merged_{merged_identity}",
+        "TaskPosition": f"merged:{first['MergeKey']}",
+        "MergeKey": first["MergeKey"],
+        "ConstituentTaskIds": constituent_ids,
+        "DagPeriod": first["DagPeriod"],
+        "HandlerId": first["HandlerId"],
+        "ReleaseTime": min(first["ReleaseTime"], second["ReleaseTime"]),
+        # A merged execution must satisfy the earliest constituent deadline.
+        "Deadline": min(first["Deadline"], second["Deadline"]),
+        "Priority": max(first["Priority"], second["Priority"]),
+        "Dependencies": sorted(
+            set(first["Dependencies"] + second["Dependencies"])
+        ),
+        "RunArgs": list2str(run_args),
+        "IsNonPartitionable": False,
+    }
+
+
 class TaskSchedule:
     def __init__(self, tasks, handler_status={}, control_queue = [], scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0):
         self.tasks = tasks
@@ -91,6 +149,11 @@ class TaskSchedule:
                 self.tasks = self.tasks + extra_tasks
             self._burst_tasks_augmented = True
         tasks_list = self.tasks
+        for task in tasks_list:
+            task.setdefault("ConstituentTaskIds", [task["TaskId"]])
+        self.offered_tasks_by_id = {
+            task["TaskId"]: deepcopy(task) for task in tasks_list
+        }
         logger = self.logger
 
         for task in tasks_list:
@@ -372,110 +435,98 @@ class TaskSchedule:
             TaskQueue.insert(0, task)
         self.TaskQueue = TaskQueue
     
-    def fine_grained_adjust(self, merge_tick=0.02, merge_handler=[5]):
+    def fine_grained_adjust(self, merge_tick=0.02, merge_handler=None):
         """
         fine-grained(reconstruct dag in task generation), only works for SIMO/MIMO
         merge_tick: the time interval to merge two tasks
         merge_handler: the handler id can be considered merging
         """
         logger = self.logger
-        TaskQueue = self.TaskQueue
-        logger.debug(f'[CTRL] fine-grained adjust, tasknum: {len(TaskQueue)}')
-        TaskStartTime = self.TaskStartTime
-        putback = []
-        merged_task = []
-        # release time sorting to merge
-        TaskQueue.sort(key=lambda x: x["ReleaseTime"])
-        while(len(TaskQueue)):
-            task = TaskQueue.pop(0)
-            # Skip merging for non-partitionable tasks
-            if task.get("IsNonPartitionable", False):
-                merged_task.append(task)
-                continue
-            if(task["HandlerId"] not in merge_handler):
-                putback.append(task)
-                continue
-            # compare to all remained tasks to merge
-            putback = []
-            while(len(TaskQueue)):
-                other_task = TaskQueue.pop(0)
-                # Also skip merging for non-partitionable tasks
-                if other_task.get("IsNonPartitionable", False):
-                    putback.append(other_task)
-                    continue
-                if(abs(other_task["ReleaseTime"]-task["ReleaseTime"]) <= merge_tick and other_task["DagPeriod"] == task["DagPeriod"]):
-                    # merge the two tasks
-                    """
-                    TODO: merge rules
-                    1. pick smaller release_time
-                    2. pick larger deadline(lower missing deadlines)
-                    3. fullfill the dependencies without repeated values
-                    4. pick higher priority
-                    5. fullfill the RunArgs without repeated values
-                    6. merge the taskid as f'{taskid}_{other_taskid}'
-                    """
-                    # merge the two tasks
-                    new_task = {
-                        "TaskId": f"{task['TaskId']}_{other_task['TaskId']}",
-                        "DagPeriod": task["DagPeriod"],
-                        "HandlerId": task["HandlerId"], # always 5
-                        "ReleaseTime": min(other_task["ReleaseTime"], task["ReleaseTime"]),
-                        "Deadline": max(other_task["Deadline"], task["Deadline"]), # deadline won't extend for ReleaseTimeDelay
-                        "Priority": max(other_task["Priority"], task["Priority"]),
-                        "Dependencies": list(set(other_task["Dependencies"] + task["Dependencies"])),
-                        "RunArgs": list2str(list(set(liststr2list(other_task["RunArgs"]) + liststr2list(task["RunArgs"])))),
-                        "IsNonPartitionable": False,
-                    }
-                    handler_id = new_task["HandlerId"]
-                    taskid = f"--taskid {new_task['TaskId']}"
-                    release_time = f"--release_time {new_task['ReleaseTime']}"
-                    deadline = f"--deadline {new_task['Deadline']}"
-                    relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-                    # only for simo
-                    simo_args = f"--simo_args {new_task['RunArgs']}"
-                    dag_period = f"--dag_period {new_task['DagPeriod']}"
-                    # create signal message and save it to task
-                    # for feedback-fine-grained approach, add skipmode
-                    if(self.approach_module == 'feedback-fine-grained'):
-                        signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
-                    else:    
-                        signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
-                    logger.debug(f'[CTRL] fine-grained merge two task: {signal_message}')
-                    
-                    task = new_task
-                    task['SignalMsg'] = signal_message
+        merge_handlers = set([5] if merge_handler is None else merge_handler)
+        pending = sorted(self.TaskQueue, key=lambda task: task["ReleaseTime"])
+        merged_queue = []
+        logger.debug(f'[CTRL] fine-grained adjust, tasknum: {len(pending)}')
+
+        while pending:
+            task = pending.pop(0)
+            remaining = []
+            for other_task in pending:
+                if (
+                    task["HandlerId"] in merge_handlers
+                    and tasks_merge_eligible(task, other_task, merge_tick)
+                ):
+                    task = merge_tasks(task, other_task)
                 else:
-                    putback.append(other_task)
-            TaskQueue = putback
-            merged_task.append(task)
-        
-        logger.debug(f'[CTRL] fine-grained merge result: {len(merged_task)}')
-        self.TaskQueue = merged_task
+                    remaining.append(other_task)
+            pending = remaining
+
+            if len(_constituent_task_ids(task)) > 1:
+                handler_id = task["HandlerId"]
+                signal_parts = [
+                    f"--release_time {task['ReleaseTime']}",
+                    f"--deadline {task['Deadline']}",
+                    f"--relative_time {self.TaskStartTime}",
+                    f"--taskid {task['TaskId']}",
+                    f"--simo_args {task['RunArgs']}",
+                    f"--dag_period {task['DagPeriod']}",
+                ]
+                if self.approach_module == 'feedback-fine-grained':
+                    signal_parts.append("--skipmode 1")
+                task['SignalMsg'] = generate_signal(
+                    handler_id, SignalCommand.RUN, *signal_parts
+                )
+                logger.debug(
+                    f"[CTRL] fine-grained merged execution: {task['TaskId']}"
+                )
+            merged_queue.append(task)
+
+        logger.debug(f'[CTRL] fine-grained merge result: {len(merged_queue)}')
+        self.TaskQueue = merged_queue
 
     def init_task_statistics(self):
         """
         generate a task statistics dict for drawing and analysis
         """
-        # record the task object for statistics
+        # Record outcomes against the original offered-node population. Merged
+        # execution nodes therefore do not change the metric denominator.
         task_statistics = defaultdict(dict)
-        for task in self.TaskQueue:
-            task_statistics[task["TaskId"]] = {
-                "handler_id":  task["HandlerId"],
-                "taskid": task["TaskId"],
-                "release_time": task["ReleaseTime"],
-                "deadline": task["Deadline"],
-                "priority": task["Priority"],
-                "dependency": task["Dependencies"],
-                "dag_period": task.get("DagPeriod", None),
-                "simo_args": task.get("RunArgs", ""),
-                "is_non_partitionable": task.get("IsNonPartitionable", False),
-            }
+        execution_to_constituents = {}
+        for execution_task in self.TaskQueue:
+            constituent_ids = _constituent_task_ids(execution_task)
+            execution_to_constituents[execution_task["TaskId"]] = constituent_ids
+            for task_id in constituent_ids:
+                task = self.offered_tasks_by_id[task_id]
+                task_statistics[task_id] = {
+                    "handler_id": task["HandlerId"],
+                    "taskid": task_id,
+                    "release_time": task["ReleaseTime"],
+                    "deadline": task["Deadline"],
+                    "priority": task["Priority"],
+                    "dependency": task["Dependencies"],
+                    "dag_period": task.get("DagPeriod", None),
+                    "simo_args": task.get("RunArgs", ""),
+                    "is_non_partitionable": task.get(
+                        "IsNonPartitionable", False
+                    ),
+                    "execution_task_id": execution_task["TaskId"],
+                }
+        self.execution_to_constituents = execution_to_constituents
         self.task_statistics = task_statistics
 
     def add_task_statistics(self, taskid, result, start_time, end_time):
-        self.task_statistics[taskid]["res"] = result
-        self.task_statistics[taskid]["start_time"] = start_time
-        self.task_statistics[taskid]["end_time"] = end_time        
+        constituent_ids = self.execution_to_constituents.get(taskid, [taskid])
+        for constituent_id in constituent_ids:
+            task_statistics = self.task_statistics[constituent_id]
+            constituent_result = result
+            if result in {"success", "failure"}:
+                constituent_result = (
+                    "success"
+                    if float(end_time) <= float(task_statistics["deadline"])
+                    else "failure"
+                )
+            task_statistics["res"] = constituent_result
+            task_statistics["start_time"] = start_time
+            task_statistics["end_time"] = end_time
 
 
     def rr(self):

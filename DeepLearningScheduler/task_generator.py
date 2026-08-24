@@ -426,12 +426,16 @@ def generate_tasks_from_dag(
         task_position = (
             f"dag={dag_idx}/period={period}/stage={stage_idx}/branch={branch_label}"
         )
+        merge_key = f"dag={dag_idx}/period={period}/stage={stage_idx}"
+        task_id = (
+            f"{config['TaskName']}_[{period}]_D{dag_idx}_S{stage_idx}_B"
+            f"{branch_label}"
+        )
         task = {
-            "TaskId": (
-                f"{config['TaskName']}_[{period}]_D{dag_idx}_S{stage_idx}_B"
-                f"{branch_label}"
-            ),
+            "TaskId": task_id,
             "TaskPosition": task_position,
+            "MergeKey": merge_key,
+            "ConstituentTaskIds": [task_id],
             "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
