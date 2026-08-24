@@ -58,8 +58,15 @@ def _replace_generated_index(path, payload):
     os.replace(temporary_path, path)
 
 
-def build_grid(source_dir, output_dir, alphas):
+def build_grid(source_dir, output_dir, alphas, devices=None):
     source_paths = sorted(source_dir.glob("*_loose_*.json"))
+    if devices:
+        devices = set(devices)
+        source_paths = [
+            path
+            for path in source_paths
+            if path.name.split("_loose_", 1)[0] in devices
+        ]
     if not source_paths:
         raise FileNotFoundError(f"no *_loose_*.json files found in {source_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -118,9 +125,17 @@ def main():
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--alphas", type=_parse_alphas, default=_parse_alphas(DEFAULT_ALPHAS))
+    parser.add_argument(
+        "--devices",
+        default="",
+        help="optional comma-separated device prefixes (for example: mac)",
+    )
     args = parser.parse_args()
     index = build_grid(
-        args.source_dir.resolve(), args.output_dir.resolve(), args.alphas
+        args.source_dir.resolve(),
+        args.output_dir.resolve(),
+        args.alphas,
+        [value.strip() for value in args.devices.split(",") if value.strip()],
     )
     print(f"Generated/verified {len(index['configs'])} calibration configs")
     return 0
