@@ -422,6 +422,9 @@ class TaskSchedule:
             "schema_version": 1,
             "run_id": self.run_id,
             "method": self.approach_module,
+            "torch_device": os.environ.get(
+                "RED_TORCH_DEVICE_RESOLVED", "unrecorded"
+            ),
             "merge_threshold_ms": self.merge_tick_seconds * 1000.0,
             "task_config_path": self.task_config_path,
             "offered_task_stream_sha256": self.offered_task_stream_hash,

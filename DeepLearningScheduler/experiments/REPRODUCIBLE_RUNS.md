@@ -3,8 +3,9 @@
 `run_matrix.py` executes every method/seed in an isolated directory. Each run
 contains:
 
-- `manifest.json`: device, power mode, git commit/status, config SHA-256, seed,
-  command, offered-task hash, timestamps, and final status;
+- `manifest.json`: device, power mode, resolved PyTorch device/runtime, git
+  commit/status, config SHA-256, seed, command, offered-task hash, timestamps,
+  and final status;
 - `stdout.log`: complete controller/handler output;
 - `task_statistics.pkl`: original offered-node outcomes, even when execution
   nodes were merged;
@@ -21,12 +22,19 @@ python3 experiments/run_matrix.py \
   --output-root taskdata/reruns/agx \
   --profiles tight,loose \
   --seeds 101,202,303,404,505 \
+  --torch-device cuda \
   --dry-run
 ```
 
 Remove `--dry-run` to execute. A run directory is never overwritten. Passing
 `--resume` skips only runs whose manifest already says `complete`; failed or
 partial directories require investigation and a new run identity.
+
+`--torch-device auto` prefers CUDA, then Apple MPS, then CPU. Formal runs
+should request the intended backend explicitly (`cuda`, `mps`, or `cpu`), so
+an unavailable accelerator fails rather than silently changing the evaluated
+platform. CUDA/MPS completion is synchronized before the handler reports a
+task end time.
 
 For EDF-only calibration, use calibration profile names/config files and only
 the `baseline` method. Do not include or inspect the proposed method until the

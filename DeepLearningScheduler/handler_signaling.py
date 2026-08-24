@@ -6,6 +6,15 @@ import logging, time
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from AbstractHandler import HandlerStatus
 
+
+def _valid_handler_output(output):
+    """Return whether a handler produced its explicit success contract."""
+    return (
+        isinstance(output, list)
+        and bool(output)
+        and all(item == "Success" for item in output)
+    )
+
 async def handle_signaling(control_queue, base_time, config=(), logger=logging, instance=None):
     """
     singaling response in child process
@@ -222,7 +231,13 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                     STATUS = HandlerStatus.Ready
                     reply_source = f"--source {handler_id}"
                     reply_status = f"--status {STATUS.value}"
-                    signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, "--warmup true")
+                    warmup_status = "true" if _valid_handler_output(output) else "false"
+                    if warmup_status == "false":
+                        logger.error(
+                            f"Handler [{handler_id}]{handler_name} warmup "
+                            f"returned invalid output: {output!r}"
+                        )
+                    signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, f"--warmup {warmup_status}")
                     control_queue.put(signal_message)
                     continue
                 
@@ -263,7 +278,13 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
                 reply_simo = f"--simo_args {simo_args}"
                 reply_dagperiod = f"--dag_period {dag_period}"
-                if(end_time > deadline):
+                if not _valid_handler_output(output):
+                    reply_output = f"--output execution_error"
+                    logger.error(
+                        f"Task[{taskid}] in [{handler_id}]{handler_name} "
+                        f"returned invalid output: {output!r}"
+                    )
+                elif(end_time > deadline):
                     reply_output = f"--output failure"
                     # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {end_time}, deadline: {deadline}")
                 else:

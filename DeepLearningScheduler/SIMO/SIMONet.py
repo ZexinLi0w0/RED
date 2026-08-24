@@ -26,8 +26,9 @@ from backbone.ObjectDetection import ObjectDetection_Decoder
 # from backbone.deeplabv3_plus.deeplabv3plus import Deeplabv3plus_Encoder, Deeplabv3plus_Decoder
 
 from utils.general import non_max_suppression, scale_coords
+from runtime_device import configure_torch_device
 
-DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+DEVICE = configure_torch_device()
 
 debug = True
 def time_it(output=''):

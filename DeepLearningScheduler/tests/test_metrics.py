@@ -23,8 +23,14 @@ def test_qoe_rejects_empty_or_unpaired_samples(finished_times, deadlines) -> Non
 
 
 def test_deadline_miss_rate_counts_every_unfinished_outcome() -> None:
-    outcomes = ["success", "failure", "skip", "burst_drop"]
-    assert deadline_miss_rate_from_outcomes(outcomes) == pytest.approx(0.75)
+    outcomes = [
+        "success",
+        "failure",
+        "skip",
+        "burst_drop",
+        "execution_error",
+    ]
+    assert deadline_miss_rate_from_outcomes(outcomes) == pytest.approx(0.8)
 
 
 def test_statistics_excludes_nonexecuted_work_from_latency(tmp_path) -> None:

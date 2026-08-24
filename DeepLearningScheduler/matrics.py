@@ -10,8 +10,10 @@ from collections.abc import Iterable, Sequence
 
 
 DEFAULT_QOE_LAMBDA = 0.05
-EXECUTED_OUTCOMES = frozenset({"success", "failure"})
-DEADLINE_MISS_OUTCOMES = frozenset({"failure", "skip", "burst_drop"})
+EXECUTED_OUTCOMES = frozenset({"success", "failure", "execution_error"})
+DEADLINE_MISS_OUTCOMES = frozenset(
+    {"failure", "skip", "burst_drop", "execution_error"}
+)
 KNOWN_OUTCOMES = EXECUTED_OUTCOMES | DEADLINE_MISS_OUTCOMES
 
 
@@ -89,8 +91,9 @@ def deadline_miss_rate_from_outcomes(outcomes: Iterable[str]) -> float:
     """Return the miss fraction for the scheduler's terminal outcome taxonomy.
 
     ``failure`` means the task executed but completed after its deadline.
-    ``skip`` and ``burst_drop`` mean no on-time result was produced, so both
-    count as misses while remaining excluded from execution-latency averages.
+    ``execution_error`` means execution completed without a valid inference
+    output. ``skip`` and ``burst_drop`` mean the task was not executed. Every
+    case without a valid on-time output counts as a miss.
     """
     outcomes = list(outcomes)
     if not outcomes:

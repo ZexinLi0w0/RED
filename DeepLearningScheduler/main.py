@@ -22,6 +22,7 @@ from task_generator import (
     load_task_config,
     task_stream_sha256,
 )
+from runtime_device import configure_torch_device
 
 def create_subprocess(control_queue, base_time, config=()):
     """
@@ -123,8 +124,16 @@ def parseArguments():
         default=None,
         help="stable run identifier recorded in machine-readable outputs",
     )
+    parser.add_argument(
+        "--torch-device",
+        default="auto",
+        choices=("auto", "cpu", "mps", "cuda", "cuda:0"),
+        help="PyTorch execution device; auto prefers CUDA, then MPS, then CPU",
+    )
 
     args = parser.parse_args()
+    torch_device = configure_torch_device(args.torch_device)
+    print(f"PyTorch execution device: {torch_device}")
 
     # Load the handlers from the handler config file
     try:

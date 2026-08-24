@@ -26,6 +26,7 @@ import numpy as np
 import time
 import asyncio
 import profile
+from runtime_device import configure_torch_device, synchronize_torch_device
 
 from loss import DiscriminativeLoss
 # from backbone.UNet import UNet_Encoder, UNet_Decoder
@@ -54,9 +55,11 @@ class handler5(AbstractHandler):
         input_img = self.input_img
         try:
             output_list = []
-            for i in range(self.BATCH):
-                net_out = model.forward(input_img, decoder_list)
-                output_list.append(net_out)
+            with torch.inference_mode():
+                for i in range(self.BATCH):
+                    net_out = model.forward(input_img, decoder_list)
+                    output_list.append(net_out)
+                synchronize_torch_device(self.device)
             return output_list
         except MemoryError:
             return "Memory Error in running task"
@@ -74,12 +77,13 @@ class handler5(AbstractHandler):
     
 
     async def load_data(self):
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = configure_torch_device()
         device = self.device
         input_img = torch.randn(1, 3, self.width, self.height).to(device)
-        model = SIMONet().to(device)
+        model = SIMONet().to(device).eval()
         self.input_img = input_img
         self.model = model
+        print(f"Handler PyTorch execution device: {device}")
     
     def ready(self):
         print(f'I\'m ready {self.task_name}')

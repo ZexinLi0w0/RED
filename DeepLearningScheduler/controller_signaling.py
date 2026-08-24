@@ -92,6 +92,10 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
                     # before all handlers are ready, we need to warmup the handlers
                     if(not all(allReady.values())):
                         if("warmup" in args_dict):
+                            if args_dict["warmup"] != "true":
+                                raise RuntimeError(
+                                    f"handler {handler_id} failed warmup"
+                                )
                             warmup[handler_id] += 1
                             if(warmup[handler_id] >= 20):
                                 allReady[handler_id] = True
@@ -195,6 +199,10 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                     # before all handlers are ready, we need to warmup the handlers
                     if(not all(allReady.values())):
                         if("warmup" in args_dict):
+                            if args_dict["warmup"] != "true":
+                                raise RuntimeError(
+                                    f"handler {handler_id} failed warmup"
+                                )
                             warmup[handler_id] += 1
                             if(warmup[handler_id] >= 20):
                                 allReady[handler_id] = True

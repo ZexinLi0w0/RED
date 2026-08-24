@@ -22,6 +22,7 @@ from task_generator import (  # noqa: E402
     load_dag_experiment_config,
     task_stream_sha256,
 )
+from runtime_device import torch_runtime_info  # noqa: E402
 
 
 def _csv_values(raw_value):
@@ -110,6 +111,11 @@ def _build_parser():
     )
     parser.add_argument("--seeds", type=_csv_ints, default=[101, 202, 303, 404, 505])
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument(
+        "--torch-device",
+        default="auto",
+        choices=("auto", "cpu", "mps", "cuda", "cuda:0"),
+    )
     parser.add_argument("--cooldown-seconds", type=float, default=3.0)
     parser.add_argument("--burst-config", type=Path)
     parser.add_argument("--dry-run", action="store_true")
@@ -133,6 +139,8 @@ def main():
     output_root = args.output_root.resolve()
     if not handler_config.is_file():
         raise FileNotFoundError(handler_config)
+
+    runtime_info = torch_runtime_info(args.torch_device)
 
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
@@ -175,6 +183,8 @@ def main():
                         str(run_dir),
                         "--run-id",
                         run_id,
+                        "--torch-device",
+                        runtime_info["resolved"],
                     ]
                     if args.burst_config:
                         command.extend(
@@ -198,6 +208,7 @@ def main():
                         "git_commit": git_commit,
                         "git_status_porcelain": git_status,
                         "python": args.python,
+                        "torch_runtime": runtime_info,
                         "command": command,
                         "host": socket.gethostname(),
                         "platform": platform.platform(),

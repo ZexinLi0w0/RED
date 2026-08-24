@@ -9,8 +9,9 @@ from torch.autograd import Variable
 import torch
 import torch.nn as nn
 from torch.functional import F
+from runtime_device import configure_torch_device
 
-DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+DEVICE = configure_torch_device()
 
 class FocalLoss(nn.Module):
     '''
@@ -116,5 +117,4 @@ class DiscriminativeLoss(_Loss):
         reg_loss = reg_loss / batch_size
 
         return var_loss, dist_loss, reg_loss
-
 
