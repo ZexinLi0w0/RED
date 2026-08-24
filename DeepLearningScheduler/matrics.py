@@ -10,7 +10,9 @@ from collections.abc import Iterable, Sequence
 
 
 DEFAULT_QOE_LAMBDA = 0.05
+DEFAULT_XRBENCH_RT_K = 15.0
 EXECUTED_OUTCOMES = frozenset({"success", "failure", "execution_error"})
+VALID_OUTPUT_OUTCOMES = frozenset({"success", "failure"})
 DEADLINE_MISS_OUTCOMES = frozenset(
     {"failure", "skip", "burst_drop", "execution_error"}
 )
@@ -85,6 +87,61 @@ def QoEScore(finished_times, deadlines, lambda_param=DEFAULT_QOE_LAMBDA):
         score,
     )
     return score
+
+
+def xrbench_realtime_score(inference_latency, time_window, k=DEFAULT_XRBENCH_RT_K):
+    """Return XRBench's sigmoid real-time utility for one inference.
+
+    Both latency and the request-to-deadline time window are in seconds, so
+    ``k`` is expressed in inverse seconds. The score is 0.5 exactly at the
+    deadline, approaches one for increasingly early completion, and approaches
+    zero as lateness grows.
+    """
+    values = (inference_latency, time_window, k)
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("latency, time_window, and k must be finite")
+    if inference_latency < 0 or time_window <= 0 or k < 0:
+        raise ValueError(
+            "latency must be non-negative, time_window positive, and k "
+            "non-negative"
+        )
+    exponent = k * (inference_latency - time_window)
+    if exponent >= 0:
+        inverse = math.exp(-min(exponent, 709.0))
+        return inverse / (1.0 + inverse)
+    return 1.0 / (1.0 + math.exp(exponent))
+
+
+def timeliness_qoe_score(task_records, k=DEFAULT_XRBENCH_RT_K):
+    """Aggregate XRBench timing utility over the offered-node population.
+
+    Valid inference outputs receive the per-inference real-time score. Skips,
+    proactive drops, and execution errors receive zero, which is equivalent to
+    combining XRBench's processed-frame ratio with its mean RT score. This
+    makes the denominator identical across methods.
+    """
+    records = list(task_records)
+    if not records:
+        return 0.0
+    scores = []
+    for record in records:
+        outcome = record["res"]
+        if outcome not in KNOWN_OUTCOMES:
+            raise ValueError(f"unknown terminal task outcome: {outcome}")
+        if outcome not in VALID_OUTPUT_OUTCOMES:
+            scores.append(0.0)
+            continue
+        release_time = float(record["release_time"])
+        deadline = float(record["deadline"])
+        end_time = float(record["end_time"])
+        scores.append(
+            xrbench_realtime_score(
+                end_time - release_time,
+                deadline - release_time,
+                k=k,
+            )
+        )
+    return sum(scores) / len(scores)
 
 
 def deadline_miss_rate_from_outcomes(outcomes: Iterable[str]) -> float:

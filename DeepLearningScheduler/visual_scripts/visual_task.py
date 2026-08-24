@@ -9,12 +9,13 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 from matrics import (
-    DEFAULT_QOE_LAMBDA,
+    DEFAULT_XRBENCH_RT_K,
     DEADLINE_MISS_OUTCOMES,
     EXECUTED_OUTCOMES,
     QoEScore,
     RTscore,
     deadline_miss_rate_from_outcomes,
+    timeliness_qoe_score,
     throughput_score,
 )
 from task_generator import overall_deadline_seconds, timing_config_from_mapping
@@ -114,19 +115,12 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics2 = 0
     metrics3 = 0
     deadline_time = math.inf
-    qoe_lambda = DEFAULT_QOE_LAMBDA
     # matrics calculation
     try:
         config_path = _resolve_task_config(task_config_path)
         with open(config_path, "r") as f:
             config = json.load(f)
         deadline_time = _overall_deadline_seconds(config)
-        qoe_lambda = config.get("QoELambda", DEFAULT_QOE_LAMBDA)
-        if "QoELambda" not in config:
-            print(
-                f"[WARN] Task config '{config_path}' has no QoELambda; "
-                f"using legacy default {DEFAULT_QOE_LAMBDA}"
-            )
     except (FileNotFoundError, json.JSONDecodeError) as exc:
         print(f"[WARN] Failed to load task config '{task_config_path}' for metrics: {exc}")
 
@@ -134,8 +128,8 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     print('metrics finished time', finished_time, deadline_time)
     if math.isfinite(deadline_time) and deadline_time > 0:
         metrics2 = RTscore([finished_time], [deadline_time])
-        metrics3 = QoEScore(
-            [finished_time], [deadline_time], lambda_param=qoe_lambda
+        metrics3 = timeliness_qoe_score(
+            task_statistics.values(), k=DEFAULT_XRBENCH_RT_K
         )
         
     metrics = (metrics1, metrics2, metrics3)

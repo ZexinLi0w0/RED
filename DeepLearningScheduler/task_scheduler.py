@@ -11,6 +11,7 @@ import logging
 from copy import deepcopy
 from burst_task_manager import BurstTaskManager
 from task_generator import task_stream_sha256
+from matrics import DEFAULT_XRBENCH_RT_K, VALID_OUTPUT_OUTCOMES
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -418,6 +419,9 @@ class TaskSchedule:
         outcome_counts = Counter(
             task["res"] for task in task_statistics.values()
         )
+        valid_output_count = sum(
+            outcome_counts[outcome] for outcome in VALID_OUTPUT_OUTCOMES
+        )
         summary = {
             "schema_version": 1,
             "run_id": self.run_id,
@@ -437,6 +441,12 @@ class TaskSchedule:
             "average_executed_node_latency_seconds": avg_finished_time,
             "overall_deadline_hit": metrics[1],
             "qoe_score": metrics[2],
+            "qoe_score_definition": (
+                "mean XRBench real-time sigmoid utility over offered nodes; "
+                "non-valid outputs score zero"
+            ),
+            "xrbench_rt_k_per_second": DEFAULT_XRBENCH_RT_K,
+            "valid_output_rate": valid_output_count / len(task_statistics),
             "burst_statistics": burst_stats,
         }
         temporary_summary_path = f"{summary_path}.tmp"

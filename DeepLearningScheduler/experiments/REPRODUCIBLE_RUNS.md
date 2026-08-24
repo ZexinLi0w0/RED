@@ -65,3 +65,15 @@ LLF-DAG receives the same offered DAG and per-node profile as EDF. Its
 remaining-cost calculation is confined to the currently admitted DAG instance;
 it does not inspect completion times or arrivals from later DAG instances and
 does not use MIMONet merging.
+
+## Timing utility reported as QoE
+
+Revision runs use an XRBench-derived timing utility over the original offered
+node population. A valid inference output receives
+`1 / (1 + exp(k * (latency - request_to_deadline_window)))` with the XRBench
+default `k=15 s^-1`; a skip, proactive drop, or execution error receives zero.
+The summary also reports `valid_output_rate` separately. This aggregation is
+equivalent to combining the processed-frame ratio with the mean per-inference
+real-time score while preserving one denominator across methods. The
+historical `QoEScore` helper remains available only to reproduce older plots;
+it is not the revision headline metric.
