@@ -568,8 +568,17 @@ class TaskSchedule:
             # self.logger.debug(f'[CTRL] Feedback adjust endtime, before {task["ReleaseTime"]}, after: {end_time}')
             if(end_time < task["ReleaseTime"]):
                 task["ReleaseTime"] = end_time
-                # adjust the data in task statistics
-                self.task_statistics[task["TaskId"]]["release_time"] = end_time
+                # Metrics are indexed by the original offered nodes, whereas a
+                # fine-grained execution node can represent several constituents.
+                # Update that reporting population without creating a synthetic
+                # statistics entry keyed by the merged execution id.
+                constituent_ids = self.execution_to_constituents.get(
+                    task["TaskId"], _constituent_task_ids(task)
+                )
+                for constituent_id in constituent_ids:
+                    self.task_statistics[constituent_id][
+                        "release_time"
+                    ] = end_time
                 
                 # generate new signal message
                 handler_id = task["HandlerId"]
