@@ -1,4 +1,5 @@
 import json
+import hashlib
 from dataclasses import dataclass
 
 from nanoid import generate
@@ -23,6 +24,7 @@ class DagTimingConfig:
     arrival_scale: float = 1.0
     dag_repeated_times: int = 10
     parallel_stage_policy: str = "max"
+    task_seed: int = 0
 
 
 def _positive_number(value, field_name):
@@ -75,11 +77,16 @@ def timing_config_from_mapping(config):
     if parallel_stage_policy not in {"max", "sum"}:
         raise ValueError("ParallelStagePolicy must be either 'max' or 'sum'")
 
+    task_seed = config.get("TaskSeed", 0)
+    if isinstance(task_seed, bool) or not isinstance(task_seed, int) or task_seed < 0:
+        raise ValueError("TaskSeed must be a non-negative integer")
+
     return DagTimingConfig(
         deadline_factor=deadline_factor,
         arrival_scale=arrival_scale,
         dag_repeated_times=dag_repeated_times,
         parallel_stage_policy=parallel_stage_policy,
+        task_seed=task_seed,
     )
 
 def validate_task_config(task_config):
@@ -371,6 +378,7 @@ def generate_tasks_from_dag(
     arrival_scale=None,
     dag_repeated_times=10,
     parallel_stage_policy="max",
+    seed=0,
 ):
     """
     Generate tasks queue from the task config.
@@ -386,8 +394,6 @@ def generate_tasks_from_dag(
     RunArgs: SIMO run arguments
     IsNonPartitionable: flag indicating if task is non-partitionable
     """
-    import random
-
     timing_config = _resolve_generation_timing(
         time_factor=time_factor,
         deadline_factor=deadline_factor,
@@ -395,13 +401,37 @@ def generate_tasks_from_dag(
         dag_repeated_times=dag_repeated_times,
         parallel_stage_policy=parallel_stage_policy,
     )
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
+    if (
+        isinstance(non_partitionable_percentage, bool)
+        or not isinstance(non_partitionable_percentage, (int, float))
+        or not 0 <= non_partitionable_percentage <= 100
+    ):
+        raise ValueError("non_partitionable_percentage must be between 0 and 100")
     tasks = []
     start_time_ms = 0.0
 
-    def generate_task_obj(config, start_time, period, is_non_partitionable=False):
+    def generate_task_obj(
+        config,
+        start_time,
+        period,
+        dag_idx,
+        stage_idx,
+        branch_idx,
+        is_non_partitionable=False,
+    ):
         worst_running_time_ms = _worst_running_time_ms(config)
+        branch_label = "single" if branch_idx is None else str(branch_idx)
+        task_position = (
+            f"dag={dag_idx}/period={period}/stage={stage_idx}/branch={branch_label}"
+        )
         task = {
-            "TaskId": f"{config['TaskName']}_[{period}]_{generate(size=7)}",
+            "TaskId": (
+                f"{config['TaskName']}_[{period}]_D{dag_idx}_S{stage_idx}_B"
+                f"{branch_label}"
+            ),
+            "TaskPosition": task_position,
             "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
             "ReleaseTime": start_time / 1000,
@@ -431,23 +461,27 @@ def generate_tasks_from_dag(
     
     # Generate all task positions and randomly select non-partitionable ones
     all_task_positions = []
-    task_index = 0
     for dag_idx, dag in enumerate(dag_config):
         for period in range(timing_config.dag_repeated_times):
             for config_idx, config in enumerate(dag):
                 if isinstance(config, list):
                     for sub_idx, _ in enumerate(config):
-                        all_task_positions.append((dag_idx, period, config_idx, sub_idx, task_index))
-                        task_index += 1
+                        all_task_positions.append(
+                            (dag_idx, period, config_idx, sub_idx)
+                        )
                 else:
-                    all_task_positions.append((dag_idx, period, config_idx, None, task_index))
-                    task_index += 1
+                    all_task_positions.append((dag_idx, period, config_idx, None))
     
-    # Randomly select positions for non-partitionable tasks
-    non_partitionable_positions = set()
-    if non_partitionable_count > 0:
-        selected_positions = random.sample(all_task_positions, non_partitionable_count)
-        non_partitionable_positions = {(pos[0], pos[1], pos[2], pos[3]) for pos in selected_positions}
+    # Rank every structural position with a stable hash. Taking a prefix makes
+    # 0/50/100% atomic sets nested and independent of Python's RNG version.
+    def position_rank(position):
+        encoded = f"{seed}|{position!r}".encode("utf-8")
+        return hashlib.sha256(encoded).digest()
+
+    ranked_positions = sorted(all_task_positions, key=position_rank)
+    non_partitionable_positions = set(
+        ranked_positions[:non_partitionable_count]
+    )
     
     # Generate tasks with non-partitionable selection
     for dag_idx, dag in enumerate(dag_config):
@@ -466,6 +500,9 @@ def generate_tasks_from_dag(
                             subconfig,
                             stage_start_ms,
                             period,
+                            dag_idx,
+                            config_idx,
+                            sub_idx,
                             is_non_partitionable,
                         )
                         tasks.append(task)
@@ -480,6 +517,9 @@ def generate_tasks_from_dag(
                         config,
                         stage_start_ms,
                         period,
+                        dag_idx,
+                        config_idx,
+                        None,
                         is_non_partitionable,
                     )
                     tasks.append(task)
@@ -491,6 +531,22 @@ def generate_tasks_from_dag(
                     * timing_config.arrival_scale
                 )
     return tasks
+
+
+def task_stream_sha256(tasks):
+    """Hash the offered task stream before method-specific scheduling changes."""
+    canonical_tasks = [
+        {key: value for key, value in task.items() if key != "SignalMsg"}
+        for task in tasks
+    ]
+    payload = json.dumps(
+        canonical_tasks,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def overall_deadline_seconds(dag_config, timing_config):
@@ -544,5 +600,6 @@ if __name__ == "__main__":
         parallel_stage_policy=timing_config.parallel_stage_policy,
         non_partitionable_percentage=non_partitionable_percentage,
         non_partitionable_config=non_partitionable_config,
+        seed=timing_config.task_seed,
     )
     print(f"Generated {len(tasks)} DAG tasks")

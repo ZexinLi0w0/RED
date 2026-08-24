@@ -4,6 +4,7 @@ from task_generator import (
     DagTimingConfig,
     generate_tasks_from_dag,
     overall_deadline_seconds,
+    task_stream_sha256,
     timing_config_from_mapping,
 )
 
@@ -78,6 +79,7 @@ def test_legacy_factor_maps_to_both_explicit_dimensions() -> None:
         arrival_scale=1.5,
         dag_repeated_times=10,
         parallel_stage_policy="max",
+        task_seed=0,
     )
 
 
@@ -90,3 +92,67 @@ def test_mixed_legacy_and_explicit_timing_is_rejected() -> None:
                 "ArrivalScale": 1.0,
             }
         )
+
+
+def test_generated_stream_is_deterministic_for_a_seed() -> None:
+    kwargs = {
+        "deadline_factor": 1.0,
+        "arrival_scale": 1.0,
+        "dag_repeated_times": 4,
+        "parallel_stage_policy": "max",
+        "non_partitionable_percentage": 50,
+        "seed": 2026,
+    }
+    first = generate_tasks_from_dag(_parallel_dag(), **kwargs)
+    second = generate_tasks_from_dag(_parallel_dag(), **kwargs)
+
+    assert first == second
+    assert task_stream_sha256(first) == task_stream_sha256(second)
+    assert len({task["TaskId"] for task in first}) == len(first)
+
+
+def test_atomic_positions_are_nested_across_ratios() -> None:
+    common = {
+        "deadline_factor": 1.0,
+        "arrival_scale": 1.0,
+        "dag_repeated_times": 10,
+        "parallel_stage_policy": "max",
+        "seed": 42,
+    }
+    tasks_50 = generate_tasks_from_dag(
+        _parallel_dag(), non_partitionable_percentage=50, **common
+    )
+    tasks_100 = generate_tasks_from_dag(
+        _parallel_dag(), non_partitionable_percentage=100, **common
+    )
+
+    positions_50 = {
+        task["TaskPosition"]
+        for task in tasks_50
+        if task["IsNonPartitionable"]
+    }
+    positions_100 = {
+        task["TaskPosition"]
+        for task in tasks_100
+        if task["IsNonPartitionable"]
+    }
+    assert positions_50 < positions_100
+
+
+def test_seed_changes_atomic_positions_without_changing_offered_work() -> None:
+    common = {
+        "deadline_factor": 1.0,
+        "arrival_scale": 1.0,
+        "dag_repeated_times": 10,
+        "parallel_stage_policy": "max",
+        "non_partitionable_percentage": 50,
+    }
+    first = generate_tasks_from_dag(_parallel_dag(), seed=1, **common)
+    second = generate_tasks_from_dag(_parallel_dag(), seed=2, **common)
+
+    first_positions = [task["TaskPosition"] for task in first]
+    second_positions = [task["TaskPosition"] for task in second]
+    assert first_positions == second_positions
+    assert [task["IsNonPartitionable"] for task in first] != [
+        task["IsNonPartitionable"] for task in second
+    ]

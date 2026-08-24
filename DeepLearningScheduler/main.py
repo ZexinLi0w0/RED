@@ -20,6 +20,7 @@ from task_generator import (
     generate_tasks_from_dag,
     load_dag_experiment_config,
     load_task_config,
+    task_stream_sha256,
 )
 
 def create_subprocess(control_queue, base_time, config=()):
@@ -106,6 +107,12 @@ def parseArguments():
     parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: \n 1. baseline(do nothing), \n 2. feedback(according to the feedback of task execution to adjust next release time), \n 3. fine-grained(reconstruct dag in task generation), \n 4. feedback-fine-grained")
     parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
     parser.add_argument("--burst-config", "-b", required=False, help="path of burst task configuration file")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="override TaskSeed for deterministic paired task generation",
+    )
 
     args = parser.parse_args()
 
@@ -141,6 +148,7 @@ def parseArguments():
     if result is None:
         raise Exception("Error: Failed to load DAG config")
     task_config, timing, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
+    task_seed = timing.task_seed if args.seed is None else args.seed
     tasks_list = generate_tasks_from_dag(
         task_config,
         deadline_factor=timing.deadline_factor,
@@ -149,7 +157,10 @@ def parseArguments():
         parallel_stage_policy=timing.parallel_stage_policy,
         non_partitionable_percentage=non_partitionable_percentage,
         non_partitionable_config=non_partitionable_config,
+        seed=task_seed,
     )
+    print(f"Task seed: {task_seed}")
+    print(f"Task stream SHA-256: {task_stream_sha256(tasks_list)}")
 
     # get filename of taskconfig
     task_file_path = args.task[::-1]
