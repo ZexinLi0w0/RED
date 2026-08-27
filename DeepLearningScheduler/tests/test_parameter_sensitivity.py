@@ -3,8 +3,10 @@ import hashlib
 import json
 
 from experiments.parameter_sensitivity import (
+    DEFAULT_SEEDS,
     PAPER_DEFAULTS,
     SENSITIVITY_POINTS,
+    _seeds_for_repetitions,
     generate_study_plan,
     summarize_study,
 )
@@ -54,17 +56,23 @@ def _base_configs(tmp_path):
     return task_path, burst_path
 
 
-def test_plan_has_all_table_points_and_five_repetitions(tmp_path) -> None:
+def test_plan_defaults_to_one_run_per_point(tmp_path) -> None:
     task_path, burst_path = _base_configs(tmp_path)
 
     plan = generate_study_plan(task_path, burst_path, tmp_path / "study")
 
     assert len(plan["points"]) == 18
-    assert plan["planned_run_count"] == 90
-    assert plan["repetitions_per_point"] == 5
+    assert plan["planned_run_count"] == 18
+    assert plan["repetitions_per_point"] == 1
+    assert plan["seeds"] == list(DEFAULT_SEEDS) == [101]
     assert [point["point_slug"] for point in plan["points"]] == [
         point.slug for point in SENSITIVITY_POINTS
     ]
+
+
+def test_repetition_count_generates_deterministic_seeds() -> None:
+    assert _seeds_for_repetitions(1) == (101,)
+    assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
 def test_generated_points_follow_one_factor_at_a_time(tmp_path) -> None:
@@ -157,6 +165,7 @@ def test_summarizer_extracts_table_values_from_validated_run_artifacts(tmp_path)
     report = summarize_study(output_root)
 
     assert report["complete_run_count"] == 36
+    assert report["aggregation"] == "arithmetic mean across 2 configured repetitions"
     assert len(report["points"]) == 18
     first = report["points"][0]
     assert first["metrics"]["end_to_end_latency_seconds"]["mean"] == 2.5

@@ -2,8 +2,8 @@
 
 This experiment implements the revision's one-factor-at-a-time study on one
 representative high-load AGX Orin workload. It evaluates the complete RED method
-(`feedback-fine-grained`) at 18 table settings with five predeclared repetitions
-per setting:
+(`feedback-fine-grained`) at 18 table settings. Each setting runs once by
+default:
 
 - moving-average window: `1, 4, 8, 16`;
 - release-time skew threshold: `0, 50, 100, 150, 200` milliseconds;
@@ -31,12 +31,23 @@ conda activate schedule
 ```
 
 The wrapper runs `git pull --ff-only` before the experiment, refuses a dirty
-source tree, generates all parameter configs, executes 90 isolated runs, resumes
-already completed runs, and creates the paper-table data after validating every
-artifact. To use another Conda environment, replace `schedule` with its name;
-the wrapper resolves `python3` from the active environment. A failed or
-interrupted run is retried on the next invocation; its old manifest and logs
-are retained with an `.attemptN` suffix.
+source tree, generates all parameter configs, executes 18 isolated runs by
+default, resumes already completed runs, and creates the paper-table data after
+validating every artifact. To use another Conda environment, replace `schedule`
+with its name; the wrapper resolves `python3` from the active environment. A
+failed or interrupted run is retried on the next invocation; its old manifest
+and logs are retained with an `.attemptN` suffix.
+
+The default command executes 18 runs. To repeat every setting, pass a positive
+integer:
+
+```bash
+./experiments/run_parameter_sensitivity.sh --repetitions 5
+```
+
+This example executes 90 runs. The runner generates deterministic seeds
+automatically. Advanced use can provide explicit seeds with `--seeds 7,11,19`;
+an explicit seed list overrides `--repetitions`.
 
 Useful overrides:
 
@@ -63,10 +74,10 @@ SKIP_GIT_PULL=1 PYTHON_BIN=.venv/bin/python \
 The default output directory is
 `taskdata/parameter_sensitivity/agx_high_load_v1/`:
 
-- `study_plan.json`: immutable grid, seeds, defaults, base-config hashes, and 90-run count;
+- `study_plan.json`: immutable grid, seeds, defaults, base-config hashes, and run count;
 - `generated_configs/`: explicit task and burst config for each table row;
 - `runs/<run-id>/manifest.json`: commit, source status, host, power mode, seed,
-  commands, hashes, and all five executed parameter values;
+  commands, hashes, and all five executed sensitivity-parameter values;
 - `runs/<run-id>/stdout.log`: complete controller and handler log;
 - `runs/<run-id>/summary.json`: validated latency, Deadline Missing Rate, QoE,
   moving-average trace, release-time skew threshold, and burst-controller statistics;
@@ -77,10 +88,12 @@ The default output directory is
   into the revision table;
 - `report/parameter_sensitivity_table_rows.tex`: generated LaTeX table rows.
 
-The table CSV and LaTeX rows use the arithmetic mean of the five predeclared
-repetitions. Summarization fails instead of silently producing a table if a run
-is missing, duplicated, has an unexpected seed, uses the wrong parameter values,
-contains a non-finite metric, or fails a hash/provenance check.
+With the default single run, the table CSV and LaTeX rows use that run directly.
+When `--repetitions N` or multiple explicit seeds are supplied, they use the
+arithmetic mean of the `N` runs. Summarization fails instead of silently
+producing a table if a run is missing, duplicated, has an unexpected seed, uses
+the wrong parameter values, contains a non-finite metric, or fails a
+hash/provenance check.
 
 To regenerate the table files without rerunning inference:
 

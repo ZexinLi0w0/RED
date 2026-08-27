@@ -19,8 +19,8 @@ override that path. The workload semantics and output files are documented in
 
 The revision's automated parameter-sensitivity experiment is documented in
 [`PARAMETER_SENSITIVITY.md`](PARAMETER_SENSITIVITY.md). Its one-command runner
-generates the complete 18-point, five-repetition AGX Orin matrix and writes CSV,
-JSON, and LaTeX values for the paper table.
+generates the complete 18-point AGX Orin matrix and writes CSV, JSON, and LaTeX
+values for the paper table. Each point runs once by default.
 
 On the Jetson server, run:
 
@@ -33,6 +33,9 @@ conda activate schedule
 Replace `schedule` with another environment name when needed. The wrapper uses
 `python3` from the active environment, pulls the latest commit, resumes completed
 runs, and creates the validated table artifacts automatically.
+
+Use `./experiments/run_parameter_sensitivity.sh --repetitions N` to run every
+parameter point `N` times. For example, `--repetitions 5` creates 90 runs.
 
 This directory contains scripts for extracting and analyzing metrics from new scenarios experiment log files.
 

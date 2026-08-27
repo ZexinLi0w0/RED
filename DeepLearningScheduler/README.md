@@ -129,8 +129,8 @@ and Sustained Burst definitions and the complete protocol.
 
 ### Parameter Sensitivity Experiment
 
-On the Jetson server, activate the `schedule` environment and launch the
-complete 18-point, five-repetition study with:
+On the Jetson server, activate the `schedule` environment and run each of the
+18 parameter settings once with:
 
 ```bash
 cd /experiment/zexin/ATC23/DeepLearningScheduler
@@ -139,11 +139,17 @@ conda activate schedule
 ```
 
 The wrapper pulls the latest commit with `git pull --ff-only`, resumes completed
-runs, executes all 90 runs, validates the artifacts, and writes the CSV, JSON,
+runs, executes all 18 runs, validates the artifacts, and writes the CSV, JSON,
 and LaTeX table files under
 `taskdata/parameter_sensitivity/agx_high_load_v1/report/`. The source tree must
 be clean. To use another Conda environment, replace `schedule` with that
 environment's name; the runner resolves `python3` from the active environment.
+
+To run every parameter setting more than once, pass the desired count:
+
+```bash
+./experiments/run_parameter_sensitivity.sh --repetitions 5
+```
 
 For a Mac/MPS validation run, use:
 
