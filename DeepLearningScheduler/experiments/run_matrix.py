@@ -25,15 +25,50 @@ from task_generator import (  # noqa: E402
 from runtime_device import torch_runtime_info  # noqa: E402
 
 
+DEFAULT_REPETITIONS = 1
+DEFAULT_SEED_STEP = 101
+
+
 def _csv_values(raw_value):
     return [value.strip() for value in raw_value.split(",") if value.strip()]
 
 
 def _csv_ints(raw_value):
     try:
-        return [int(value) for value in _csv_values(raw_value)]
+        values = [int(value) for value in _csv_values(raw_value)]
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("seeds must be comma-separated integers") from exc
+        raise argparse.ArgumentTypeError(
+            "seeds must be comma-separated integers"
+        ) from exc
+    if not values or any(value < 0 for value in values):
+        raise argparse.ArgumentTypeError("seeds must be non-negative integers")
+    if len(values) != len(set(values)):
+        raise argparse.ArgumentTypeError("seeds cannot contain duplicates")
+    return values
+
+
+def _positive_int(raw_value):
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "value must be a positive integer"
+        ) from exc
+    if value <= 0:
+        raise argparse.ArgumentTypeError("value must be a positive integer")
+    return value
+
+
+def _seeds_for_repetitions(repetitions):
+    return [
+        DEFAULT_SEED_STEP * index for index in range(1, repetitions + 1)
+    ]
+
+
+def _resolve_seeds(repetitions, explicit_seeds):
+    if explicit_seeds is not None:
+        return explicit_seeds
+    return _seeds_for_repetitions(repetitions)
 
 
 def _sha256_file(path):
@@ -109,7 +144,21 @@ def _build_parser():
         "--methods",
         default="baseline,llf-dag,feedback,fine-grained,feedback-fine-grained",
     )
-    parser.add_argument("--seeds", type=_csv_ints, default=[101, 202, 303, 404, 505])
+    parser.add_argument(
+        "--repetitions",
+        type=_positive_int,
+        default=DEFAULT_REPETITIONS,
+        help="runs per experiment cell; defaults to 1",
+    )
+    parser.add_argument(
+        "--seeds",
+        type=_csv_ints,
+        default=None,
+        help=(
+            "optional comma-separated seeds; when provided, overrides "
+            "--repetitions"
+        ),
+    )
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument(
         "--torch-device",
@@ -129,8 +178,9 @@ def main():
     profiles = _csv_values(args.profiles)
     scenarios = _csv_values(args.scenarios)
     methods = _csv_values(args.methods)
-    if not profiles or not scenarios or not methods or not args.seeds:
-        raise ValueError("profiles, scenarios, methods, and seeds cannot be empty")
+    seeds = _resolve_seeds(args.repetitions, args.seeds)
+    if not profiles or not scenarios or not methods:
+        raise ValueError("profiles, scenarios, and methods cannot be empty")
     if args.cooldown_seconds < 0:
         raise ValueError("cooldown-seconds cannot be negative")
 
@@ -154,7 +204,7 @@ def main():
                 raise FileNotFoundError(config_path)
             config_sha256 = _sha256_file(config_path)
 
-            for seed in args.seeds:
+            for seed in seeds:
                 offered_task_count, offered_hash = _offered_stream(config_path, seed)
                 for method in methods:
                     planned += 1

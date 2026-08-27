@@ -1,7 +1,7 @@
 # Reproducible experiment runner
 
-`run_matrix.py` executes every method/seed in an isolated directory. Each run
-contains:
+`run_matrix.py` executes every experiment cell once by default, with each run
+stored in an isolated directory. Each run contains:
 
 - `manifest.json`: device, power mode, resolved PyTorch device/runtime, git
   commit/status, config SHA-256, seed, command, offered-task hash, timestamps,
@@ -21,7 +21,6 @@ python3 experiments/run_matrix.py \
   --task-dir TaskConfigs/simo/new_scenarios \
   --output-root taskdata/reruns/agx \
   --profiles tight,loose \
-  --seeds 101,202,303,404,505 \
   --torch-device cuda \
   --dry-run
 ```
@@ -29,6 +28,16 @@ python3 experiments/run_matrix.py \
 Remove `--dry-run` to execute. A run directory is never overwritten. Passing
 `--resume` skips only runs whose manifest already says `complete`; failed or
 partial directories require investigation and a new run identity.
+
+To repeat every cell, pass a positive count. Deterministic seeds are generated
+automatically:
+
+```bash
+python3 experiments/run_matrix.py [other arguments] --repetitions 5
+```
+
+For advanced reproduction of specific runs, an explicit list such as
+`--seeds 7,11,19` overrides `--repetitions`.
 
 `--torch-device auto` prefers CUDA, then Apple MPS, then CPU. Formal runs
 should request the intended backend explicitly (`cuda`, `mps`, or `cpu`), so

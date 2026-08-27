@@ -3,8 +3,13 @@
 
 import argparse
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPOSITORY_ROOT))
 
 import matplotlib
 
@@ -39,8 +44,10 @@ METRICS = (
 )
 
 
-def load_representative_runs(runs_root):
+def load_representative_runs(runs_root, repetitions=1):
     """Return one complete, latency-median run for every declared experiment group."""
+    if repetitions <= 0:
+        raise ValueError("repetitions must be positive")
     grouped = defaultdict(list)
     runs_root = Path(runs_root)
     for manifest_path in sorted(runs_root.glob("*/manifest.json")):
@@ -72,9 +79,10 @@ def load_representative_runs(runs_root):
             for scenario, _ in SCENARIOS:
                 group_key = (profile, scenario, method)
                 records = grouped.get(group_key, [])
-                if len(records) != 5:
+                if len(records) != repetitions:
                     raise ValueError(
-                        f"expected five complete repetitions for {group_key}; "
+                        f"expected {repetitions} complete repetition(s) for "
+                        f"{group_key}; "
                         f"found {len(records)}"
                     )
                 seeds = [record["seed"] for record in records]
@@ -107,9 +115,9 @@ def selection_report(selected, profiles=None):
     return "\n".join(lines)
 
 
-def plot_qoe(runs_root, output_path, profiles=("tight",)):
+def plot_qoe(runs_root, output_path, profiles=("tight",), repetitions=1):
     """Plot QoE for the requested profiles; the paper defaults to Tight only."""
-    selected = load_representative_runs(runs_root)
+    selected = load_representative_runs(runs_root, repetitions=repetitions)
     profile_titles = dict(PROFILES)
     profiles = tuple(profiles)
     unknown_profiles = set(profiles) - set(profile_titles)
@@ -223,6 +231,12 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path)
     parser.add_argument(
+        "--repetitions",
+        type=int,
+        default=1,
+        help="complete runs expected per experiment cell; defaults to 1",
+    )
+    parser.add_argument(
         "--profiles",
         nargs="+",
         choices=[profile for profile, _ in PROFILES],
@@ -230,7 +244,14 @@ def main():
         help="deadline profiles to plot (default: tight)",
     )
     args = parser.parse_args()
-    selected = plot_qoe(args.runs_root, args.output, profiles=args.profiles)
+    if args.repetitions <= 0:
+        parser.error("--repetitions must be positive")
+    selected = plot_qoe(
+        args.runs_root,
+        args.output,
+        profiles=args.profiles,
+        repetitions=args.repetitions,
+    )
     report = selection_report(selected, profiles=args.profiles)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
