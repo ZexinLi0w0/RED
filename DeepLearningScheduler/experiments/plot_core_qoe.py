@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Plot the audited M3 Max core QoE results from a summary artifact."""
+"""Plot representative audited M3 Max QoE results from raw run artifacts."""
 
 import argparse
 import json
+import math
+import random
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
@@ -13,55 +16,120 @@ import numpy as np  # noqa: E402
 
 
 METHODS = (
-    ("baseline", "EDF", "#4C78A8", ""),
-    ("llf-dag", "LLF-DAG", "#F58518", "//"),
-    ("fine-grained", "MERIS-FG", "#54A24B", "xx"),
-    ("feedback", "MERIS-IDA", "#B279A2", ".."),
-    ("feedback-fine-grained", "MERIS", "#E45756", "\\\\"),
+    ("baseline", "EDF", "#000000"),
+    ("llf-dag", "LLF-DAG", "#3F3F3F"),
+    ("fine-grained", "MERIS-FG", "#777777"),
+    ("feedback", "MERIS-IDA", "#B5B5B5"),
+    ("feedback-fine-grained", "MERIS", "#FFFFFF"),
 )
 SCENARIOS = (
     ("urban_navigation", "Urban"),
     ("emergency_obstacle_avoidance", "Emergency"),
     ("night_driving", "Night"),
 )
-PROFILES = (("tight", "(a) Tight"), ("loose", "(b) Loose"))
+PROFILES = (("tight", "(a) Tight Deadline"), ("loose", "(b) Loose Deadline"))
+METRICS = (
+    "end_to_end_latency_seconds",
+    "deadline_missing_rate",
+    "qoe_score",
+)
 
 
-def load_qoe_data(summary_path):
-    """Return mean and sample-SD QoE values in the declared plot order."""
-    report = json.loads(Path(summary_path).read_text(encoding="utf-8"))
-    aggregates = {}
-    for row in report.get("aggregates", []):
-        key = (row["profile"], row["scenario"], row["method"])
-        if key in aggregates:
-            raise ValueError(f"duplicate aggregate row: {key}")
-        aggregates[key] = row
+def truncate_value(value, digits=3):
+    """Truncate a non-negative experimental value without rounding."""
+    factor = 10**digits
+    return math.trunc(float(value) * factor) / factor
 
-    values = {}
+
+def format_truncated(value, digits=3):
+    """Format a value after decimal truncation."""
+    return f"{truncate_value(value, digits):.{digits}f}"
+
+
+def select_representative(records, group_key):
+    """Select the latency-median run, preserving its complete metric tuple."""
+    ordered = sorted(
+        records,
+        key=lambda record: (record["end_to_end_latency_seconds"], record["seed"]),
+    )
+    midpoint = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[midpoint]
+
+    # The protocol permits either central run for an even repetition count. Use a
+    # group-seeded pseudo-random choice so the selection is random but reproducible.
+    chooser = random.Random("|".join(group_key))
+    return chooser.choice((ordered[midpoint - 1], ordered[midpoint]))
+
+
+def load_representative_runs(runs_root):
+    """Return one complete, latency-median run for every declared experiment group."""
+    grouped = defaultdict(list)
+    runs_root = Path(runs_root)
+    for manifest_path in sorted(runs_root.glob("*/manifest.json")):
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if manifest.get("status") != "complete":
+            continue
+        group_key = (
+            manifest["profile"],
+            manifest["scenario"],
+            manifest["method"],
+        )
+        summary_path = manifest_path.with_name("summary.json")
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if summary.get("run_id") != manifest.get("run_id"):
+            raise ValueError(f"run id mismatch in {manifest_path.parent}")
+        record = {
+            "seed": int(manifest["seed"]),
+            "run_id": manifest["run_id"],
+        }
+        for metric in METRICS:
+            record[metric] = float(summary[metric])
+        grouped[group_key].append(record)
+
+    selected = {}
     for profile, _ in PROFILES:
-        values[profile] = {}
-        for method, _, _, _ in METHODS:
-            means = []
-            sample_sds = []
+        selected[profile] = {}
+        for method, _, _ in METHODS:
+            selected[profile][method] = {}
             for scenario, _ in SCENARIOS:
-                key = (profile, scenario, method)
-                if key not in aggregates:
-                    raise ValueError(f"missing aggregate row: {key}")
-                row = aggregates[key]
-                if row.get("n") != 5:
-                    raise ValueError(f"expected five repetitions for {key}")
-                metric = row["metrics"]["qoe_score"]
-                means.append(float(metric["mean"]))
-                sample_sds.append(float(metric["sample_sd"]))
-            values[profile][method] = {
-                "means": means,
-                "sample_sds": sample_sds,
-            }
-    return values
+                group_key = (profile, scenario, method)
+                records = grouped.get(group_key, [])
+                if len(records) != 5:
+                    raise ValueError(
+                        f"expected five complete repetitions for {group_key}; "
+                        f"found {len(records)}"
+                    )
+                seeds = [record["seed"] for record in records]
+                if len(set(seeds)) != len(seeds):
+                    raise ValueError(f"duplicate seed for {group_key}")
+                selected[profile][method][scenario] = select_representative(
+                    records, group_key
+                )
+    return selected
 
 
-def plot_qoe(summary_path, output_path):
-    values = load_qoe_data(summary_path)
+def selection_report(selected):
+    """Return an auditable text report of selected seeds and metric triples."""
+    lines = [
+        "profile\tscenario\tmethod\tseed\tlatency / Deadline Missing Rate / QoE"
+    ]
+    for profile, _ in PROFILES:
+        for scenario, scenario_label in SCENARIOS:
+            for method, method_label, _ in METHODS:
+                record = selected[profile][method][scenario]
+                triple = " / ".join(
+                    format_truncated(record[metric]) for metric in METRICS
+                )
+                lines.append(
+                    f"{profile}\t{scenario_label}\t{method_label}\t"
+                    f"{record['seed']}\t{triple}"
+                )
+    return "\n".join(lines)
+
+
+def plot_qoe(runs_root, output_path):
+    selected = load_representative_runs(runs_root)
     output_path = Path(output_path)
     if output_path.suffix.lower() != ".pdf":
         raise ValueError("QoE figure output must be a PDF")
@@ -82,51 +150,47 @@ def plot_qoe(summary_path, output_path):
         }
     )
 
-    figure, axes = plt.subplots(1, 2, figsize=(7.1, 2.9), sharey=True)
+    figure, axes = plt.subplots(1, 2, figsize=(7.1, 2.65), sharey=True)
     x = np.arange(len(SCENARIOS), dtype=float)
     width = 0.155
     offsets = (np.arange(len(METHODS)) - (len(METHODS) - 1) / 2) * width
 
     for axis, (profile, title) in zip(axes, PROFILES):
-        for offset, (method, label, color, hatch) in zip(offsets, METHODS):
-            means = values[profile][method]["means"]
-            sample_sds = values[profile][method]["sample_sds"]
+        for offset, (method, label, shade) in zip(offsets, METHODS):
+            values = [
+                truncate_value(selected[profile][method][scenario]["qoe_score"])
+                for scenario, _ in SCENARIOS
+            ]
             bars = axis.bar(
                 x + offset,
-                means,
+                values,
                 width=width,
-                yerr=sample_sds,
-                capsize=1.8,
-                error_kw={"elinewidth": 0.7, "capthick": 0.7},
                 label=label,
-                color=color,
+                color=shade,
                 edgecolor="black",
-                linewidth=0.55,
-                hatch=hatch,
+                linewidth=0.65,
                 zorder=3,
             )
             if method == "feedback-fine-grained":
-                for bar, mean, sample_sd in zip(bars, means, sample_sds):
+                for bar, value in zip(bars, values):
                     axis.text(
                         bar.get_x() + bar.get_width() / 2,
-                        mean + sample_sd + 0.025,
-                        f"{mean:.3f}",
+                        value + 0.018,
+                        f"{value:.3f}",
                         ha="center",
                         va="bottom",
                         fontsize=6.6,
                         fontweight="bold",
-                        color="#9C2F2F",
+                        color="black",
                     )
 
-        axis.set_title(title, pad=4, fontweight="bold")
+        axis.set_title(title, pad=4)
         axis.set_xticks(x, [label for _, label in SCENARIOS])
         axis.set_ylim(0.0, 1.02)
         axis.set_yticks(np.arange(0.0, 1.01, 0.2))
-        axis.grid(axis="y", linestyle="--", linewidth=0.5, alpha=0.55, zorder=0)
-        axis.spines["top"].set_visible(False)
-        axis.spines["right"].set_visible(False)
+        axis.grid(axis="y", linestyle=":", linewidth=0.45, color="#B0B0B0", zorder=0)
         axis.set_xlabel("Scenario")
-    axes[0].set_ylabel("Corrected QoE score")
+    axes[0].set_ylabel("Quality of Experience Score")
 
     handles, labels = axes[0].get_legend_handles_labels()
     figure.legend(
@@ -134,30 +198,41 @@ def plot_qoe(summary_path, output_path):
         labels,
         loc="upper center",
         ncol=5,
-        frameon=False,
+        frameon=True,
+        facecolor="white",
+        edgecolor="black",
         bbox_to_anchor=(0.5, 0.995),
         columnspacing=1.1,
         handlelength=1.8,
     )
-    figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.86), pad=0.5, w_pad=0.8)
+    figure.tight_layout(rect=(0.0, 0.0, 1.0, 0.84), pad=0.5, w_pad=0.8)
     figure.savefig(
         output_path,
         format="pdf",
         bbox_inches="tight",
         metadata={
-            "Title": "Audited M3 Max core QoE results",
-            "Subject": "Mean and sample standard deviation over five paired runs",
+            "Title": "Representative M3 Max core Quality of Experience results",
+            "Subject": (
+                "Latency-median runs; plotted values are truncated to three decimals"
+            ),
         },
     )
     plt.close(figure)
+    return selected
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--summary", type=Path, required=True)
+    parser.add_argument("--runs-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--report", type=Path)
     args = parser.parse_args()
-    plot_qoe(args.summary, args.output)
+    selected = plot_qoe(args.runs_root, args.output)
+    report = selection_report(selected)
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(report + "\n", encoding="utf-8")
+    print(report)
     print(f"Wrote {args.output}")
 
 
