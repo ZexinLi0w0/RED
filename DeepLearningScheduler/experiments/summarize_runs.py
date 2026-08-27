@@ -10,6 +10,13 @@ import statistics
 from collections import defaultdict
 from pathlib import Path
 
+from experiments.result_presentation import (
+    PAPER_DECIMAL_DIGITS,
+    REPRESENTATIVE_METRIC,
+    format_truncated,
+    select_representative,
+)
+
 
 METRICS = {
     "end_to_end_latency_seconds": "lower",
@@ -217,6 +224,21 @@ def summarize(input_root, reference_method="baseline"):
             }
             for index, seed in enumerate(seeds)
         }
+        representative_records = []
+        for run in ordered:
+            record = {
+                "run_id": run["manifest"]["run_id"],
+                "seed": run["manifest"]["seed"],
+            }
+            record.update(
+                {metric: run["summary"][metric] for metric in METRICS}
+            )
+            representative_records.append(record)
+        representative = select_representative(
+            representative_records,
+            key,
+            metric=REPRESENTATIVE_METRIC,
+        )
         aggregates.append(
             {
                 "device": key[0],
@@ -228,6 +250,22 @@ def summarize(input_root, reference_method="baseline"):
                 "metrics": {
                     metric: _sample_summary(values)
                     for metric, values in metric_values.items()
+                },
+                "paper_presentation": {
+                    "selection_rule": (
+                        "median run by end-to-end latency; for an even "
+                        "repetition count, one of the two central runs is "
+                        "selected by a reproducible random choice"
+                    ),
+                    "run_id": representative["run_id"],
+                    "seed": representative["seed"],
+                    "raw_metrics": {
+                        metric: representative[metric] for metric in METRICS
+                    },
+                    "display_metrics": {
+                        metric: format_truncated(representative[metric])
+                        for metric in METRICS
+                    },
                 },
             }
         )
@@ -306,7 +344,6 @@ def summarize(input_root, reference_method="baseline"):
                     "offered_node_count",
                     "deadline_missing_rate",
                     "qoe_score",
-                    "valid_output_rate",
                 ):
                     values = [
                         record[metric]
@@ -362,22 +399,19 @@ def summarize(input_root, reference_method="baseline"):
 
 
 def _write_csv(path, report):
-    comparison_lookup = {
-        (
-            row["device"],
-            row["profile"],
-            row["scenario"],
-            row["candidate_method"],
-        ): row
-        for row in report["paired_comparisons"]
-    }
-    fieldnames = ["device", "profile", "scenario", "method", "n", "seeds"]
-    for metric in METRICS:
-        fieldnames.extend(
-            f"{metric}_{suffix}"
-            for suffix in ("mean", "sample_sd", "ci95_low", "ci95_high")
-        )
-        fieldnames.append(f"{metric}_paired_improvement_vs_reference")
+    fieldnames = [
+        "device",
+        "profile",
+        "scenario",
+        "method",
+        "n",
+        "seeds",
+        "representative_run_id",
+        "representative_seed",
+        "selection_metric",
+        "decimal_digits",
+    ]
+    fieldnames.extend(METRICS)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as output_file:
         writer = csv.DictWriter(output_file, fieldnames=fieldnames)
@@ -388,24 +422,13 @@ def _write_csv(path, report):
                 for key in ("device", "profile", "scenario", "method", "n")
             }
             row["seeds"] = ";".join(map(str, aggregate["seeds"]))
-            comparison = comparison_lookup.get(
-                (
-                    aggregate["device"],
-                    aggregate["profile"],
-                    aggregate["scenario"],
-                    aggregate["method"],
-                )
-            )
+            presentation = aggregate["paper_presentation"]
+            row["representative_run_id"] = presentation["run_id"]
+            row["representative_seed"] = presentation["seed"]
+            row["selection_metric"] = REPRESENTATIVE_METRIC
+            row["decimal_digits"] = PAPER_DECIMAL_DIGITS
             for metric in METRICS:
-                for suffix in ("mean", "sample_sd", "ci95_low", "ci95_high"):
-                    row[f"{metric}_{suffix}"] = aggregate["metrics"][metric][
-                        suffix
-                    ]
-                row[f"{metric}_paired_improvement_vs_reference"] = (
-                    comparison["metrics"][metric]["mean"]
-                    if comparison
-                    else 0.0
-                )
+                row[metric] = presentation["display_metrics"][metric]
             writer.writerow(row)
 
 

@@ -1,7 +1,4 @@
-import pytest
-
-
-torch = pytest.importorskip("torch")
+import torch
 
 from SIMO.backbone.MLP import _adaptive_avg_pool2d_exact  # noqa: E402
 

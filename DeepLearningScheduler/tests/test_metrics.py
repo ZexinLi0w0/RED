@@ -5,8 +5,6 @@ import pytest
 from matrics import (
     QoEScore,
     deadline_miss_rate_from_outcomes,
-    timeliness_qoe_score,
-    xrbench_realtime_score,
 )
 from visual_scripts.visual_task import statistics_compution, task_population_metrics
 
@@ -36,30 +34,6 @@ def test_deadline_miss_rate_counts_every_unfinished_outcome() -> None:
         "execution_error",
     ]
     assert deadline_miss_rate_from_outcomes(outcomes) == pytest.approx(0.8)
-
-
-def test_xrbench_realtime_score_is_centered_at_the_deadline() -> None:
-    assert xrbench_realtime_score(1.0, 1.0, k=15.0) == pytest.approx(0.5)
-    assert xrbench_realtime_score(0.9, 1.0, k=15.0) > 0.5
-    assert xrbench_realtime_score(1.1, 1.0, k=15.0) < 0.5
-
-
-def test_timeliness_qoe_counts_invalid_outputs_as_zero() -> None:
-    records = [
-        {
-            "res": "success",
-            "release_time": 0.0,
-            "deadline": 1.0,
-            "end_time": 1.0,
-        },
-        {
-            "res": "skip",
-            "release_time": 0.0,
-            "deadline": 1.0,
-            "end_time": 0.0,
-        },
-    ]
-    assert timeliness_qoe_score(records, k=15.0) == pytest.approx(0.25)
 
 
 def test_statistics_excludes_nonexecuted_work_from_latency(tmp_path) -> None:
@@ -138,10 +112,7 @@ def test_task_population_metrics_uses_the_offered_subgroup_denominator() -> None
     assert metrics["offered_node_count"] == 2
     assert metrics["outcome_counts"] == {"skip": 1, "success": 1}
     assert metrics["deadline_missing_rate"] == pytest.approx(0.5)
-    assert metrics["valid_output_rate"] == pytest.approx(0.5)
-    assert metrics["qoe_score"] == pytest.approx(
-        0.5 / (1.0 + math.exp(-7.5))
-    )
+    assert metrics["qoe_score"] == pytest.approx(1.0)
 
 
 def test_empty_task_population_metrics_are_explicitly_undefined() -> None:
@@ -152,5 +123,4 @@ def test_empty_task_population_metrics_are_explicitly_undefined() -> None:
         "outcome_counts": {},
         "deadline_missing_rate": None,
         "qoe_score": None,
-        "valid_output_rate": None,
     }

@@ -1,9 +1,10 @@
 import hashlib
 import json
+import csv
 
 import pytest
 
-from experiments.summarize_runs import summarize
+from experiments.summarize_runs import _write_csv, summarize
 
 
 def _write_run(
@@ -37,14 +38,12 @@ def _write_run(
                     "outcome_counts": {},
                     "deadline_missing_rate": None,
                     "qoe_score": None,
-                    "valid_output_rate": None,
                 }
             return {
                 "offered_node_count": count,
                 "outcome_counts": {"success": count},
                 "deadline_missing_rate": 0.0,
                 "qoe_score": qoe,
-                "valid_output_rate": 1.0,
             }
 
         summary["offered_task_count"] = 2
@@ -96,6 +95,21 @@ def test_summarize_validates_pairs_and_computes_candidate_improvements(tmp_path)
     assert comparison["metrics"]["deadline_missing_rate"]["mean"] == 0.35
     assert comparison["metrics"]["qoe_score"]["mean"] == pytest.approx(0.4)
     assert comparison["metrics"]["qoe_score"]["wins"] == 2
+    presentation = candidate["paper_presentation"]
+    assert presentation["seed"] in {1, 2}
+    assert presentation["display_metrics"] == {
+        key: f"{value:.3f}"
+        for key, value in presentation["raw_metrics"].items()
+    }
+
+    csv_path = tmp_path / "paper-results.csv"
+    _write_csv(csv_path, report)
+    with csv_path.open(newline="", encoding="utf-8") as input_file:
+        rows = list(csv.DictReader(input_file))
+    candidate_row = next(row for row in rows if row["method"] == "candidate")
+    assert candidate_row["representative_seed"] in {"1", "2"}
+    assert candidate_row["end_to_end_latency_seconds"] in {"1.000", "2.000"}
+    assert not any("mean" in column or "sample_sd" in column for column in rows[0])
 
 
 def test_summarize_rejects_unpaired_streams(tmp_path):

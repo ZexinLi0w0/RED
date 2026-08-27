@@ -26,6 +26,7 @@ class DagTimingConfig:
     parallel_stage_policy: str = "max"
     task_seed: int = 0
     merge_threshold_ms: float = 20.0
+    moving_average_window: int = 8
 
 
 def _positive_number(value, field_name):
@@ -90,6 +91,14 @@ def timing_config_from_mapping(config):
     ):
         raise ValueError("MergeThresholdMs must be a non-negative number")
 
+    moving_average_window = config.get("MovingAverageWindow", 8)
+    if (
+        isinstance(moving_average_window, bool)
+        or not isinstance(moving_average_window, int)
+        or moving_average_window <= 0
+    ):
+        raise ValueError("MovingAverageWindow must be a positive integer")
+
     return DagTimingConfig(
         deadline_factor=deadline_factor,
         arrival_scale=arrival_scale,
@@ -97,6 +106,7 @@ def timing_config_from_mapping(config):
         parallel_stage_policy=parallel_stage_policy,
         task_seed=task_seed,
         merge_threshold_ms=float(merge_threshold_ms),
+        moving_average_window=moving_average_window,
     )
 
 def validate_task_config(task_config):

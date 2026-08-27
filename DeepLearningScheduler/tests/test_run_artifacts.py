@@ -60,8 +60,14 @@ def test_completed_run_writes_machine_readable_summary(tmp_path) -> None:
     assert summary["execution_task_count"] == 1
     assert summary["finished_execution_task_count"] == 1
     assert summary["outcome_counts"] == {"success": 1}
-    assert summary["xrbench_rt_k_per_second"] == 15.0
-    assert summary["valid_output_rate"] == 1.0
+    assert summary["qoe_lambda"] == 0.05
+    assert summary["qoe_time_unit"] == "seconds"
+    assert summary["moving_average_reassignment"] == {
+        "enabled": False,
+        "window": 8,
+        "event_count": 0,
+        "events": [],
+    }
     assert summary["atomic_node_statistics"]["atomic_offered_ratio"] == 0.0
     assert summary["atomic_node_statistics"]["atomic"][
         "offered_node_count"
@@ -69,7 +75,7 @@ def test_completed_run_writes_machine_readable_summary(tmp_path) -> None:
     assert summary["atomic_node_statistics"]["partitionable"][
         "offered_node_count"
     ] == 1
-    assert "XRBench" in summary["qoe_score_definition"]
+    assert "original QoEScore" in summary["qoe_score_definition"]
     assert len(summary["offered_task_stream_sha256"]) == 64
     assert (output_dir / "task_statistics.pkl").is_file()
     assert (output_dir / "end2end_time.txt").is_file()

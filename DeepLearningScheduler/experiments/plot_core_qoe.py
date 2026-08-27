@@ -3,8 +3,6 @@
 
 import argparse
 import json
-import math
-import random
 from collections import defaultdict
 from pathlib import Path
 
@@ -13,6 +11,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
+from experiments.result_presentation import (
+    format_truncated,
+    select_representative,
+    truncate_value,
+)
 
 
 METHODS = (
@@ -33,33 +37,6 @@ METRICS = (
     "deadline_missing_rate",
     "qoe_score",
 )
-
-
-def truncate_value(value, digits=3):
-    """Truncate a non-negative experimental value without rounding."""
-    factor = 10**digits
-    return math.trunc(float(value) * factor) / factor
-
-
-def format_truncated(value, digits=3):
-    """Format a value after decimal truncation."""
-    return f"{truncate_value(value, digits):.{digits}f}"
-
-
-def select_representative(records, group_key):
-    """Select the latency-median run, preserving its complete metric tuple."""
-    ordered = sorted(
-        records,
-        key=lambda record: (record["end_to_end_latency_seconds"], record["seed"]),
-    )
-    midpoint = len(ordered) // 2
-    if len(ordered) % 2:
-        return ordered[midpoint]
-
-    # The protocol permits either central run for an even repetition count. Use a
-    # group-seeded pseudo-random choice so the selection is random but reproducible.
-    chooser = random.Random("|".join(group_key))
-    return chooser.choice((ordered[midpoint - 1], ordered[midpoint]))
 
 
 def load_representative_runs(runs_root):
