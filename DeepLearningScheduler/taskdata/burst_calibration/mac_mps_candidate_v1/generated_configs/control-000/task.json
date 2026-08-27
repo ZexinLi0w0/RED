@@ -1,0 +1,103 @@
+{
+  "ArrivalScale": 1.2,
+  "BurstStudyWorkload": {
+    "base_dag": "urban navigation",
+    "expected_burst_behavior": "50 and 100 percent Burst activate ProactiveDrop for RED",
+    "expected_control_behavior": "no ProactiveDrop activation under the 0 percent control",
+    "purpose": "near-saturation Mac/MPS base load with Burst-induced sustained queue pressure"
+  },
+  "BurstTaskRatio": 0,
+  "DagRepeatedTimes": 20,
+  "DeadlineFactor": 1.5,
+  "MovingAverageWindow": 8,
+  "ParallelStagePolicy": "max",
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 100.0,
+  "RuntimeProfile": {
+    "bound_margin_fraction": 0.1,
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "platform": "MacBook Pro (M3 Max)",
+    "power_mode": "mps-default-ac-power",
+    "profile_file": "mac_mps_profile_v1.json",
+    "profile_sha256": "e4aa7b15b76d69d1a6c420224924d39d0525561fd16ddafa92ae699ea112b546",
+    "torch_device": "mps"
+  },
+  "TaskSeed": 0,
+  "dag_list": [
+    [
+      [
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.4,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 14.287183,
+          "TaskName": "Burst_Stage1_LaneDetection",
+          "WorstRunningTime": 17.953559
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.25,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "Burst_Stage1_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        }
+      ],
+      [
+        {
+          "Dependencies": [
+            1,
+            4
+          ],
+          "DropThreshold": 0.2,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 13.554899,
+          "TaskName": "Burst_Stage2_Segmentation",
+          "WorstRunningTime": 17.229667
+        },
+        {
+          "Dependencies": [
+            1,
+            4
+          ],
+          "DropThreshold": 0.25,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "Burst_Stage2_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        }
+      ],
+      {
+        "Dependencies": [
+          3,
+          4
+        ],
+        "DropThreshold": 0.5,
+        "HandlerId": 5,
+        "Priority": 2,
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "TaskName": "Burst_Stage3_Control",
+        "WorstRunningTime": 17.231959
+      }
+    ]
+  ]
+}

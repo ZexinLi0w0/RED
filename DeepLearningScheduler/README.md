@@ -106,6 +106,80 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 
 ## SIMO Experiment
 
+### Burst Experiment
+
+The formal Burst study currently runs locally on the M3 Max with MPS. Initialize
+Conda, activate the `schedule` environment, and launch the complete experiment
+with:
+
+```zsh
+eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
+conda activate schedule
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
+./experiments/run_burst_study.sh
+```
+
+The wrapper generates the study plan, resumes completed runs, executes each of
+the 15 distinct Burst condition/method cells once by default, and validates and
+summarizes the results. It uses the dedicated
+`TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json` workload: the 0% MERIS
+control must not activate ProactiveDrop, while every 50%/100% MERIS Burst cell
+must activate it and record proactive drops. Raw artifacts are written under
+`taskdata/major_revision_burst_mac_mps_v3/`. To repeat each cell, pass a
+positive count:
+
+```zsh
+./experiments/run_burst_study.sh --repetitions 5
+```
+
+Set `BURST_OUTPUT_ROOT` before the command to use another output directory. See
+[`BURST_TASK_IMPLEMENTATION.md`](BURST_TASK_IMPLEMENTATION.md) for the Transient
+and Sustained Burst definitions and the complete protocol.
+
+### Parameter Sensitivity Experiment
+
+On the Jetson server, activate the `schedule` environment and run each of the
+47 parameter settings once with:
+
+```bash
+cd /experiment/zexin/ATC23/DeepLearningScheduler
+conda activate schedule
+./experiments/run_parameter_sensitivity.sh
+```
+
+The wrapper pulls the latest commit with `git pull --ff-only`, resumes completed
+runs, executes all 47 runs, validates the artifacts, and writes the CSV, JSON,
+and LaTeX table files under
+`taskdata/parameter_sensitivity/agx_high_load_v1/report/`. The source tree must
+be clean. To use another Conda environment, replace `schedule` with that
+environment's name; the runner resolves `python3` from the active environment.
+
+To run every parameter setting more than once, pass the desired count:
+
+```bash
+./experiments/run_parameter_sensitivity.sh --repetitions 5
+```
+
+For a Mac/MPS validation run, use:
+
+```bash
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
+conda activate schedule
+SKIP_GIT_PULL=1 ./experiments/run_parameter_sensitivity.sh \
+  --device mac --power-mode AC --torch-device mps \
+  --base-task-config TaskConfigs/simo/parameter_sensitivity/mac_mps_parameter_sensitivity.json \
+  --output-root taskdata/parameter_sensitivity/mac_validation
+```
+
+The Mac task config uses the measured MPS runtime profile and a sensitivity-only
+near-saturation workload. The refinement block runs the 4 x 5 Cartesian product
+with burst disabled; the independent Burst Management block runs the 3 x 3 x 3
+Cartesian product with `k=8` and `gamma=100 ms` fixed. A Mac run does not replace
+the final AGX Orin paper measurements. See
+[`experiments/PARAMETER_SENSITIVITY.md`](experiments/PARAMETER_SENSITIVITY.md)
+for the parameter grid, workload definition, dry-run command, and artifact
+schema.
+
 ### Baseline
 ```
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo-baseline-nano.json" -a "baseline"

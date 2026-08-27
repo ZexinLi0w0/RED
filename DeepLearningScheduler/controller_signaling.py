@@ -125,7 +125,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02, moving_average_window=8):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, release_time_skew_threshold_seconds=0.1, moving_average_window=8):
     """
     SIMO Baseline handler
     """
@@ -145,6 +145,13 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     
     # register task scheduler with edf scheduler
     burst_enabled = burst_config is not None and burst_config.get('burst_enabled', False)
+    scheduler_tick_seconds = (
+        float(burst_config.get('scheduler_tick_seconds', 0.005))
+        if burst_enabled
+        else 0.0
+    )
+    if scheduler_tick_seconds < 0:
+        raise ValueError("scheduler_tick_seconds cannot be negative")
     scheduler_name = 'llf_dag' if approach_module == 'llf-dag' else 'edf'
     task_scheduler = TaskSchedule(
         tasks_list, 
@@ -160,13 +167,13 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         task_config_path=task_config_path,
         output_dir=output_dir,
         run_id=run_id,
-        merge_tick_seconds=merge_tick_seconds,
+        release_time_skew_threshold_seconds=release_time_skew_threshold_seconds,
         moving_average_window=moving_average_window,
     )
     # controller signal response loop
     while True: 
         # avoid to busy loop
-        await asyncio.sleep(0)
+        await asyncio.sleep(scheduler_tick_seconds)
         # when all handlers are ready and tasks are not generated, generate tasks
         if(not tasksGeneratedReady and all(allReady.values())):
             task_scheduler.generate_task_list()

@@ -1,0 +1,208 @@
+PyTorch execution device: mps
+Task seed: 101
+Task stream SHA-256: fdcac1664482f647b640ed4d17fe1c2c23483877691b2928eaba8ef67f790ddc
+Release-time skew threshold: 100.0 ms
+Moving-average window: 8
+/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v5/generated_configs/sustained-050/task.json task.json task
+Loaded burst configuration: {'burst_enabled': True, 'burst_regime': 'sustained', 'burst_start_seconds': 0.36, 'drop_threshold': 0.5, 'gpu_threshold': 100.0, 'monitoring_interval': 0.05, 'persistence_window': 3, 'queue_threshold': 8, 'release_horizon_seconds': 1.96, 'scheduler_tick_seconds': 0.005}
+INFO     [CTRL] All subprocesses started.
+INFO     [BURST] System health monitoring started
+INFO     [BURST] macOS GPU logging thread started.
+INFO     [BURST] sustained workload enabled for feedback-fine-grained; proactive management=True; GPU threshold=100.0%, queue threshold=8, persistence=3 ticks
+INFO     [BURST] Generated 30 nodes from 5 additional DAG releases (sustained, ratio=50.0%, window=[0.360, 1.960)).
+INFO     [BURST] Augmenting task list with 30 burst tasks (ratio=50.0%).
+DEBUG    [CTRL] fine-grained adjust, tasknum: 114
+DEBUG    [CTRL] fine-grained merge result: 114
+INFO     [CTRL] Tasks generated, start time: 1787824681.757332, finished time: 1787824681.7611468
+INFO     [CTRL] Tasks generated, offline scheduler: edf, start time: 1787824681.757332, finished time: 1787824681.7612102
+INFO     [CTRL] Task Burst_Critical_Segmentation_[0]_D0_S0_B1 finished, status: success, start time: 0.009948015213012695, taskover time: 0.024942874908447266
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[0]_D0_S0_B0 finished, status: success, start time: 0.033006906509399414, taskover time: 0.04829883575439453
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[0]_D0_S0_B3 finished, status: success, start time: 0.055567026138305664, taskover time: 0.06983375549316406
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[0]_D0_S0_B2 finished, status: success, start time: 0.08382987976074219, taskover time: 0.10048508644104004
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[0]_D0_S0_B4 finished, status: success, start time: 0.10714268684387207, taskover time: 0.12444472312927246
+INFO     [CTRL] Task Burst_Control_[0]_D0_S1_Bsingle finished, status: success, start time: 0.1466829776763916, taskover time: 0.16055989265441895
+INFO     [CTRL] Task Burst_Critical_Segmentation_[1]_D0_S0_B1 finished, status: success, start time: 0.18029308319091797, taskover time: 0.19764971733093262
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[1]_D0_S0_B0 finished, status: success, start time: 0.20894193649291992, taskover time: 0.22357892990112305
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[1]_D0_S0_B3 finished, status: success, start time: 0.23121404647827148, taskover time: 0.24669694900512695
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[1]_D0_S0_B2 finished, status: success, start time: 0.2538027763366699, taskover time: 0.2706789970397949
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[1]_D0_S0_B4 finished, status: failure, start time: 0.28261899948120117, taskover time: 0.2984659671783447
+DEBUG    [DEBUG]drop following tasks with 1, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[1]_D0_S1_Bsingle finished, status: skip, start time: 0.31731605529785156, taskover time: 0.31731605529785156
+INFO     [CTRL] Task Burst_Critical_Segmentation_[2]_D0_S0_B1 finished, status: success, start time: 0.32916688919067383, taskover time: 0.3440217971801758
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[2]_D0_S0_B0 finished, status: success, start time: 0.3525547981262207, taskover time: 0.36848878860473633
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[2]_D0_S0_B3 finished, status: success, start time: 0.3748338222503662, taskover time: 0.39012908935546875
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[2]_D0_S0_B2 finished, status: success, start time: 0.3978548049926758, taskover time: 0.41577696800231934
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[2]_D0_S0_B4 finished, status: failure, start time: 0.4264669418334961, taskover time: 0.44376683235168457
+DEBUG    [DEBUG]drop following tasks with 2, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[2]_D0_S1_Bsingle finished, status: skip, start time: 0.45488977432250977, taskover time: 0.45488977432250977
+INFO     [CTRL] Task Burst_Critical_Segmentation_[3]_D0_S0_B1 finished, status: success, start time: 0.47697877883911133, taskover time: 0.4928758144378662
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[3]_D0_S0_B0 finished, status: success, start time: 0.5160717964172363, taskover time: 0.5305430889129639
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=13
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[4]_D0_S0_B3 with criticality 0.144 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[4]_D0_S0_B3_burst_sustained_1 with criticality 0.144 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[4]_D0_S0_B4 with criticality 0.121 (threshold: 0.250)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[4]_D0_S0_B4_burst_sustained_1 with criticality 0.121 (threshold: 0.250)
+INFO     [BURST] Dropped 4 tasks, remaining 9 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[4]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[4]_D0_S0_B3_burst_sustained_1 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[4]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[4]_D0_S0_B4_burst_sustained_1 dropped due to burst_drop
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[3]_D0_S0_B3 finished, status: success, start time: 0.5447478294372559, taskover time: 0.5599958896636963
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=8
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[3]_D0_S0_B2 finished, status: failure, start time: 0.5672249794006348, taskover time: 0.5844330787658691
+DEBUG    [DEBUG]drop following tasks with 3, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[3]_D0_S1_Bsingle']
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[3]_D0_S0_B4 finished, status: skip, start time: 0.5946090221405029, taskover time: 0.5946090221405029
+INFO     [CTRL] Task Burst_Critical_Segmentation_[4]_D0_S0_B1 finished, status: success, start time: 0.6063530445098877, taskover time: 0.6209368705749512
+INFO     [CTRL] Task Burst_Critical_Segmentation_[4]_D0_S0_B1_burst_sustained_1 finished, status: failure, start time: 0.6292331218719482, taskover time: 0.6444969177246094
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[4]_D0_S0_B0 finished, status: success, start time: 0.651176929473877, taskover time: 0.6667649745941162
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=9
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[5]_D0_S0_B3 with criticality 0.135 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[5]_D0_S0_B4 with criticality 0.113 (threshold: 0.250)
+INFO     [BURST] Dropped 2 tasks, remaining 7 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[5]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[5]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=7
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[4]_D0_S0_B0_burst_sustained_1 finished, status: failure, start time: 0.6847479343414307, taskover time: 0.7001738548278809
+DEBUG    [DEBUG]drop following tasks with 4, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[4]_D0_S1_Bsingle']
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[4]_D0_S0_B2 finished, status: skip, start time: 0.7076547145843506, taskover time: 0.7076547145843506
+DEBUG    [DEBUG]drop following tasks with 14, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[4]_D0_S1_Bsingle_burst_sustained_1']
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[4]_D0_S0_B2_burst_sustained_1 finished, status: skip, start time: 0.7189218997955322, taskover time: 0.7189218997955322
+INFO     [CTRL] Task Burst_Critical_Segmentation_[5]_D0_S0_B1 finished, status: success, start time: 0.7307908535003662, taskover time: 0.7463858127593994
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[5]_D0_S0_B0 finished, status: success, start time: 0.753511905670166, taskover time: 0.7687311172485352
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[5]_D0_S0_B2 finished, status: success, start time: 0.7762820720672607, taskover time: 0.7922890186309814
+INFO     [CTRL] Task Burst_Control_[5]_D0_S1_Bsingle finished, status: success, start time: 0.7993347644805908, taskover time: 0.8135778903961182
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=9
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[6]_D0_S0_B3 with criticality 0.159 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[6]_D0_S0_B3_burst_sustained_2 with criticality 0.159 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[6]_D0_S0_B4 with criticality 0.134 (threshold: 0.250)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[6]_D0_S0_B4_burst_sustained_2 with criticality 0.134 (threshold: 0.250)
+INFO     [BURST] Dropped 4 tasks, remaining 5 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[6]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[6]_D0_S0_B3_burst_sustained_2 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[6]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[6]_D0_S0_B4_burst_sustained_2 dropped due to burst_drop
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=5
+INFO     [CTRL] Task Burst_Critical_Segmentation_[6]_D0_S0_B1 finished, status: success, start time: 0.822458028793335, taskover time: 0.8368649482727051
+INFO     [CTRL] Task Burst_Critical_Segmentation_[6]_D0_S0_B1_burst_sustained_2 finished, status: success, start time: 0.8463199138641357, taskover time: 0.861732006072998
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[6]_D0_S0_B0 finished, status: success, start time: 0.8752398490905762, taskover time: 0.8896558284759521
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[6]_D0_S0_B0_burst_sustained_2 finished, status: success, start time: 0.8977019786834717, taskover time: 0.9138889312744141
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[6]_D0_S0_B2 finished, status: success, start time: 0.9252989292144775, taskover time: 0.9429669380187988
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[6]_D0_S0_B2_burst_sustained_2 finished, status: failure, start time: 0.9537310600280762, taskover time: 0.9718680381774902
+INFO     [CTRL] Task Burst_Control_[6]_D0_S1_Bsingle finished, status: failure, start time: 0.982036828994751, taskover time: 0.9972777366638184
+DEBUG    [DEBUG]drop following tasks with 15, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[6]_D0_S1_Bsingle_burst_sustained_2 finished, status: skip, start time: 1.0043790340423584, taskover time: 1.0043790340423584
+INFO     [CTRL] Task Burst_Critical_Segmentation_[7]_D0_S0_B1 finished, status: success, start time: 1.016211748123169, taskover time: 1.0316109657287598
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[7]_D0_S0_B0 finished, status: success, start time: 1.0389628410339355, taskover time: 1.0545530319213867
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[7]_D0_S0_B3 finished, status: success, start time: 1.0673258304595947, taskover time: 1.0835719108581543
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=12
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[8]_D0_S0_B3 with criticality 0.137 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[8]_D0_S0_B3_burst_sustained_3 with criticality 0.137 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[8]_D0_S0_B4 with criticality 0.115 (threshold: 0.250)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[8]_D0_S0_B4_burst_sustained_3 with criticality 0.115 (threshold: 0.250)
+INFO     [BURST] Dropped 4 tasks, remaining 8 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[8]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[8]_D0_S0_B3_burst_sustained_3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[8]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[8]_D0_S0_B4_burst_sustained_3 dropped due to burst_drop
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=8
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[7]_D0_S0_B2 finished, status: success, start time: 1.0903489589691162, taskover time: 1.1087620258331299
+DEBUG    [DEBUG]drop following tasks with 7, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[7]_D0_S1_Bsingle']
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[7]_D0_S0_B4 finished, status: skip, start time: 1.1249220371246338, taskover time: 1.1249220371246338
+INFO     [CTRL] Task Burst_Critical_Segmentation_[8]_D0_S0_B1 finished, status: success, start time: 1.1361520290374756, taskover time: 1.1516430377960205
+INFO     [CTRL] Task Burst_Critical_Segmentation_[8]_D0_S0_B1_burst_sustained_3 finished, status: success, start time: 1.1593568325042725, taskover time: 1.1760847568511963
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[8]_D0_S0_B0 finished, status: success, start time: 1.1824688911437988, taskover time: 1.1977639198303223
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[8]_D0_S0_B0_burst_sustained_3 finished, status: success, start time: 1.2055730819702148, taskover time: 1.2208549976348877
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[8]_D0_S0_B2 finished, status: failure, start time: 1.227529764175415, taskover time: 1.2453007698059082
+DEBUG    [DEBUG]drop following tasks with 16, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[8]_D0_S1_Bsingle_burst_sustained_3']
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[8]_D0_S0_B2_burst_sustained_3 finished, status: skip, start time: 1.2602038383483887, taskover time: 1.2602038383483887
+DEBUG    [DEBUG]drop following tasks with 8, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[8]_D0_S1_Bsingle finished, status: skip, start time: 1.2827770709991455, taskover time: 1.2827770709991455
+INFO     [CTRL] Task Burst_Critical_Segmentation_[9]_D0_S0_B1 finished, status: success, start time: 1.2945377826690674, taskover time: 1.3094587326049805
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[9]_D0_S0_B0 finished, status: success, start time: 1.3230550289154053, taskover time: 1.3391978740692139
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=13
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[10]_D0_S0_B3 with criticality 0.158 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[10]_D0_S0_B3_burst_sustained_4 with criticality 0.158 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[10]_D0_S0_B4 with criticality 0.132 (threshold: 0.250)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[10]_D0_S0_B4_burst_sustained_4 with criticality 0.132 (threshold: 0.250)
+INFO     [BURST] Dropped 4 tasks, remaining 9 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[10]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[10]_D0_S0_B3_burst_sustained_4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[10]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[10]_D0_S0_B4_burst_sustained_4 dropped due to burst_drop
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[9]_D0_S0_B3 finished, status: success, start time: 1.3460228443145752, taskover time: 1.3615069389343262
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=8
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[9]_D0_S0_B2 finished, status: failure, start time: 1.3747670650482178, taskover time: 1.3928890228271484
+DEBUG    [DEBUG]drop following tasks with 9, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[9]_D0_S1_Bsingle']
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[9]_D0_S0_B4 finished, status: skip, start time: 1.403451681137085, taskover time: 1.403451681137085
+INFO     [CTRL] Task Burst_Critical_Segmentation_[10]_D0_S0_B1 finished, status: success, start time: 1.415111780166626, taskover time: 1.4315791130065918
+INFO     [CTRL] Task Burst_Critical_Segmentation_[10]_D0_S0_B1_burst_sustained_4 finished, status: failure, start time: 1.448300838470459, taskover time: 1.4628498554229736
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[10]_D0_S0_B0 finished, status: success, start time: 1.4714138507843018, taskover time: 1.4862120151519775
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=9
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[11]_D0_S0_B3 with criticality 0.116 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[11]_D0_S0_B4 with criticality 0.097 (threshold: 0.250)
+INFO     [BURST] Dropped 2 tasks, remaining 7 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[11]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[11]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=7
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[10]_D0_S0_B0_burst_sustained_4 finished, status: success, start time: 1.4936659336090088, taskover time: 1.508638858795166
+DEBUG    [DEBUG]drop following tasks with 10, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[10]_D0_S1_Bsingle']
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[10]_D0_S0_B2 finished, status: skip, start time: 1.5168507099151611, taskover time: 1.5168507099151611
+DEBUG    [DEBUG]drop following tasks with 17, dep: 4
+DEBUG    [DEBUG]drop following tasks: ['Burst_Control_[10]_D0_S1_Bsingle_burst_sustained_4']
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[10]_D0_S0_B2_burst_sustained_4 finished, status: skip, start time: 1.5280580520629883, taskover time: 1.5280580520629883
+INFO     [CTRL] Task Burst_Critical_Segmentation_[11]_D0_S0_B1 finished, status: success, start time: 1.54475998878479, taskover time: 1.5600717067718506
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[11]_D0_S0_B0 finished, status: success, start time: 1.5672099590301514, taskover time: 1.5820300579071045
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[11]_D0_S0_B2 finished, status: success, start time: 1.5953068733215332, taskover time: 1.6107449531555176
+WARNING  [BURST] Sustained overload detected after 3 ticks: GPU=52.2%, Queue=10
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[12]_D0_S0_B3 with criticality 0.115 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_LaneDetection_[12]_D0_S0_B3_burst_sustained_5 with criticality 0.115 (threshold: 0.400)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[12]_D0_S0_B4 with criticality 0.097 (threshold: 0.250)
+INFO     [BURST] Dropped task Burst_Redundant_ObjectDetection_[12]_D0_S0_B4_burst_sustained_5 with criticality 0.097 (threshold: 0.250)
+INFO     [BURST] Dropped 4 tasks, remaining 6 tasks
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[12]_D0_S0_B3 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_LaneDetection_[12]_D0_S0_B3_burst_sustained_5 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[12]_D0_S0_B4 dropped due to burst_drop
+INFO     [BURST] Task Burst_Redundant_ObjectDetection_[12]_D0_S0_B4_burst_sustained_5 dropped due to burst_drop
+INFO     [CTRL] Task Burst_Control_[11]_D0_S1_Bsingle finished, status: success, start time: 1.6173391342163086, taskover time: 1.6317479610443115
+INFO     [BURST] Overload resolved: GPU=52.2%, Queue=5
+INFO     [CTRL] Task Burst_Critical_Segmentation_[12]_D0_S0_B1 finished, status: success, start time: 1.6409859657287598, taskover time: 1.6550288200378418
+INFO     [CTRL] Task Burst_Critical_Segmentation_[12]_D0_S0_B1_burst_sustained_5 finished, status: success, start time: 1.6639909744262695, taskover time: 1.6775479316711426
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[12]_D0_S0_B0 finished, status: success, start time: 1.687004804611206, taskover time: 1.7022979259490967
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[12]_D0_S0_B0_burst_sustained_5 finished, status: success, start time: 1.715714931488037, taskover time: 1.73089599609375
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[12]_D0_S0_B2 finished, status: success, start time: 1.737947940826416, taskover time: 1.7540011405944824
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[12]_D0_S0_B2_burst_sustained_5 finished, status: failure, start time: 1.7604148387908936, taskover time: 1.7758269309997559
+INFO     [CTRL] Task Burst_Control_[12]_D0_S1_Bsingle finished, status: success, start time: 1.7828598022460938, taskover time: 1.7967400550842285
+DEBUG    [DEBUG]drop following tasks with 18, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[12]_D0_S1_Bsingle_burst_sustained_5 finished, status: skip, start time: 1.805474042892456, taskover time: 1.805474042892456
+INFO     [CTRL] Task Burst_Critical_Segmentation_[13]_D0_S0_B1 finished, status: success, start time: 1.8171679973602295, taskover time: 1.8321869373321533
+INFO     [CTRL] Task Burst_Critical_LaneDetection_[13]_D0_S0_B0 finished, status: success, start time: 1.845212697982788, taskover time: 1.861072063446045
+INFO     [CTRL] Task Burst_Redundant_LaneDetection_[13]_D0_S0_B3 finished, status: success, start time: 1.8680229187011719, taskover time: 1.8835010528564453
+INFO     [CTRL] Task Burst_Critical_ObjectDetection_[13]_D0_S0_B2 finished, status: success, start time: 1.8909380435943604, taskover time: 1.9092519283294678
+INFO     [CTRL] Task Burst_Redundant_ObjectDetection_[13]_D0_S0_B4 finished, status: failure, start time: 1.9193158149719238, taskover time: 1.9376859664916992
+DEBUG    [DEBUG]drop following tasks with 13, dep: 2
+DEBUG    [DEBUG]drop following tasks: []
+INFO     [CTRL] Task Burst_Control_[13]_D0_S1_Bsingle finished, status: skip, start time: 1.9529027938842773, taskover time: 1.9529027938842773
+INFO     [CTRL] All tasks finished
+INFO     [BURST] System health monitoring stopped
+INFO     [BURST] macOS GPU logging thread stopped.
+INFO     [CTRL] Saved end2end time to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v5/runs/burst-mac-sustained-050-feedback-fine-grained-seed101-taskc225b41c-bursta16c298e/end2end_time.txt
+INFO     [CTRL] Saved statistics to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v5/runs/burst-mac-sustained-050-feedback-fine-grained-seed101-taskc225b41c-bursta16c298e/task_statistics.pkl
+INFO     [CTRL] Task End to End Finished time: 1.9644708633422852
+INFO     [CTRL] SubTask Missing deadline rate: 0.5087719298245614
+INFO     [CTRL] SubTask Average finished time: 0.015709165264578426
+INFO     [CTRL] Task Metrics: (1, 0.0, 0.9703438442703491)
+INFO     [CTRL] Saved run summary to: /Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v5/runs/burst-mac-sustained-050-feedback-fine-grained-seed101-taskc225b41c-bursta16c298e/summary.json
+metrics finished time 1.9644708633422852 1.9353988924999992
+[DEBUG] QoE score calculation, finished_times:  [1.9644708633422852] deadlines:  [1.9353988924999992] lambda_param:  0.05 QoE Score:  0.9703438442703491

@@ -27,13 +27,42 @@ def _task(name: str, run_arg: int, deadline: float, merge_key: str) -> dict:
 def test_merge_requires_the_same_structural_stage() -> None:
     first = _task("first", 1, 0.10, "dag=0/period=0/stage=0")
     second = _task("second", 2, 0.20, "dag=0/period=0/stage=1")
-    assert not tasks_merge_eligible(first, second, merge_tick=0.02)
+    assert not tasks_merge_eligible(first, second, release_time_skew_threshold_seconds=0.02)
 
     second["MergeKey"] = first["MergeKey"]
-    assert tasks_merge_eligible(first, second, merge_tick=0.02)
+    assert tasks_merge_eligible(first, second, release_time_skew_threshold_seconds=0.02)
 
     second["IsNonPartitionable"] = True
-    assert not tasks_merge_eligible(first, second, merge_tick=0.02)
+    assert not tasks_merge_eligible(first, second, release_time_skew_threshold_seconds=0.02)
+
+
+def test_release_time_skew_threshold_changes_execution_graph() -> None:
+    tasks = [
+        {
+            **_task(name, run_arg, 1.0, "same-stage"),
+            "ReleaseTime": release,
+        }
+        for name, run_arg, release in (
+            ("first", 1, 0.0),
+            ("second", 3, 0.05),
+            ("third", 4, 0.10),
+        )
+    ]
+
+    execution_counts = []
+    for threshold in (0.0, 0.05, 0.10):
+        scheduler = TaskSchedule(
+            tasks,
+            handler_status=defaultdict(int),
+            control_queue=Queue(),
+            scheduler="edf",
+            approach_module="fine-grained",
+            release_time_skew_threshold_seconds=threshold,
+        )
+        scheduler.generate_task_list()
+        execution_counts.append(scheduler.task_num)
+
+    assert execution_counts == [3, 2, 1]
 
 
 def test_merged_task_uses_the_earliest_deadline_and_preserves_constituents() -> None:

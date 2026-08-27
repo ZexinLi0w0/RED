@@ -1,0 +1,76 @@
+{
+  "DeadlineFactor": 2.0,
+  "ArrivalScale": 1.0,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "ReleaseTimeSkewThresholdMs": 100,
+  "MovingAverageWindow": 8,
+  "BurstTaskRatio": 100,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      [
+        {
+          "TaskName": "Request0_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [1],
+          "WorstRunningTime": 75,
+          "ReleaseTimeOffsetMs": 0,
+          "DropThreshold": 0.40
+        },
+        {
+          "TaskName": "Request1_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [3],
+          "WorstRunningTime": 67.5,
+          "ReleaseTimeOffsetMs": 50,
+          "DropThreshold": 0.20
+        },
+        {
+          "TaskName": "Request2_ObjectDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [4],
+          "WorstRunningTime": 82.5,
+          "ReleaseTimeOffsetMs": 100,
+          "DropThreshold": 0.25
+        },
+        {
+          "TaskName": "Request3_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [1],
+          "WorstRunningTime": 75,
+          "ReleaseTimeOffsetMs": 150,
+          "DropThreshold": 0.40
+        },
+        {
+          "TaskName": "Request4_ObjectDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [4],
+          "WorstRunningTime": 82.5,
+          "ReleaseTimeOffsetMs": 200,
+          "DropThreshold": 0.25
+        }
+      ],
+      {
+        "TaskName": "Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 2,
+        "Dependencies": [1, 3, 4],
+        "RunArgs": [2],
+        "WorstRunningTime": 60,
+        "DropThreshold": 0.50
+      }
+    ]
+  ]
+}

@@ -14,7 +14,7 @@ def test_calibration_grid_changes_only_deadline_factor(tmp_path) -> None:
         "DagRepeatedTimes": 10,
         "ParallelStagePolicy": "max",
         "TaskSeed": 0,
-        "MergeThresholdMs": 20,
+        "ReleaseTimeSkewThresholdMs": 20,
         "QoELambda": 0.05,
         "dag_list": [],
     }

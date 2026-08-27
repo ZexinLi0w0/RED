@@ -10,6 +10,7 @@ import platform
 import queue
 from pathlib import Path
 from copy import deepcopy
+from dataclasses import asdict, dataclass
 
 try:
     from macos_gpu_test import log_gpu_utilization, read_latest_logged_gpu
@@ -270,24 +271,147 @@ class SystemHealthMonitor:
         """Update the current queue length."""
         self.queue_length = length
 
+@dataclass(frozen=True)
+class BurstWorkloadConfig:
+    """Absolute release schedule for a burst workload."""
+
+    regime: str
+    burst_start_seconds: float
+    release_horizon_seconds: float
+    transient_duration_seconds: Optional[float] = None
+
+    @property
+    def burst_end_seconds(self) -> float:
+        if self.regime == "transient":
+            return self.burst_start_seconds + self.transient_duration_seconds
+        return self.release_horizon_seconds
+
+
+def burst_workload_config_from_mapping(config: Dict) -> BurstWorkloadConfig:
+    """Parse and validate the paper's transient/sustained burst definition."""
+    regime = config.get("burst_regime")
+    if regime not in {"transient", "sustained"}:
+        raise ValueError(
+            "burst_regime must be either 'transient' or 'sustained'"
+        )
+
+    def finite_non_negative(field_name: str) -> float:
+        value = config.get(field_name)
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+        ):
+            raise ValueError(f"{field_name} must be a finite non-negative number")
+        return float(value)
+
+    burst_start_seconds = finite_non_negative("burst_start_seconds")
+    release_horizon_seconds = finite_non_negative("release_horizon_seconds")
+    if release_horizon_seconds <= burst_start_seconds:
+        raise ValueError(
+            "release_horizon_seconds must be greater than burst_start_seconds"
+        )
+
+    transient_duration_seconds = None
+    if regime == "transient":
+        transient_duration_seconds = finite_non_negative(
+            "transient_duration_seconds"
+        )
+        if transient_duration_seconds <= 0:
+            raise ValueError("transient_duration_seconds must be positive")
+        if burst_start_seconds + transient_duration_seconds > release_horizon_seconds:
+            raise ValueError(
+                "transient burst window cannot exceed release_horizon_seconds"
+            )
+    elif "transient_duration_seconds" in config:
+        raise ValueError(
+            "transient_duration_seconds is only valid for a transient burst"
+        )
+
+    return BurstWorkloadConfig(
+        regime=regime,
+        burst_start_seconds=burst_start_seconds,
+        release_horizon_seconds=release_horizon_seconds,
+        transient_duration_seconds=transient_duration_seconds,
+    )
+
+
+def _dag_instance_groups(tasks: List[Dict]) -> List[Tuple[Tuple[int, int], List[Dict]]]:
+    groups = defaultdict(list)
+    for task in tasks:
+        if task.get("DagIndex") is None or task.get("DagPeriod") is None:
+            raise ValueError(
+                "burst workloads require every task to define DagIndex and DagPeriod"
+            )
+        groups[(int(task["DagIndex"]), int(task["DagPeriod"]))].append(task)
+    return sorted(
+        groups.items(),
+        key=lambda item: (
+            min(float(task["ReleaseTime"]) for task in item[1]),
+            item[0],
+        ),
+    )
+
+
+def _evenly_selected_groups(groups, burst_ratio: float):
+    """Select a deterministic, temporally distributed ratio of DAG releases."""
+    selected = []
+    accumulator = 0.0
+    for group in groups:
+        accumulator += burst_ratio
+        if accumulator + 1e-12 >= 100.0:
+            selected.append(group)
+            accumulator -= 100.0
+    return selected
+
+
 class BurstTaskManager:
     """
     Manages burst task scenarios with proactive task dropping mechanism.
     """
     
     def __init__(self, 
-                 gpu_threshold: float = 80.0,
-                 queue_threshold: int = 10,
+                 gpu_threshold: float = 90.0,
+                 queue_threshold: int = 8,
+                 persistence_window: int = 3,
                  default_drop_threshold: float = 0.5,
                  monitoring_interval: float = 0.1,
+                 workload_config: Optional[BurstWorkloadConfig] = None,
+                 management_enabled: bool = True,
                  logger=None):
-        self.gpu_threshold = gpu_threshold
+        if isinstance(gpu_threshold, bool) or not isinstance(
+            gpu_threshold, (int, float)
+        ) or not 0 <= gpu_threshold <= 100:
+            raise ValueError("gpu_threshold must be between 0 and 100")
+        if isinstance(queue_threshold, bool) or not isinstance(
+            queue_threshold, int
+        ) or queue_threshold < 0:
+            raise ValueError("queue_threshold must be a non-negative integer")
+        if isinstance(persistence_window, bool) or not isinstance(
+            persistence_window, int
+        ) or persistence_window <= 0:
+            raise ValueError("persistence_window must be a positive integer")
+        if isinstance(default_drop_threshold, bool) or not isinstance(
+            default_drop_threshold, (int, float)
+        ) or not 0 <= default_drop_threshold <= 1:
+            raise ValueError("default_drop_threshold must be between 0 and 1")
+
+        self.gpu_threshold = float(gpu_threshold)
         self.queue_threshold = queue_threshold
-        self.default_drop_threshold = default_drop_threshold
+        self.persistence_window = persistence_window
+        self.default_drop_threshold = float(default_drop_threshold)
+        self.workload_config = workload_config
+        self.management_enabled = bool(management_enabled)
         self.logger = logger or logging.getLogger(__name__)
         self.health_monitor = SystemHealthMonitor(logger, monitoring_interval=monitoring_interval)
         self.dropped_tasks = []
+        self.drop_records = []
         self.burst_mode_active = False
+        self.consecutive_overload_ticks = 0
+        self.maximum_consecutive_overload_ticks = 0
+        self.overload_activation_count = 0
+        self.workload_statistics = None
         
     def start_monitoring(self):
         """Start the burst task monitoring."""
@@ -299,29 +423,107 @@ class BurstTaskManager:
     
     def generate_burst_tasks(self, base_tasks: List[Dict], burst_ratio: float) -> List[Dict]:
         """
-        Generate additional burst tasks by duplicating existing ones according to burst_ratio (%).
-        Burst tasks inherit all attributes but have doubled priority and unique TaskIds.
+        Duplicate complete DAG releases inside the configured burst window.
+
+        A 100 percent burst adds one DAG release for every base DAG release in
+        the window. A 50 percent burst adds one for half of those releases,
+        distributed across the window. Clones retain release times, deadlines,
+        and priorities but receive an independent DAG-period identity.
         """
-        if burst_ratio <= 0 or not base_tasks:
+        if (
+            isinstance(burst_ratio, bool)
+            or not isinstance(burst_ratio, (int, float))
+            or not math.isfinite(burst_ratio)
+            or not 0 <= burst_ratio <= 100
+        ):
+            raise ValueError("burst_ratio must be between 0 and 100")
+        if self.workload_config is None:
+            raise ValueError("a validated burst workload configuration is required")
+        if not base_tasks:
+            self.workload_statistics = self._workload_statistics(
+                burst_ratio, 0, 0, 0, 0
+            )
             return []
-        
-        burst_count = int(len(base_tasks) * burst_ratio / 100)
-        if burst_count <= 0:
-            return []
-        
+
+        maximum_release = max(float(task["ReleaseTime"]) for task in base_tasks)
+        if maximum_release > self.workload_config.release_horizon_seconds:
+            raise ValueError(
+                "release_horizon_seconds must cover every base-task ReleaseTime"
+            )
+
+        groups = _dag_instance_groups(base_tasks)
+        eligible_groups = [
+            group
+            for group in groups
+            if self.workload_config.burst_start_seconds
+            <= min(float(task["ReleaseTime"]) for task in group[1])
+            < self.workload_config.burst_end_seconds
+        ]
+        selected_groups = _evenly_selected_groups(eligible_groups, burst_ratio)
+        maximum_period = max(int(task["DagPeriod"]) for task in base_tasks)
         burst_tasks = []
-        for idx in range(burst_count):
-            original = base_tasks[idx % len(base_tasks)]
-            duplicate = deepcopy(original)
-            orig_id = duplicate.get("TaskId", f"task_{idx}")
-            duplicate["TaskId"] = f"{orig_id}_burst_{idx}"
-            duplicate["Priority"] = int(original.get("Priority", 0) * 2)
-            duplicate["IsBurstTask"] = True
-            duplicate.pop("SignalMsg", None)
-            burst_tasks.append(duplicate)
-        
-        self.logger.info(f"[BURST] Generated {len(burst_tasks)} burst tasks (ratio={burst_ratio}%).")
+        for burst_instance_index, ((source_dag_index, source_period), tasks) in enumerate(
+            selected_groups, start=1
+        ):
+            burst_period = maximum_period + burst_instance_index
+            for original in tasks:
+                duplicate = deepcopy(original)
+                orig_id = duplicate["TaskId"]
+                duplicate["TaskId"] = (
+                    f"{orig_id}_burst_{self.workload_config.regime}_"
+                    f"{burst_instance_index}"
+                )
+                duplicate["ConstituentTaskIds"] = [duplicate["TaskId"]]
+                duplicate["DagPeriod"] = burst_period
+                duplicate["MergeKey"] = (
+                    f"dag={source_dag_index}/period={burst_period}/"
+                    f"stage={duplicate['StageIndex']}"
+                )
+                duplicate["IsBurstTask"] = True
+                duplicate["BurstRegime"] = self.workload_config.regime
+                duplicate["BurstInstanceIndex"] = burst_instance_index
+                duplicate["BurstSourceDagIndex"] = source_dag_index
+                duplicate["BurstSourceDagPeriod"] = source_period
+                duplicate.pop("SignalMsg", None)
+                burst_tasks.append(duplicate)
+
+        self.workload_statistics = self._workload_statistics(
+            burst_ratio,
+            len(groups),
+            len(eligible_groups),
+            len(selected_groups),
+            len(burst_tasks),
+        )
+        self.logger.info(
+            "[BURST] Generated %d nodes from %d additional DAG releases "
+            "(%s, ratio=%s%%, window=[%.3f, %.3f)).",
+            len(burst_tasks),
+            len(selected_groups),
+            self.workload_config.regime,
+            burst_ratio,
+            self.workload_config.burst_start_seconds,
+            self.workload_config.burst_end_seconds,
+        )
         return burst_tasks
+
+    def _workload_statistics(
+        self,
+        burst_ratio,
+        base_dag_release_count,
+        eligible_dag_release_count,
+        added_dag_release_count,
+        added_node_count,
+    ):
+        config = asdict(self.workload_config)
+        config["burst_end_seconds"] = self.workload_config.burst_end_seconds
+        return {
+            **config,
+            "burst_ratio_percent": float(burst_ratio),
+            "base_dag_release_count": base_dag_release_count,
+            "eligible_dag_release_count": eligible_dag_release_count,
+            "added_dag_release_count": added_dag_release_count,
+            "added_node_count": added_node_count,
+        }
     
     def calculate_criticality_score(self, task: Dict, current_time: float) -> float:
         """
@@ -375,16 +577,34 @@ class BurstTaskManager:
         gpu_util = health.get("gpu_utilization", 0.0)
         queue_len = health.get("queue_length", 0)
         
-        overload = (gpu_util > self.gpu_threshold or queue_len > self.queue_threshold)
-        
-        if overload and not self.burst_mode_active:
-            self.logger.warning(f"[BURST] Overload detected: GPU={gpu_util:.1f}%, Queue={queue_len}")
+        raw_overload = (
+            gpu_util > self.gpu_threshold or queue_len > self.queue_threshold
+        )
+        if raw_overload:
+            self.consecutive_overload_ticks += 1
+            self.maximum_consecutive_overload_ticks = max(
+                self.maximum_consecutive_overload_ticks,
+                self.consecutive_overload_ticks,
+            )
+        else:
+            self.consecutive_overload_ticks = 0
+
+        sustained_overload = (
+            self.consecutive_overload_ticks >= self.persistence_window
+        )
+        if sustained_overload and not self.burst_mode_active:
+            self.logger.warning(
+                "[BURST] Sustained overload detected after "
+                f"{self.consecutive_overload_ticks} ticks: "
+                f"GPU={gpu_util:.1f}%, Queue={queue_len}"
+            )
             self.burst_mode_active = True
-        elif not overload and self.burst_mode_active:
+            self.overload_activation_count += 1
+        elif not raw_overload and self.burst_mode_active:
             self.logger.info(f"[BURST] Overload resolved: GPU={gpu_util:.1f}%, Queue={queue_len}")
             self.burst_mode_active = False
         
-        return overload
+        return sustained_overload
     
     def proactive_drop(self, task_queue: List[Dict], current_time: float) -> Tuple[List[Dict], List[Dict]]:
         """
@@ -397,18 +617,17 @@ class BurstTaskManager:
         Returns:
             Tuple of (remaining_tasks, dropped_tasks)
         """
-        if not self.is_overload_detected():
+        if not self.management_enabled or not self.is_overload_detected():
             return task_queue, []
         
-        # Calculate criticality scores for all tasks
-        # [TODO] This can be optimized by priority queue or min heap
+        # Evaluate each already-released queued task independently. The caller
+        # passes tasks in scheduler order, which must remain unchanged for the
+        # retained tasks so Burst management does not silently replace EDF or
+        # LLF-DAG with a different scheduling policy.
         tasks_with_scores = []
         for task in task_queue:
             criticality = self.calculate_criticality_score(task, current_time)
             tasks_with_scores.append((task, criticality))
-        
-        # Sort tasks by criticality score (ascending - lower scores dropped first)
-        tasks_with_scores.sort(key=lambda x: x[1])
         
         # Determine how many tasks to drop based on individual drop thresholds
         dropped_tasks = []
@@ -420,6 +639,27 @@ class BurstTaskManager:
             # Drop task if its criticality is below its drop threshold
             if criticality < drop_threshold:
                 dropped_tasks.append(task)
+                self.drop_records.append(
+                    {
+                        "task_id": task.get("TaskId"),
+                        "constituent_task_ids": list(
+                            task.get("ConstituentTaskIds", [task.get("TaskId")])
+                        ),
+                        "criticality_score": criticality,
+                        "drop_threshold": drop_threshold,
+                        "is_burst_task": bool(task.get("IsBurstTask", False)),
+                        "burst_regime": task.get("BurstRegime"),
+                        "burst_source_dag_index": task.get(
+                            "BurstSourceDagIndex"
+                        ),
+                        "burst_source_dag_period": task.get(
+                            "BurstSourceDagPeriod"
+                        ),
+                        "priority": task.get("Priority"),
+                        "release_time_seconds": task.get("ReleaseTime"),
+                        "deadline_seconds": task.get("Deadline"),
+                    }
+                )
                 self.logger.info(f"[BURST] Dropped task {task.get('TaskId', 'Unknown')} "
                                f"with criticality {criticality:.3f} (threshold: {drop_threshold:.3f})")
             else:
@@ -435,12 +675,20 @@ class BurstTaskManager:
     def get_burst_statistics(self) -> Dict:
         """Get statistics about burst management."""
         return {
+            "management_enabled": self.management_enabled,
+            "workload": self.workload_statistics,
             "burst_mode_active": self.burst_mode_active,
             "dropped_tasks_count": len(self.dropped_tasks),
+            "drop_records": self.drop_records,
             "current_gpu_utilization": self.health_monitor.gpu_utilization,
             "current_queue_length": self.health_monitor.queue_length,
             "gpu_threshold": self.gpu_threshold,
-            "queue_threshold": self.queue_threshold
+            "queue_threshold": self.queue_threshold,
+            "persistence_window": self.persistence_window,
+            "consecutive_overload_ticks": self.consecutive_overload_ticks,
+            "maximum_consecutive_overload_ticks": self.maximum_consecutive_overload_ticks,
+            "overload_activation_count": self.overload_activation_count,
+            "drop_threshold": self.default_drop_threshold,
         }
     
     def update_queue_length(self, length: int):
@@ -498,4 +746,4 @@ class BurstAwareTaskScheduler:
     
     def get_burst_statistics(self) -> Dict:
         """Get burst management statistics."""
-        return self.burst_manager.get_burst_statistics() 
+        return self.burst_manager.get_burst_statistics()

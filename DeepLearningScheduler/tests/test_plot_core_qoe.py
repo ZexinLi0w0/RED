@@ -35,8 +35,9 @@ def _write_run(root, profile, scenario, method, seed, latency):
     (run_dir / "summary.json").write_text(json.dumps(summary), encoding="utf-8")
 
 
-def _write_matrix(root):
-    latencies = {101: 5.0, 202: 1.0, 303: 3.0, 404: 4.0, 505: 2.0}
+def _write_matrix(root, latencies=None):
+    if latencies is None:
+        latencies = {101: 5.0}
     for profile, _ in PROFILES:
         for scenario, _ in SCENARIOS:
             for method, _, _ in METHODS:
@@ -45,9 +46,12 @@ def _write_matrix(root):
 
 
 def test_load_representative_runs_preserves_one_complete_median_tuple(tmp_path):
-    _write_matrix(tmp_path)
+    _write_matrix(
+        tmp_path,
+        {101: 5.0, 202: 1.0, 303: 3.0, 404: 4.0, 505: 2.0},
+    )
 
-    selected = load_representative_runs(tmp_path)
+    selected = load_representative_runs(tmp_path, repetitions=5)
 
     record = selected["tight"]["baseline"]["urban_navigation"]
     assert record["seed"] == 303
@@ -57,12 +61,12 @@ def test_load_representative_runs_preserves_one_complete_median_tuple(tmp_path):
 
 
 def test_load_representative_runs_rejects_an_incomplete_matrix(tmp_path):
-    _write_matrix(tmp_path)
+    _write_matrix(tmp_path, {101: 1.0, 202: 2.0})
     first_run = next(tmp_path.iterdir())
     (first_run / "manifest.json").unlink()
 
-    with pytest.raises(ValueError, match="expected five complete repetitions"):
-        load_representative_runs(tmp_path)
+    with pytest.raises(ValueError, match=r"expected 2 complete repetition\(s\)"):
+        load_representative_runs(tmp_path, repetitions=2)
 
 
 def test_even_selection_uses_one_of_the_two_central_runs():

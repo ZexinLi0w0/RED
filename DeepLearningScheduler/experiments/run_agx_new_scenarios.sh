@@ -14,7 +14,7 @@ DEADLINE_LABELS=("Loose")
 SCENARIOS=("urban_navigation" "emergency_obstacle_avoidance" "night_driving")
 SCENARIO_LABELS=("Urban navigation" "Emergency obstacle avoidance" "Night driving")
 APPROACHES=("baseline" "feedback" "fine-grained" "feedback-fine-grained")
-APPROACH_LABELS=("Baseline" "RED-IDA" "RED-FG" "RED")
+APPROACH_LABELS=("Baseline" "MERIS-IDA" "MERIS-FG" "MERIS")
 
 cd "${ROOT}"
 mkdir -p "$(dirname "${LOG_FILE}")"
@@ -61,4 +61,3 @@ for idx in "${!SCENARIOS[@]}"; do
     done
   done
 done
-

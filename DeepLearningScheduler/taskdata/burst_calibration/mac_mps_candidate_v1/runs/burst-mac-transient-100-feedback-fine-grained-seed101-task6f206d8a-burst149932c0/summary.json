@@ -1,0 +1,676 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.8,
+      "offered_node_count": 145,
+      "outcome_counts": {
+        "failure": 61,
+        "skip": 55,
+        "success": 29
+      },
+      "qoe_score": 0.9938152728163632
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.019551642735799155,
+  "burst_statistics": {
+    "burst_mode_active": false,
+    "consecutive_overload_ticks": 0,
+    "current_gpu_utilization": 0.0,
+    "current_queue_length": 1,
+    "drop_records": [],
+    "drop_threshold": 0.5,
+    "dropped_tasks_count": 0,
+    "gpu_threshold": 90.0,
+    "management_enabled": true,
+    "maximum_consecutive_overload_ticks": 0,
+    "overload_activation_count": 0,
+    "persistence_window": 3,
+    "queue_threshold": 8,
+    "workload": {
+      "added_dag_release_count": 9,
+      "added_node_count": 45,
+      "base_dag_release_count": 20,
+      "burst_end_seconds": 0.96,
+      "burst_ratio_percent": 100.0,
+      "burst_start_seconds": 0.36,
+      "eligible_dag_release_count": 9,
+      "regime": "transient",
+      "release_horizon_seconds": 1.96,
+      "transient_duration_seconds": 0.6
+    }
+  },
+  "deadline_missing_rate": 0.8,
+  "end_to_end_latency_seconds": 1.4495270252227783,
+  "execution_task_count": 87,
+  "finished_execution_task_count": 87,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 50,
+    "events": [
+      {
+        "completed_task_id": "merged_31590219ee07cf53",
+        "completion_time_seconds": 0.03248405456542969,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.01954817771911621,
+        "observed_execution_seconds": 0.01954817771911621,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[0]_D0_S2_Bsingle": 0.0771762489,
+          "merged_ae13da3dfed6a2b6": 0.05723427872531808
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_ae13da3dfed6a2b6",
+        "completion_time_seconds": 0.07021212577819824,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.01888895034790039,
+        "observed_execution_seconds": 0.01888895034790039,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[0]_D0_S2_Bsingle": 0.0771762489
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_e488167c77a9de8d",
+        "completion_time_seconds": 0.09155702590942383,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.019260644912719727,
+        "observed_execution_seconds": 0.018973112106323242,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[1]_D0_S2_Bsingle": 0.14918291009999998,
+          "merged_89659085e3cac4f3": 0.1216917175570172
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_d4542d23b56da717",
+        "completion_time_seconds": 0.17008209228515625,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.019873778025309246,
+        "observed_execution_seconds": 0.02110004425048828,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[2]_D0_S2_Bsingle": 0.2211895713,
+          "merged_9a6c838676a4c306": 0.19680807042207873
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_9a6c838676a4c306",
+        "completion_time_seconds": 0.2015988826751709,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.018898367881774902,
+        "observed_execution_seconds": 0.018907785415649414,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[2]_D0_S2_Bsingle": 0.2211895713
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[2]_D0_S2_Bsingle",
+        "completion_time_seconds": 0.23277902603149414,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.015218019485473633,
+        "observed_execution_seconds": 0.015218019485473633,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_72d22cdc2fafe41a",
+        "completion_time_seconds": 0.2542428970336914,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.020237326622009277,
+        "observed_execution_seconds": 0.021327972412109375,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[3]_D0_S2_Bsingle": 0.2931962325,
+          "merged_80ea31c138b04eac": 0.2758206349090443
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_80ea31c138b04eac",
+        "completion_time_seconds": 0.2823669910430908,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.01875758171081543,
+        "observed_execution_seconds": 0.018476009368896484,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_3a0c951574492b5c",
+        "completion_time_seconds": 0.31237292289733887,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.02019047737121582,
+        "observed_execution_seconds": 0.020003080368041992,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[4]_D0_S2_Bsingle": 0.3652028936999999,
+          "merged_5a47a47f005273e4": 0.341539809110353
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_5a47a47f005273e4",
+        "completion_time_seconds": 0.3408379554748535,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.018856942653656006,
+        "observed_execution_seconds": 0.019155025482177734,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[4]_D0_S2_Bsingle": 0.3652028936999999
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[4]_D0_S2_Bsingle",
+        "completion_time_seconds": 0.36547303199768066,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.015029549598693848,
+        "observed_execution_seconds": 0.014841079711914062,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_e45834ab0c8446bd",
+        "completion_time_seconds": 0.38506197929382324,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.020064910252888996,
+        "observed_execution_seconds": 0.019437074661254883,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[5]_D0_S2_Bsingle": 0.4372095548999999,
+          "merged_6afc882a63fda7c3": 0.4140807350685427
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_4530ce941b61104e",
+        "completion_time_seconds": 0.40491795539855957,
+        "dag_index": 0,
+        "dag_period": 20,
+        "moving_average_seconds": 0.020015784672328403,
+        "observed_execution_seconds": 0.019721031188964844,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[5]_D0_S2_Bsingle_burst_transient_1": 0.4372095548999999,
+          "merged_87140faf9ba34790": 0.42288738213824406
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_6afc882a63fda7c3",
+        "completion_time_seconds": 0.4231128692626953,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.01869335174560547,
+        "observed_execution_seconds": 0.01803898811340332,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[5]_D0_S2_Bsingle": 0.4372095548999999
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[5]_D0_S2_Bsingle",
+        "completion_time_seconds": 0.45642685890197754,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.0182492733001709,
+        "observed_execution_seconds": 0.024688720703125,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_b27faf90ee7c2844",
+        "completion_time_seconds": 0.5551731586456299,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.02243158221244812,
+        "observed_execution_seconds": 0.03934216499328613,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[7]_D0_S2_Bsingle": 0.5812228772999997
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_383ca08938426a2b",
+        "completion_time_seconds": 0.608781099319458,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.023431330919265747,
+        "observed_execution_seconds": 0.027546167373657227,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[8]_D0_S2_Bsingle": 0.6532295384999998
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_5a6df80e09d091bb",
+        "completion_time_seconds": 0.6856508255004883,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.02518978714942932,
+        "observed_execution_seconds": 0.033040761947631836,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[9]_D0_S2_Bsingle": 0.7252361996999996,
+          "merged_2f355c8f7a55bada": 0.7056814357501918
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_2f355c8f7a55bada",
+        "completion_time_seconds": 0.7237460613250732,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.01945364475250244,
+        "observed_execution_seconds": 0.023255109786987305,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[9]_D0_S2_Bsingle": 0.7252361996999996
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_f1ccdbb5ca255bc7",
+        "completion_time_seconds": 0.7432198524475098,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.02493077516555786,
+        "observed_execution_seconds": 0.0190279483795166,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[10]_D0_S2_Bsingle": 0.7972428608999996,
+          "merged_0072defc89a67494": 0.7710942045978643
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_8e6a05b3aabb2da1",
+        "completion_time_seconds": 0.7624759674072266,
+        "dag_index": 0,
+        "dag_period": 25,
+        "moving_average_seconds": 0.02466064691543579,
+        "observed_execution_seconds": 0.019166946411132812,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[10]_D0_S2_Bsingle_burst_transient_6": 0.7972428608999996,
+          "merged_e3f6bf80e4fbe54f": 0.7804147061067511
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_0072defc89a67494",
+        "completion_time_seconds": 0.7805180549621582,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.01923557690211705,
+        "observed_execution_seconds": 0.017927169799804688,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[10]_D0_S2_Bsingle": 0.7972428608999996
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_fb106e04d67e5f32",
+        "completion_time_seconds": 0.8123030662536621,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.02442726492881775,
+        "observed_execution_seconds": 0.018136024475097656,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[11]_D0_S2_Bsingle": 0.8692495220999995,
+          "merged_fcb43523175841e3": 0.841525483438842
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_41ec4b9e534926c6",
+        "completion_time_seconds": 0.8292949199676514,
+        "dag_index": 0,
+        "dag_period": 26,
+        "moving_average_seconds": 0.024103373289108276,
+        "observed_execution_seconds": 0.0168459415435791,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[11]_D0_S2_Bsingle_burst_transient_7": 0.8692495220999995,
+          "merged_a886ae35d36690c7": 0.8497978649644373
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_fcb43523175841e3",
+        "completion_time_seconds": 0.8445749282836914,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.018732011318206787,
+        "observed_execution_seconds": 0.015207052230834961,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[11]_D0_S2_Bsingle": 0.8692495220999995
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_a886ae35d36690c7",
+        "completion_time_seconds": 0.8613219261169434,
+        "dag_index": 0,
+        "dag_period": 26,
+        "moving_average_seconds": 0.01845136284828186,
+        "observed_execution_seconds": 0.016643762588500977,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[11]_D0_S2_Bsingle_burst_transient_7": 0.8692495220999995
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[11]_D0_S2_Bsingle",
+        "completion_time_seconds": 0.8743798732757568,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.016921937465667725,
+        "observed_execution_seconds": 0.012939929962158203,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_434c93e1d14501be",
+        "completion_time_seconds": 0.8935680389404297,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.024013996124267578,
+        "observed_execution_seconds": 0.019006013870239258,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[12]_D0_S2_Bsingle": 0.9412561832999995,
+          "merged_92ee469a58d67d73": 0.9184430505262916
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_92ee469a58d67d73",
+        "completion_time_seconds": 0.9294979572296143,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.018525242805480957,
+        "observed_execution_seconds": 0.019498825073242188,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[12]_D0_S2_Bsingle": 0.9412561832999995
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_e627586e85244543",
+        "completion_time_seconds": 0.9592719078063965,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.021588832139968872,
+        "observed_execution_seconds": 0.019940853118896484,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[13]_D0_S2_Bsingle": 1.0132628444999994,
+          "merged_42497cdfbe267b51": 0.9874884035584839
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_af79ccfb7f93a6d7",
+        "completion_time_seconds": 0.980525016784668,
+        "dag_index": 0,
+        "dag_period": 28,
+        "moving_average_seconds": 0.02077043056488037,
+        "observed_execution_seconds": 0.02099895477294922,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[13]_D0_S2_Bsingle_burst_transient_9": 1.0132628444999994,
+          "merged_ea0ff5f7a02067b1": 0.9976343101815294
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_42497cdfbe267b51",
+        "completion_time_seconds": 0.9995241165161133,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.018574029207229614,
+        "observed_execution_seconds": 0.018866300582885742,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[13]_D0_S2_Bsingle": 1.0132628444999994
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[13]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.0246179103851318,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.016513776779174805,
+        "observed_execution_seconds": 0.014881134033203125,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_5ffd68913e22e8b4",
+        "completion_time_seconds": 1.0440850257873535,
+        "dag_index": 0,
+        "dag_period": 14,
+        "moving_average_seconds": 0.019055098295211792,
+        "observed_execution_seconds": 0.019318103790283203,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[14]_D0_S2_Bsingle": 1.0852695056999997,
+          "merged_809c666ebe70ee1e": 1.0658863813089399
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_809c666ebe70ee1e",
+        "completion_time_seconds": 1.069200038909912,
+        "dag_index": 0,
+        "dag_period": 14,
+        "moving_average_seconds": 0.01855143904685974,
+        "observed_execution_seconds": 0.01897430419921875,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[14]_D0_S2_Bsingle": 1.0852695056999997
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[14]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.0986428260803223,
+        "dag_index": 0,
+        "dag_period": 14,
+        "moving_average_seconds": 0.016086459159851074,
+        "observed_execution_seconds": 0.013949871063232422,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_a864ce468f0ba1fd",
+        "completion_time_seconds": 1.1181960105895996,
+        "dag_index": 0,
+        "dag_period": 15,
+        "moving_average_seconds": 0.019103974103927612,
+        "observed_execution_seconds": 0.019418954849243164,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[15]_D0_S2_Bsingle": 1.1572761669,
+          "merged_564ceebccce1e0b4": 1.1391266436611434
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_564ceebccce1e0b4",
+        "completion_time_seconds": 1.141676902770996,
+        "dag_index": 0,
+        "dag_period": 15,
+        "moving_average_seconds": 0.018406927585601807,
+        "observed_execution_seconds": 0.016882896423339844,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[15]_D0_S2_Bsingle": 1.1572761669
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[15]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.159613847732544,
+        "dag_index": 0,
+        "dag_period": 15,
+        "moving_average_seconds": 0.015569380351475306,
+        "observed_execution_seconds": 0.012466907501220703,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_12b61f02ec4cce03",
+        "completion_time_seconds": 1.176722764968872,
+        "dag_index": 0,
+        "dag_period": 16,
+        "moving_average_seconds": 0.018837690353393555,
+        "observed_execution_seconds": 0.01703667640686035,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[16]_D0_S2_Bsingle": 1.2292828281000001,
+          "merged_18c47d1b6a99a0f1": 1.2051975856510089
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_18c47d1b6a99a0f1",
+        "completion_time_seconds": 1.2042300701141357,
+        "dag_index": 0,
+        "dag_period": 16,
+        "moving_average_seconds": 0.01763167977333069,
+        "observed_execution_seconds": 0.01705312728881836,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[16]_D0_S2_Bsingle": 1.2292828281000001
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[16]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.2291088104248047,
+        "dag_index": 0,
+        "dag_period": 16,
+        "moving_average_seconds": 0.015310287475585938,
+        "observed_execution_seconds": 0.013496637344360352,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_b3fb8c4b645ada9e",
+        "completion_time_seconds": 1.2492449283599854,
+        "dag_index": 0,
+        "dag_period": 17,
+        "moving_average_seconds": 0.019074559211730957,
+        "observed_execution_seconds": 0.020030975341796875,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[17]_D0_S2_Bsingle": 1.3012894893000004,
+          "merged_4ba08efc345fb8fa": 1.2771009767102284
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_4ba08efc345fb8fa",
+        "completion_time_seconds": 1.285526990890503,
+        "dag_index": 0,
+        "dag_period": 17,
+        "moving_average_seconds": 0.01769879460334778,
+        "observed_execution_seconds": 0.018464088439941406,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[17]_D0_S2_Bsingle": 1.3012894893000004
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[17]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.310058832168579,
+        "dag_index": 0,
+        "dag_period": 17,
+        "moving_average_seconds": 0.015177667140960693,
+        "observed_execution_seconds": 0.01415705680847168,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_7ee5926092d437b7",
+        "completion_time_seconds": 1.3318579196929932,
+        "dag_index": 0,
+        "dag_period": 18,
+        "moving_average_seconds": 0.01967567205429077,
+        "observed_execution_seconds": 0.021654844284057617,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[18]_D0_S2_Bsingle": 1.3732961505000008,
+          "merged_a94098c487ea3c73": 1.354165877936289
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_a94098c487ea3c73",
+        "completion_time_seconds": 1.3660268783569336,
+        "dag_index": 0,
+        "dag_period": 18,
+        "moving_average_seconds": 0.01811841130256653,
+        "observed_execution_seconds": 0.01856398582458496,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_71103d7fffbde132",
+        "completion_time_seconds": 1.3903729915618896,
+        "dag_index": 0,
+        "dag_period": 19,
+        "moving_average_seconds": 0.01986640691757202,
+        "observed_execution_seconds": 0.020531892776489258,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[19]_D0_S2_Bsingle": 1.445302811700001,
+          "merged_d8c8794f368a1a8d": 1.4202636309573462
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_d8c8794f368a1a8d",
+        "completion_time_seconds": 1.4163498878479004,
+        "dag_index": 0,
+        "dag_period": 19,
+        "moving_average_seconds": 0.01830431818962097,
+        "observed_execution_seconds": 0.018131017684936523,
+        "reassigned_deadlines": {
+          "Burst_Stage3_Control_[19]_D0_S2_Bsingle": 1.445302811700001
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Stage3_Control_[19]_D0_S2_Bsingle",
+        "completion_time_seconds": 1.441796064376831,
+        "dag_index": 0,
+        "dag_period": 19,
+        "moving_average_seconds": 0.015176564455032349,
+        "observed_execution_seconds": 0.014832258224487305,
+        "reassigned_deadlines": {},
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 145,
+  "offered_task_stream_sha256": "b33e5085896bde18ae347aae3d4f1a9021420ec4fe777414d9ebf626c5b19124",
+  "outcome_counts": {
+    "failure": 61,
+    "skip": 55,
+    "success": 29
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.9955788398780755,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 100.0,
+  "run_id": "burst-mac-transient-100-feedback-fine-grained-seed101-task6f206d8a-burst149932c0",
+  "schema_version": 1,
+  "task_config_path": "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v1/generated_configs/transient-100/task.json",
+  "torch_device": "mps"
+}
