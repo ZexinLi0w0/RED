@@ -25,19 +25,19 @@ def test_default_plan_runs_each_cell_once(tmp_path) -> None:
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
-    ] == [84, 96, 114, 114, 150]
+    ] == [84, 96, 108, 114, 150]
     assert [
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
-    ] == [0, 2, 5, 5, 11]
+    ] == [0, 2, 4, 5, 11]
     assert plan["deadline_factor"] == 6.0
-    assert plan["arrival_scale"] == 3.5
+    assert plan["arrival_scale"] == 4.0
     assert plan["timing_source"] == {
         "deadline_factor": "task-config",
         "arrival_scale": "task-config",
     }
     assert plan["gpu_threshold"] == 100.0
-    assert plan["queue_threshold"] == 8
+    assert plan["queue_threshold"] == 10
     assert plan["persistence_window"] == 3
     assert plan["require_proactive_drop_for_red_burst"] is True
     assert plan["require_no_proactive_drop_for_red_control"] is True

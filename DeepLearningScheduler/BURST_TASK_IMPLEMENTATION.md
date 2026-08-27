@@ -57,9 +57,9 @@ Transient example:
   "burst_regime": "transient",
   "burst_start_seconds": 0.36,
   "transient_duration_seconds": 0.6,
-  "release_horizon_seconds": 1.96,
+  "release_horizon_seconds": 2.4,
   "gpu_threshold": 100.0,
-  "queue_threshold": 8,
+  "queue_threshold": 10,
   "persistence_window": 3,
   "drop_threshold": 0.5,
   "monitoring_interval": 0.05,
@@ -90,7 +90,7 @@ so refinement cannot merge away the ready-queue pressure being studied.
 
 For this Mac study, `gpu_threshold=100` disables utilization-based activation,
 which is not deterministic on MPS. The formal trigger is instead the released
-ready queue: `queue_threshold=8` with a three-tick persistence window. The base
+ready queue: `queue_threshold=10` with a three-tick persistence window. The base
 0% workload stays below that threshold, while the injected 50% and 100% Burst
 workloads cross it. Validation fails unless the 0% RED control has no overload
 activation or proactive drop, and every 50%/100% RED cell has at least one

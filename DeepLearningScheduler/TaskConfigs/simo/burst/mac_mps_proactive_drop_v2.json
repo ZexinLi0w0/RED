@@ -1,6 +1,6 @@
 {
   "DeadlineFactor": 6.0,
-  "ArrivalScale": 3.5,
+  "ArrivalScale": 4.0,
   "DagRepeatedTimes": 14,
   "ParallelStagePolicy": "max",
   "TaskSeed": 0,
@@ -87,9 +87,10 @@
   "BurstStudyWorkload": {
     "purpose": "queue-triggered ProactiveDrop validation on Mac/MPS",
     "base_dag": "five independent perception requests followed by control",
-    "control_ready_queue_bound": 4,
-    "burst_ready_queue_lower_bound": 9,
-    "queue_threshold": 8,
+    "nominal_control_ready_queue_bound": 4,
+    "burst_ready_queue_lower_bound": 11,
+    "queue_threshold": 10,
+    "release_horizon_seconds": 2.4,
     "drop_policy": "retain three critical perception types and control; shed two redundant perception requests"
   }
 }
