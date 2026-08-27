@@ -106,6 +106,27 @@ def test_release_time_skew_threshold_is_loaded_from_experiment_config() -> None:
     assert timing.release_time_skew_threshold_ms == pytest.approx(100.0)
 
 
+def test_legacy_merge_threshold_field_preserves_historical_configs() -> None:
+    timing = timing_config_from_mapping(
+        {
+            "DeadlineFactor": 1.0,
+            "ArrivalScale": 1.0,
+            "MergeThresholdMs": 20,
+        }
+    )
+    assert timing.release_time_skew_threshold_ms == pytest.approx(20.0)
+
+
+def test_release_time_skew_threshold_rejects_conflicting_field_names() -> None:
+    with pytest.raises(ValueError, match="cannot be combined"):
+        timing_config_from_mapping(
+            {
+                "ReleaseTimeSkewThresholdMs": 100,
+                "MergeThresholdMs": 20,
+            }
+        )
+
+
 def test_generated_stream_is_deterministic_for_a_seed() -> None:
     kwargs = {
         "deadline_factor": 1.0,

@@ -17,7 +17,7 @@ named parameter. The default frozen workload is
 `TaskConfigs/simo/parameter_sensitivity/agx_high_load.json`. It uses AGX Orin
 profiles, a 100 percent burst injection so burst-controller parameters are
 observable, and fixed 0/50/100/150/200 millisecond predicted release skews among
-compatible MIMONet requests so the merge threshold changes the executed graph.
+compatible MIMONet requests so the release-time skew threshold changes the executed graph.
 Override `--base-task-config` if a replacement frozen AGX workload is selected.
 
 ## One-command Jetson run

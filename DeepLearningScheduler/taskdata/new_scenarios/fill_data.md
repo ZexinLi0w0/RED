@@ -1,59 +1,33 @@
 Based on the filled latex table, update data and address comment in main text. Make sure to check logic and make transition smooth. All numbers keep two decimal places.
 
 Results Table:
-Device | Scenario                     | Deadline | Approach | Missing Deadline Rate | Finished Time      | Deadline Time      | QoE Score         
---------------------------------------------------------------------------------------------------------------------------------------------------
-Mac    | Urban navigation             | Loose    | Baseline | 0.0                   | 7.763628005981445  | 5.946              | 0.3435458301423162
-Mac    | Urban navigation             | Loose    | RED-IDA  | 0.0                   | 4.123502969741821  | 5.946              | 1.0               
-Mac    | Urban navigation             | Loose    | RED-FG   | 0.0                   | 7.766097068786621  | 5.946              | 0.3432397542493702
-Mac    | Urban navigation             | Loose    | RED      | 0.0                   | 3.2012200355529785 | 5.946              | 1.0               
-Mac    | Emergency obstacle avoidance | Loose    | Baseline | 0.275                 | 3.4520747661590576 | 2.8709999999999996 | 0.6207836735675429
-Mac    | Emergency obstacle avoidance | Loose    | RED-IDA  | 0.0                   | 2.627624988555908  | 2.8709999999999996 | 1.0               
-Mac    | Emergency obstacle avoidance | Loose    | RED-FG   | 0.03333333333333333   | 3.4481253623962402 | 2.8709999999999996 | 0.6223878334113846
-Mac    | Emergency obstacle avoidance | Loose    | RED      | 0.0                   | 2.2696919441223145 | 2.8709999999999996 | 1.0               
-Mac    | Night driving                | Loose    | Baseline | 0.0                   | 1.4355590343475342 | 1.4460000000000002 | 1.0               
-Mac    | Night driving                | Loose    | RED-IDA  | 0.0                   | 1.1590237617492676 | 1.4460000000000002 | 1.0               
-Mac    | Night driving                | Loose    | RED-FG   | 0.03333333333333333   | 1.4358839988708496 | 1.4460000000000002 | 1.0               
-Mac    | Night driving                | Loose    | RED      | 0.0                   | 1.1465232372283936 | 1.4460000000000002 | 1.0 
+Device | Scenario                     | Deadline | Approach | Missing Deadline Rate | Finished Time      | Deadline Time | QoE Score          
+----------------------------------------------------------------------------------------------------------------------------------------------
+AGX    | Urban navigation             | Loose    | Baseline | 0.52                  | 27.89833974838257  | 16.68         | 0.07816459325612621
+AGX    | Urban navigation             | Loose    | RED-IDA  | 0.02                  | 24.648674964904785 | 16.68         | 0.10664121306395663
+AGX    | Urban navigation             | Loose    | RED-FG   | 0.06666666666666667   | 27.935713052749634 | 16.68         | 0.07792528114828812
+AGX    | Urban navigation             | Loose    | RED      | 0.0                   | 14.236137390136719 | 16.68         | 1.0                
+AGX    | Emergency obstacle avoidance | Loose    | Baseline | 0.375                 | 21.931200742721558 | 16.5          | 0.14903875163192004
+AGX    | Emergency obstacle avoidance | Loose    | RED-IDA  | 0.125                 | 18.764435529708862 | 16.5          | 0.29581111155733886
+AGX    | Emergency obstacle avoidance | Loose    | RED-FG   | 0.03333333333333333   | 21.904763221740723 | 16.5          | 0.1496586729160575 
+AGX    | Emergency obstacle avoidance | Loose    | RED      | 0.0                   | 13.701050519943237 | 16.5          | 1.0                
+AGX    | Night driving                | Loose    | Baseline | 0.16666666666666666   | 13.96184492111206  | 14.13         | 1.0                
+AGX    | Night driving                | Loose    | RED-IDA  | 0.13333333333333333   | 11.354617595672607 | 14.13         | 1.0                
+AGX    | Night driving                | Loose    | RED-FG   | 0.26666666666666666   | 13.998088598251343 | 14.13         | 1.0                
+AGX    | Night driving                | Loose    | RED      | 0.03333333333333333   | 12.249221563339233 | 14.13         | 1.0 
 
-Adjusted QoE Score Table:
-================================================================================
-Device: Mac
-================================================================================
-
-  Scenario: Emergency obstacle avoidance
---------------------------------------------------------------------------------
-    Deadline: Loose
-
-Approach       λ=0.01       
-----------------------------
-Baseline          0.630154* 
-RED-IDA           1.000000* 
-RED-FG            0.631742* 
-RED               1.000000* 
-
-  Scenario: Night driving
---------------------------------------------------------------------------------
-    Deadline: Loose
-
-Approach       λ=0.01       
-----------------------------
-Baseline          1.000000* 
-RED-IDA           1.000000* 
-RED-FG            1.000000* 
-RED               1.000000* 
-
-  Scenario: Urban navigation
---------------------------------------------------------------------------------
-    Deadline: Loose
-
-Approach       λ=0.01       
-----------------------------
-Baseline          0.352622* 
-RED-IDA           1.000000* 
-RED-FG            0.352312* 
-RED               1.000000* 
-
+Nano   | Urban navigation             | Loose    | Baseline | 1.0                   | 32.24140024185181  | 17.41         | 0.06027065480277153
+Nano   | Urban navigation             | Loose    | RED-IDA  | 1.0                   | 31.372717142105103 | 17.41         | 0.06378120105583825
+Nano   | Urban navigation             | Loose    | RED-FG   | 1.0                   | 29.16496181488037  | 17.41         | 0.07486345881152094
+Nano   | Urban navigation             | Loose    | RED      | 0.16666666666666666   | 23.037281274795532 | 17.41         | 0.1445964699278325 
+Nano   | Emergency obstacle avoidance | Loose    | Baseline | 1.0                   | 24.880135774612427 | 17.41         | 0.11295430159006623
+Nano   | Emergency obstacle avoidance | Loose    | RED-IDA  | 1.0                   | 25.164552211761475 | 17.41         | 0.10926410335616027
+Nano   | Emergency obstacle avoidance | Loose    | RED-FG   | 1.0                   | 23.02457618713379  | 17.41         | 0.14487626968656375
+Nano   | Emergency obstacle avoidance | Loose    | RED      | 0.43333333333333335   | 22.200773239135742 | 17.41         | 0.16566161324249418
+Nano   | Night driving                | Loose    | Baseline | 1.0                   | 16.067562341690063 | 14.55         | 0.3853016028032262 
+Nano   | Night driving                | Loose    | RED-IDA  | 1.0                   | 16.308627128601074 | 14.55         | 0.35102574835996636
+Nano   | Night driving                | Loose    | RED-FG   | 1.0                   | 16.421063899993896 | 14.55         | 0.33704130475915406
+Nano   | Night driving                | Loose    | RED      | 0.9666666666666667    | 13.650720357894897 | 14.55         | 1.0
 
 Text:
 \begin{table}[!tbp]

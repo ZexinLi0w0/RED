@@ -36,7 +36,7 @@ def test_merge_requires_the_same_structural_stage() -> None:
     assert not tasks_merge_eligible(first, second, release_time_skew_threshold_seconds=0.02)
 
 
-def test_merge_threshold_changes_execution_graph_for_fixed_release_skews() -> None:
+def test_release_time_skew_threshold_changes_execution_graph() -> None:
     tasks = [
         {
             **_task(name, run_arg, 1.0, "same-stage"),

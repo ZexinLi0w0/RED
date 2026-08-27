@@ -321,8 +321,12 @@ class BurstTaskManager:
     
     def generate_burst_tasks(self, base_tasks: List[Dict], burst_ratio: float) -> List[Dict]:
         """
-        Generate additional burst tasks by duplicating existing ones according to burst_ratio (%).
-        Burst tasks inherit all attributes but have doubled priority and unique TaskIds.
+        Generate the legacy count-based burst workload.
+
+        The first ``burst_ratio`` percent of ``base_tasks`` are duplicated once.
+        Duplicates retain the original release time and deadline; this function
+        does not define a transient window, a sustained regime, or a separate
+        arrival process. Burst tasks have unique TaskIds and doubled priority.
         """
         if burst_ratio <= 0 or not base_tasks:
             return []

@@ -87,23 +87,23 @@ SENSITIVITY_POINTS = (
         task_config_key="MovingAverageWindow",
     ),
     SensitivityPoint(
-        "Merge-skew threshold", "gamma", "release_time_skew_threshold_ms", 0.0,
+        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 0.0,
         "0 ms", "gamma-000ms", task_config_key="ReleaseTimeSkewThresholdMs",
     ),
     SensitivityPoint(
-        "Merge-skew threshold", "gamma", "release_time_skew_threshold_ms", 50.0,
+        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 50.0,
         "50 ms", "gamma-050ms", task_config_key="ReleaseTimeSkewThresholdMs",
     ),
     SensitivityPoint(
-        "Merge-skew threshold", "gamma", "release_time_skew_threshold_ms", 100.0,
+        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 100.0,
         "100 ms (default)", "gamma-100ms", task_config_key="ReleaseTimeSkewThresholdMs",
     ),
     SensitivityPoint(
-        "Merge-skew threshold", "gamma", "release_time_skew_threshold_ms", 150.0,
+        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 150.0,
         "150 ms", "gamma-150ms", task_config_key="ReleaseTimeSkewThresholdMs",
     ),
     SensitivityPoint(
-        "Merge-skew threshold", "gamma", "release_time_skew_threshold_ms", 200.0,
+        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 200.0,
         "200 ms", "gamma-200ms", task_config_key="ReleaseTimeSkewThresholdMs",
     ),
     SensitivityPoint(

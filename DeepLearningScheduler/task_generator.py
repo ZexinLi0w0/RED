@@ -83,13 +83,25 @@ def timing_config_from_mapping(config):
     if isinstance(task_seed, bool) or not isinstance(task_seed, int) or task_seed < 0:
         raise ValueError("TaskSeed must be a non-negative integer")
 
-    release_time_skew_threshold_ms = config.get("ReleaseTimeSkewThresholdMs", 100.0)
+    threshold_field = "ReleaseTimeSkewThresholdMs"
+    legacy_threshold_field = "MergeThresholdMs"
+    if threshold_field in config and legacy_threshold_field in config:
+        raise ValueError(
+            f"{threshold_field} cannot be combined with the legacy "
+            f"{legacy_threshold_field} field"
+        )
+    release_time_skew_threshold_ms = config.get(
+        threshold_field,
+        config.get(legacy_threshold_field, 100.0),
+    )
     if (
         isinstance(release_time_skew_threshold_ms, bool)
         or not isinstance(release_time_skew_threshold_ms, (int, float))
         or release_time_skew_threshold_ms < 0
     ):
-        raise ValueError("ReleaseTimeSkewThresholdMs must be a non-negative number")
+        raise ValueError(
+            "ReleaseTimeSkewThresholdMs must be a non-negative number"
+        )
 
     moving_average_window = config.get("MovingAverageWindow", 8)
     if (
