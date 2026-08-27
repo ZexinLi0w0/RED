@@ -213,9 +213,10 @@
 - **功能**: 根据任务执行反馈调整下次任务释放时间
 - **策略**: 如果当前任务提前完成，将下次任务释放时间提前
 
-**`fine_grained_adjust(merge_tick=0.02, merge_handler=[5])`**
+**`fine_grained_adjust(release_time_skew_threshold_seconds=0.1, merge_handler=[5])`**
 - **功能**: 细粒度调整，合并相近时间的任务
-- **策略**: 将时间间隔小于merge_tick的同类型任务合并
+- **策略**: 当其他合并条件均满足时，只合并 ReleaseTime 绝对差不超过
+  `release_time_skew_threshold_seconds` 的任务。
 
 **调度算法方法**:
 - **`edf()`**: 最早截止时间优先排序

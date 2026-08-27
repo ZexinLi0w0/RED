@@ -80,7 +80,7 @@ def test_legacy_factor_maps_to_both_explicit_dimensions() -> None:
         dag_repeated_times=10,
         parallel_stage_policy="max",
         task_seed=0,
-        merge_threshold_ms=20.0,
+        release_time_skew_threshold_ms=100.0,
     )
 
 
@@ -95,15 +95,15 @@ def test_mixed_legacy_and_explicit_timing_is_rejected() -> None:
         )
 
 
-def test_merge_threshold_is_loaded_from_the_experiment_config() -> None:
+def test_release_time_skew_threshold_is_loaded_from_experiment_config() -> None:
     timing = timing_config_from_mapping(
         {
             "DeadlineFactor": 1.0,
             "ArrivalScale": 1.0,
-            "MergeThresholdMs": 100,
+            "ReleaseTimeSkewThresholdMs": 100,
         }
     )
-    assert timing.merge_threshold_ms == pytest.approx(100.0)
+    assert timing.release_time_skew_threshold_ms == pytest.approx(100.0)
 
 
 def test_generated_stream_is_deterministic_for_a_seed() -> None:
@@ -121,6 +121,62 @@ def test_generated_stream_is_deterministic_for_a_seed() -> None:
     assert first == second
     assert task_stream_sha256(first) == task_stream_sha256(second)
     assert len({task["TaskId"] for task in first}) == len(first)
+
+
+def test_parallel_release_offsets_create_fixed_predicted_skews() -> None:
+    dag = [[[
+        {
+            "TaskName": "first",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [1],
+            "WorstRunningTime": 20,
+            "ReleaseTimeOffsetMs": 0,
+        },
+        {
+            "TaskName": "second",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [3],
+            "WorstRunningTime": 20,
+            "ReleaseTimeOffsetMs": 50,
+        },
+        {
+            "TaskName": "third",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [4],
+            "WorstRunningTime": 20,
+            "ReleaseTimeOffsetMs": 100,
+        },
+    ]]]
+
+    tasks = generate_tasks_from_dag(
+        dag,
+        deadline_factor=1.0,
+        arrival_scale=1.0,
+        dag_repeated_times=1,
+    )
+
+    assert [task["ReleaseTime"] for task in tasks] == pytest.approx(
+        [0.0, 0.05, 0.1]
+    )
+    assert [task["Deadline"] for task in tasks] == pytest.approx(
+        [0.02, 0.07, 0.12]
+    )
+    assert overall_deadline_seconds(
+        dag,
+        timing_config_from_mapping(
+            {
+                "DeadlineFactor": 1.0,
+                "ArrivalScale": 1.0,
+                "DagRepeatedTimes": 1,
+            }
+        ),
+    ) == pytest.approx(0.12)
 
 
 def test_atomic_positions_are_nested_across_ratios() -> None:

@@ -33,8 +33,8 @@ def _constituent_task_ids(task):
     return list(task.get("ConstituentTaskIds", [task["TaskId"]]))
 
 
-def tasks_merge_eligible(first, second, merge_tick):
-    """Return whether two execution nodes represent the same mergeable stage."""
+def tasks_merge_eligible(first, second, release_time_skew_threshold_seconds):
+    """Return whether compatible nodes fall within the release-time skew threshold."""
     if first.get("IsNonPartitionable", False) or second.get(
         "IsNonPartitionable", False
     ):
@@ -47,7 +47,7 @@ def tasks_merge_eligible(first, second, merge_tick):
         "MergeKey"
     ):
         return False
-    return abs(first["ReleaseTime"] - second["ReleaseTime"]) <= merge_tick
+    return abs(first["ReleaseTime"] - second["ReleaseTime"]) <= release_time_skew_threshold_seconds
 
 
 def merge_tasks(first, second):
@@ -176,7 +176,7 @@ def annotate_remaining_critical_path_costs(tasks):
 
 
 class TaskSchedule:
-    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02, moving_average_window=DEFAULT_MOVING_AVERAGE_WINDOW):
+    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, release_time_skew_threshold_seconds=0.1, moving_average_window=DEFAULT_MOVING_AVERAGE_WINDOW):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -188,9 +188,9 @@ class TaskSchedule:
         self.task_config_path = task_config_path or f"{task_filename}.json"
         self.output_dir = output_dir or os.path.join(os.getcwd(), 'taskdata')
         self.run_id = run_id
-        if merge_tick_seconds < 0:
-            raise ValueError("merge_tick_seconds cannot be negative")
-        self.merge_tick_seconds = float(merge_tick_seconds)
+        if release_time_skew_threshold_seconds < 0:
+            raise ValueError("release_time_skew_threshold_seconds cannot be negative")
+        self.release_time_skew_threshold_seconds = float(release_time_skew_threshold_seconds)
         self.moving_average_estimator = MovingAverageCostEstimator(
             moving_average_window
         )
@@ -232,20 +232,26 @@ class TaskSchedule:
         self.burst_enabled = burst_enabled
         if burst_enabled:
             burst_config = burst_config or {}
-            gpu_threshold = burst_config.get('gpu_threshold', 80.0)
-            queue_threshold = burst_config.get('queue_threshold', 10)
+            gpu_threshold = burst_config.get('gpu_threshold', 90.0)
+            queue_threshold = burst_config.get('queue_threshold', 8)
+            persistence_window = burst_config.get('persistence_window', 3)
             default_drop_threshold = burst_config.get('drop_threshold', 0.5)
             monitoring_interval = burst_config.get('monitoring_interval', 0.05)
             self.burst_manager = BurstTaskManager(
                 gpu_threshold=gpu_threshold,
                 queue_threshold=queue_threshold,
+                persistence_window=persistence_window,
                 default_drop_threshold=default_drop_threshold,
                 monitoring_interval=monitoring_interval,
                 logger=logger
             )
             # Start burst monitoring
             self.burst_manager.start_monitoring()
-            self.logger.info(f"[BURST] Burst task management enabled with GPU threshold: {gpu_threshold}%, Queue threshold: {queue_threshold}")
+            self.logger.info(
+                "[BURST] Burst task management enabled with GPU threshold: "
+                f"{gpu_threshold}%, Queue threshold: {queue_threshold}, "
+                f"Persistence window: {persistence_window} ticks"
+            )
         else:
             self.burst_manager = None
         self.burst_task_ratio = burst_task_ratio or 0
@@ -287,7 +293,7 @@ class TaskSchedule:
         
         if(self.approach_module == 'fine-grained' or self.approach_module == 'feedback-fine-grained'):
             # reconstruct dag_period
-            self.fine_grained_adjust(merge_tick=self.merge_tick_seconds)
+            self.fine_grained_adjust(release_time_skew_threshold_seconds=self.release_time_skew_threshold_seconds)
         if self.scheduler_name == 'llf_dag':
             annotate_remaining_critical_path_costs(self.TaskQueue)
         # offline Task schedule algorithm (baseline only)
@@ -353,6 +359,7 @@ class TaskSchedule:
         
         # Apply burst-aware scheduling to putback tasks if enabled
         if self.burst_enabled and self.burst_manager and len(putback) > 0:
+            self.burst_manager.update_queue_length(len(putback))
             # Use time relative to TaskStartTime for consistent criticality calculation
             current_time = time.time() - TaskStartTime
             remaining_tasks, dropped_tasks = self.burst_manager.proactive_drop(putback, current_time)
@@ -451,7 +458,7 @@ class TaskSchedule:
             "torch_device": os.environ.get(
                 "RED_TORCH_DEVICE_RESOLVED", "unrecorded"
             ),
-            "merge_threshold_ms": self.merge_tick_seconds * 1000.0,
+            "release_time_skew_threshold_ms": self.release_time_skew_threshold_seconds * 1000.0,
             "task_config_path": self.task_config_path,
             "offered_task_stream_sha256": self.offered_task_stream_hash,
             "offered_task_count": len(task_statistics),
@@ -711,10 +718,11 @@ class TaskSchedule:
             TaskQueue.insert(0, task)
         self.TaskQueue = TaskQueue
     
-    def fine_grained_adjust(self, merge_tick=0.02, merge_handler=None):
+    def fine_grained_adjust(self, release_time_skew_threshold_seconds=0.1, merge_handler=None):
         """
         fine-grained(reconstruct dag in task generation), only works for SIMO/MIMO
-        merge_tick: the time interval to merge two tasks
+        release_time_skew_threshold_seconds: maximum allowed absolute difference
+            between the release times of otherwise compatible tasks
         merge_handler: the handler id can be considered merging
         """
         logger = self.logger
@@ -729,7 +737,7 @@ class TaskSchedule:
             for other_task in pending:
                 if (
                     task["HandlerId"] in merge_handlers
-                    and tasks_merge_eligible(task, other_task, merge_tick)
+                    and tasks_merge_eligible(task, other_task, release_time_skew_threshold_seconds)
                 ):
                     task = merge_tasks(task, other_task)
                 else:

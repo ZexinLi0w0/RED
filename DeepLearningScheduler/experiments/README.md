@@ -1,5 +1,10 @@
 # New Scenarios Metrics Extraction
 
+The revision's automated parameter-sensitivity experiment is documented in
+[`PARAMETER_SENSITIVITY.md`](PARAMETER_SENSITIVITY.md). Its one-command runner
+generates the complete 18-point, five-repetition AGX Orin matrix and writes CSV,
+JSON, and LaTeX values for the paper table.
+
 This directory contains scripts for extracting and analyzing metrics from new scenarios experiment log files.
 
 ## Scripts
@@ -120,4 +125,3 @@ The CSV files contain the following columns:
 - The extraction script automatically handles ANSI color codes in log files
 - Missing metrics are marked as 'N/A' in the output
 - Each experiment run should produce 24 results (3 scenarios × 2 deadlines × 4 approaches)
-

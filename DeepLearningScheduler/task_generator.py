@@ -25,7 +25,7 @@ class DagTimingConfig:
     dag_repeated_times: int = 10
     parallel_stage_policy: str = "max"
     task_seed: int = 0
-    merge_threshold_ms: float = 20.0
+    release_time_skew_threshold_ms: float = 100.0
     moving_average_window: int = 8
 
 
@@ -83,13 +83,13 @@ def timing_config_from_mapping(config):
     if isinstance(task_seed, bool) or not isinstance(task_seed, int) or task_seed < 0:
         raise ValueError("TaskSeed must be a non-negative integer")
 
-    merge_threshold_ms = config.get("MergeThresholdMs", 20.0)
+    release_time_skew_threshold_ms = config.get("ReleaseTimeSkewThresholdMs", 100.0)
     if (
-        isinstance(merge_threshold_ms, bool)
-        or not isinstance(merge_threshold_ms, (int, float))
-        or merge_threshold_ms < 0
+        isinstance(release_time_skew_threshold_ms, bool)
+        or not isinstance(release_time_skew_threshold_ms, (int, float))
+        or release_time_skew_threshold_ms < 0
     ):
-        raise ValueError("MergeThresholdMs must be a non-negative number")
+        raise ValueError("ReleaseTimeSkewThresholdMs must be a non-negative number")
 
     moving_average_window = config.get("MovingAverageWindow", 8)
     if (
@@ -105,7 +105,7 @@ def timing_config_from_mapping(config):
         dag_repeated_times=dag_repeated_times,
         parallel_stage_policy=parallel_stage_policy,
         task_seed=task_seed,
-        merge_threshold_ms=float(merge_threshold_ms),
+        release_time_skew_threshold_ms=float(release_time_skew_threshold_ms),
         moving_average_window=moving_average_window,
     )
 
@@ -335,13 +335,29 @@ def _worst_running_time_ms(task_config):
     return _positive_number(worst_running_time, "WorstRunningTime")
 
 
+def _release_time_offset_ms(task_config):
+    offset = task_config.get("ReleaseTimeOffsetMs", 0.0)
+    if (
+        isinstance(offset, bool)
+        or not isinstance(offset, (int, float))
+        or offset < 0
+    ):
+        raise ValueError("ReleaseTimeOffsetMs must be a non-negative number")
+    return float(offset)
+
+
 def _stage_duration_ms(stage_config, parallel_stage_policy):
     if isinstance(stage_config, list):
         if not stage_config:
             raise ValueError("parallel DAG stages cannot be empty")
-        durations = [_worst_running_time_ms(task) for task in stage_config]
+        durations = [
+            _release_time_offset_ms(task) + _worst_running_time_ms(task)
+            for task in stage_config
+        ]
         return max(durations) if parallel_stage_policy == "max" else sum(durations)
-    return _worst_running_time_ms(stage_config)
+    return _release_time_offset_ms(stage_config) + _worst_running_time_ms(
+        stage_config
+    )
 
 
 def _resolve_generation_timing(
@@ -442,6 +458,7 @@ def generate_tasks_from_dag(
         is_non_partitionable=False,
     ):
         worst_running_time_ms = _worst_running_time_ms(config)
+        release_time_ms = start_time + _release_time_offset_ms(config)
         branch_label = "single" if branch_idx is None else str(branch_idx)
         task_position = (
             f"dag={dag_idx}/period={period}/stage={stage_idx}/branch={branch_label}"
@@ -461,9 +478,9 @@ def generate_tasks_from_dag(
             "BranchIndex": branch_idx,
             "DagPeriod": period,
             "HandlerId": config["HandlerId"], # always 5
-            "ReleaseTime": start_time / 1000,
+            "ReleaseTime": release_time_ms / 1000,
             "Deadline": (
-                start_time
+                release_time_ms
                 + worst_running_time_ms * timing_config.deadline_factor
             )
             / 1000,
@@ -599,6 +616,7 @@ def overall_deadline_seconds(dag_config, timing_config):
                     maximum_deadline_ms = max(
                         maximum_deadline_ms,
                         start_time_ms
+                        + _release_time_offset_ms(task_config)
                         + _worst_running_time_ms(task_config)
                         * timing_config.deadline_factor,
                     )

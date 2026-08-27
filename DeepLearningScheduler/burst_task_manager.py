@@ -276,18 +276,40 @@ class BurstTaskManager:
     """
     
     def __init__(self, 
-                 gpu_threshold: float = 80.0,
-                 queue_threshold: int = 10,
+                 gpu_threshold: float = 90.0,
+                 queue_threshold: int = 8,
+                 persistence_window: int = 3,
                  default_drop_threshold: float = 0.5,
                  monitoring_interval: float = 0.1,
                  logger=None):
-        self.gpu_threshold = gpu_threshold
+        if isinstance(gpu_threshold, bool) or not isinstance(
+            gpu_threshold, (int, float)
+        ) or not 0 <= gpu_threshold <= 100:
+            raise ValueError("gpu_threshold must be between 0 and 100")
+        if isinstance(queue_threshold, bool) or not isinstance(
+            queue_threshold, int
+        ) or queue_threshold < 0:
+            raise ValueError("queue_threshold must be a non-negative integer")
+        if isinstance(persistence_window, bool) or not isinstance(
+            persistence_window, int
+        ) or persistence_window <= 0:
+            raise ValueError("persistence_window must be a positive integer")
+        if isinstance(default_drop_threshold, bool) or not isinstance(
+            default_drop_threshold, (int, float)
+        ) or not 0 <= default_drop_threshold <= 1:
+            raise ValueError("default_drop_threshold must be between 0 and 1")
+
+        self.gpu_threshold = float(gpu_threshold)
         self.queue_threshold = queue_threshold
-        self.default_drop_threshold = default_drop_threshold
+        self.persistence_window = persistence_window
+        self.default_drop_threshold = float(default_drop_threshold)
         self.logger = logger or logging.getLogger(__name__)
         self.health_monitor = SystemHealthMonitor(logger, monitoring_interval=monitoring_interval)
         self.dropped_tasks = []
         self.burst_mode_active = False
+        self.consecutive_overload_ticks = 0
+        self.maximum_consecutive_overload_ticks = 0
+        self.overload_activation_count = 0
         
     def start_monitoring(self):
         """Start the burst task monitoring."""
@@ -315,6 +337,7 @@ class BurstTaskManager:
             duplicate = deepcopy(original)
             orig_id = duplicate.get("TaskId", f"task_{idx}")
             duplicate["TaskId"] = f"{orig_id}_burst_{idx}"
+            duplicate["ConstituentTaskIds"] = [duplicate["TaskId"]]
             duplicate["Priority"] = int(original.get("Priority", 0) * 2)
             duplicate["IsBurstTask"] = True
             duplicate.pop("SignalMsg", None)
@@ -375,16 +398,34 @@ class BurstTaskManager:
         gpu_util = health.get("gpu_utilization", 0.0)
         queue_len = health.get("queue_length", 0)
         
-        overload = (gpu_util > self.gpu_threshold or queue_len > self.queue_threshold)
-        
-        if overload and not self.burst_mode_active:
-            self.logger.warning(f"[BURST] Overload detected: GPU={gpu_util:.1f}%, Queue={queue_len}")
+        raw_overload = (
+            gpu_util > self.gpu_threshold or queue_len > self.queue_threshold
+        )
+        if raw_overload:
+            self.consecutive_overload_ticks += 1
+            self.maximum_consecutive_overload_ticks = max(
+                self.maximum_consecutive_overload_ticks,
+                self.consecutive_overload_ticks,
+            )
+        else:
+            self.consecutive_overload_ticks = 0
+
+        sustained_overload = (
+            self.consecutive_overload_ticks >= self.persistence_window
+        )
+        if sustained_overload and not self.burst_mode_active:
+            self.logger.warning(
+                "[BURST] Sustained overload detected after "
+                f"{self.consecutive_overload_ticks} ticks: "
+                f"GPU={gpu_util:.1f}%, Queue={queue_len}"
+            )
             self.burst_mode_active = True
-        elif not overload and self.burst_mode_active:
+            self.overload_activation_count += 1
+        elif not raw_overload and self.burst_mode_active:
             self.logger.info(f"[BURST] Overload resolved: GPU={gpu_util:.1f}%, Queue={queue_len}")
             self.burst_mode_active = False
         
-        return overload
+        return sustained_overload
     
     def proactive_drop(self, task_queue: List[Dict], current_time: float) -> Tuple[List[Dict], List[Dict]]:
         """
@@ -440,7 +481,12 @@ class BurstTaskManager:
             "current_gpu_utilization": self.health_monitor.gpu_utilization,
             "current_queue_length": self.health_monitor.queue_length,
             "gpu_threshold": self.gpu_threshold,
-            "queue_threshold": self.queue_threshold
+            "queue_threshold": self.queue_threshold,
+            "persistence_window": self.persistence_window,
+            "consecutive_overload_ticks": self.consecutive_overload_ticks,
+            "maximum_consecutive_overload_ticks": self.maximum_consecutive_overload_ticks,
+            "overload_activation_count": self.overload_activation_count,
+            "drop_threshold": self.default_drop_threshold,
         }
     
     def update_queue_length(self, length: int):
@@ -498,4 +544,4 @@ class BurstAwareTaskScheduler:
     
     def get_burst_statistics(self) -> Dict:
         """Get burst management statistics."""
-        return self.burst_manager.get_burst_statistics() 
+        return self.burst_manager.get_burst_statistics()
