@@ -108,36 +108,28 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 
 ### Parameter Sensitivity Experiment
 
-Activate the Python environment that should run the experiment, then launch the
-complete 18-point, five-repetition study with one command:
+On the Jetson server, activate the `schedule` environment and launch the
+complete 18-point, five-repetition study with:
 
 ```bash
 cd /experiment/zexin/ATC23/DeepLearningScheduler
-PYTHON_BIN="$(command -v python)" ./experiments/run_parameter_sensitivity.sh
-```
-
-For example, with Conda:
-
-```bash
-conda activate <environment-name>
-cd /experiment/zexin/ATC23/DeepLearningScheduler
-PYTHON_BIN="$(command -v python)" ./experiments/run_parameter_sensitivity.sh
+conda activate schedule
+./experiments/run_parameter_sensitivity.sh
 ```
 
 The wrapper pulls the latest commit with `git pull --ff-only`, resumes completed
 runs, executes all 90 runs, validates the artifacts, and writes the CSV, JSON,
 and LaTeX table files under
 `taskdata/parameter_sensitivity/agx_high_load_v1/report/`. The source tree must
-be clean. `PYTHON_BIN` records and uses the Python executable from the active
-environment, so the same command works with Conda, `venv`, or another managed
-environment.
+be clean. To use another Conda environment, replace `schedule` with that
+environment's name; the runner resolves `python3` from the active environment.
 
 For a Mac/MPS validation run, use:
 
 ```bash
 cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
-SKIP_GIT_PULL=1 PYTHON_BIN="$(command -v python)" \
-  ./experiments/run_parameter_sensitivity.sh \
+conda activate schedule
+SKIP_GIT_PULL=1 ./experiments/run_parameter_sensitivity.sh \
   --device mac --power-mode AC --torch-device mps \
   --output-root taskdata/parameter_sensitivity/mac_validation
 ```
