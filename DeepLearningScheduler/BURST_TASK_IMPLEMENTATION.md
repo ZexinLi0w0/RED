@@ -18,8 +18,8 @@ times, deadlines, priorities, dependencies, and task-level `DropThreshold`, but
 receives a unique DAG-period identity so its dependency state is independent.
 
 Every scheduling method receives the same augmented offered stream. EDF
-(`baseline`) and LLF-DAG (`llf-dag`) do not use RED's active overload
-management. Only RED (`feedback-fine-grained`) starts system monitoring and may
+(`baseline`) and LLF-DAG (`llf-dag`) do not use MERIS's active overload
+management. Only MERIS (`feedback-fine-grained`) starts system monitoring and may
 invoke `ProactiveDrop`.
 
 ## Overload and ProactiveDrop
@@ -33,7 +33,7 @@ Future releases are not counted as active backlog and cannot be dropped before
 their release time. Raw overload must persist for `persistence_window`
 consecutive scheduler ticks before active management begins.
 
-For an already-released task, RED computes
+For an already-released task, MERIS computes
 
 ```text
 C_i = 1 - S_i / D_i
@@ -77,7 +77,7 @@ The task configuration separately supplies `BurstTaskRatio` and may supply a
 
 The reproducible runner is `experiments/burst_study.py`. It generates a common
 0% control plus Transient and Sustained 50%/100% conditions, runs EDF, LLF-DAG,
-and RED once per condition by default, and validates identical offered-stream
+and MERIS once per condition by default, and validates identical offered-stream
 hashes across methods.
 
 The default base workload is
@@ -92,8 +92,8 @@ For this Mac study, `gpu_threshold=100` disables utilization-based activation,
 which is not deterministic on MPS. The formal trigger is instead the released
 ready queue: `queue_threshold=10` with a three-tick persistence window. The base
 0% workload stays below that threshold, while the injected 50% and 100% Burst
-workloads cross it. Validation fails unless the 0% RED control has no overload
-activation or proactive drop, and every 50%/100% RED cell has at least one
+workloads cross it. Validation fails unless the 0% MERIS control has no overload
+activation or proactive drop, and every 50%/100% MERIS cell has at least one
 overload activation and a non-empty proactive-drop record.
 
 Run the full local Mac/MPS study with:

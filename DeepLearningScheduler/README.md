@@ -122,8 +122,8 @@ cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
 The wrapper generates the study plan, resumes completed runs, executes each of
 the 15 distinct Burst condition/method cells once by default, and validates and
 summarizes the results. It uses the dedicated
-`TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json` workload: the 0% RED
-control must not activate ProactiveDrop, while every 50%/100% RED Burst cell
+`TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json` workload: the 0% MERIS
+control must not activate ProactiveDrop, while every 50%/100% MERIS Burst cell
 must activate it and record proactive drops. Raw artifacts are written under
 `taskdata/major_revision_burst_mac_mps_v3/`. To repeat each cell, pass a
 positive count:

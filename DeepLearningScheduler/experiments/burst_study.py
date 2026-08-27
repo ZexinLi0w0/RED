@@ -65,7 +65,7 @@ METHODS = ("baseline", "llf-dag", "feedback-fine-grained")
 METHOD_LABELS = {
     "baseline": "EDF",
     "llf-dag": "LLF-DAG",
-    "feedback-fine-grained": "RED",
+    "feedback-fine-grained": "MERIS",
 }
 METRICS = (
     "end_to_end_latency_seconds",
@@ -299,8 +299,8 @@ def generate_study_plan(
         "run_order": "fixed pseudo-random permutation of all cases",
         "run_order_seed": DEFAULT_RUN_ORDER_SEED,
         "zero_burst_control_reused_between_regimes": True,
-        "require_proactive_drop_for_red_burst": True,
-        "require_no_proactive_drop_for_red_control": True,
+        "require_proactive_drop_for_meris_burst": True,
+        "require_no_proactive_drop_for_meris_control": True,
     }
     _write_json_atomic(output_root / "study_plan.json", plan)
     return plan
@@ -346,13 +346,15 @@ def _validate_summary(manifest, summary):
     drop_records = burst.get("drop_records") or []
     if manifest.get("require_proactive_drop"):
         if activation_count <= 0:
-            problems.append("RED Burst run did not activate ProactiveDrop")
+            problems.append("MERIS Burst run did not activate ProactiveDrop")
         if dropped_count <= 0 or not drop_records:
-            problems.append("RED Burst run did not record proactive drops")
+            problems.append("MERIS Burst run did not record proactive drops")
     if manifest.get("require_no_proactive_drop") and (
         activation_count or dropped_count or drop_records
     ):
-        problems.append("RED zero-Burst control unexpectedly activated ProactiveDrop")
+        problems.append(
+            "MERIS zero-Burst control unexpectedly activated ProactiveDrop"
+        )
     return problems
 
 
@@ -438,12 +440,18 @@ def run_study(
             **offered,
             "expected_workload": condition["expected_workload"],
             "require_proactive_drop": (
-                plan.get("require_proactive_drop_for_red_burst", False)
+                plan.get(
+                    "require_proactive_drop_for_meris_burst",
+                    plan.get("require_proactive_drop_for_red_burst", False),
+                )
                 and method == "feedback-fine-grained"
                 and condition["ratio_percent"] > 0
             ),
             "require_no_proactive_drop": (
-                plan.get("require_no_proactive_drop_for_red_control", False)
+                plan.get(
+                    "require_no_proactive_drop_for_meris_control",
+                    plan.get("require_no_proactive_drop_for_red_control", False),
+                )
                 and method == "feedback-fine-grained"
                 and condition["ratio_percent"] == 0
             ),
@@ -689,35 +697,42 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
             "come from that same run"
         )
     )
+    protocol_fields = (
+        "device",
+        "platform_label",
+        "power_mode",
+        "torch_device",
+        "seeds",
+        "repetitions_per_cell",
+        "deadline_factor",
+        "arrival_scale",
+        "timing_source",
+        "burst_start_seconds",
+        "release_horizon_seconds",
+        "gpu_threshold",
+        "queue_threshold",
+        "persistence_window",
+        "run_order",
+        "run_order_seed",
+        "zero_burst_control_reused_between_regimes",
+        "require_proactive_drop_for_meris_burst",
+        "require_no_proactive_drop_for_meris_control",
+    )
+    protocol = {field: plan[field] for field in protocol_fields if field in plan}
+    protocol.setdefault(
+        "require_proactive_drop_for_meris_burst",
+        plan.get("require_proactive_drop_for_red_burst", False),
+    )
+    protocol.setdefault(
+        "require_no_proactive_drop_for_meris_control",
+        plan.get("require_no_proactive_drop_for_red_control", False),
+    )
     report = {
         "schema_version": 1,
         "study": plan["study"],
         "selection_rule": selection_rule,
         "precision_rule": "truncate to three decimal places without rounding",
-        "protocol": {
-            field: plan[field]
-            for field in (
-                "device",
-                "platform_label",
-                "power_mode",
-                "torch_device",
-                "seeds",
-                "repetitions_per_cell",
-                "deadline_factor",
-                "arrival_scale",
-                "timing_source",
-                "burst_start_seconds",
-                "release_horizon_seconds",
-                "gpu_threshold",
-                "queue_threshold",
-                "persistence_window",
-                "run_order",
-                "run_order_seed",
-                "zero_burst_control_reused_between_regimes",
-                "require_proactive_drop_for_red_burst",
-                "require_no_proactive_drop_for_red_control",
-            )
-        },
+        "protocol": protocol,
         "conditions": plan["conditions"],
         "raw_runs": raw_runs,
         "representative_runs": representative_runs,
@@ -732,14 +747,14 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
     ) as output_file:
         fieldnames = ["regime", "ratio_percent"] + [
             f"{label}_{metric}"
-            for label in ("EDF", "LLF-DAG", "RED")
+            for label in ("EDF", "LLF-DAG", "MERIS")
             for metric in METRICS
         ]
         writer = csv.DictWriter(output_file, fieldnames=fieldnames)
         writer.writeheader()
         for row in table_rows:
             flat = {"regime": row["regime"], "ratio_percent": row["ratio_percent"]}
-            for label in ("EDF", "LLF-DAG", "RED"):
+            for label in ("EDF", "LLF-DAG", "MERIS"):
                 for metric in METRICS:
                     flat[f"{label}_{metric}"] = row[label][metric]
             writer.writerow(flat)

@@ -15,8 +15,8 @@ The wrapper performs planning, execution, validation, and summarization. It runs
 each of the 15 distinct Burst condition/method cells once by default and resumes
 runs whose manifests are already complete. The default Mac/MPS TaskConfig is
 `TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json`. Artifact validation
-requires no ProactiveDrop activity in the 0% RED control and requires both an
-overload activation and proactive-drop records in every 50%/100% RED cell. Use
+requires no ProactiveDrop activity in the 0% MERIS control and requires both an
+overload activation and proactive-drop records in every 50%/100% MERIS cell. Use
 `--repetitions N` to repeat each cell `N` times; for example:
 
 ```zsh
@@ -158,7 +158,7 @@ The CSV files contain the following columns:
 - `device`: Device name (Mac, Nano, AGX)
 - `scenario`: Scenario name (Urban navigation, Emergency obstacle avoidance, Night driving)
 - `deadline`: Deadline type (Tight, Loose)
-- `approach`: Scheduling approach (Baseline, RED-IDA, RED-FG, RED)
+- `approach`: Scheduling approach (Baseline, MERIS-IDA, MERIS-FG, MERIS)
 - `missing_deadline_rate`: Missing deadline rate (0.0 to 1.0)
 - `avg_finished_time`: Average finished time in seconds
 - `qoe_score`: QoE score (typically 0.0 to 1.0)

@@ -1,7 +1,7 @@
 # Parameter-sensitivity study
 
 This experiment implements the revision's one-factor-at-a-time study on one
-representative high-load AGX Orin workload. It evaluates the complete RED method
+representative high-load AGX Orin workload. It evaluates the complete MERIS method
 (`feedback-fine-grained`) at 18 table settings. Each setting runs once by
 default:
 

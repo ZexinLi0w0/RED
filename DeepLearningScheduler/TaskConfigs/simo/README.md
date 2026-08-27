@@ -27,7 +27,7 @@
 ### Burst 工作负载配置
 
 Burst 实验通过单独的 JSON 文件定义绝对释放窗口。所有调度方法使用同一份
-Burst 工作负载；只有 `feedback-fine-grained`（RED）启用过载检测和主动丢弃。
+Burst 工作负载；只有 `feedback-fine-grained`（MERIS）启用过载检测和主动丢弃。
 
 - **burst_regime**: `transient` 或 `sustained`。
 - **burst_start_seconds**: Burst 相对于实验起点的开始时间。

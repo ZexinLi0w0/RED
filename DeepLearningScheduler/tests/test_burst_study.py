@@ -39,8 +39,8 @@ def test_default_plan_runs_each_cell_once(tmp_path) -> None:
     assert plan["gpu_threshold"] == 100.0
     assert plan["queue_threshold"] == 10
     assert plan["persistence_window"] == 3
-    assert plan["require_proactive_drop_for_red_burst"] is True
-    assert plan["require_no_proactive_drop_for_red_control"] is True
+    assert plan["require_proactive_drop_for_meris_burst"] is True
+    assert plan["require_no_proactive_drop_for_meris_control"] is True
 
 
 def test_repetition_count_generates_deterministic_seeds() -> None:
@@ -48,7 +48,7 @@ def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
-def test_red_burst_validation_requires_activation_and_drop_records() -> None:
+def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
     expected_workload = {"added_dag_release_count": 5}
     manifest = {
         "run_id": "red-burst",
@@ -78,8 +78,8 @@ def test_red_burst_validation_requires_activation_and_drop_records() -> None:
 
     problems = _validate_summary(manifest, summary)
 
-    assert "RED Burst run did not activate ProactiveDrop" in problems
-    assert "RED Burst run did not record proactive drops" in problems
+    assert "MERIS Burst run did not activate ProactiveDrop" in problems
+    assert "MERIS Burst run did not record proactive drops" in problems
 
     summary["burst_statistics"].update(
         {
@@ -91,7 +91,7 @@ def test_red_burst_validation_requires_activation_and_drop_records() -> None:
     assert _validate_summary(manifest, summary) == []
 
 
-def test_red_control_validation_rejects_proactive_drop() -> None:
+def test_meris_control_validation_rejects_proactive_drop() -> None:
     expected_workload = {"added_dag_release_count": 0}
     manifest = {
         "run_id": "red-control",
@@ -120,7 +120,7 @@ def test_red_control_validation_rejects_proactive_drop() -> None:
     }
 
     assert _validate_summary(manifest, summary) == [
-        "RED zero-Burst control unexpectedly activated ProactiveDrop"
+        "MERIS zero-Burst control unexpectedly activated ProactiveDrop"
     ]
 
 
