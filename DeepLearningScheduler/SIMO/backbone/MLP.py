@@ -4,8 +4,40 @@ from torch.nn import init
 from torch import nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from runtime_device import configure_torch_device
 
-DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+DEVICE = configure_torch_device()
+
+
+def _adaptive_avg_pool2d_exact(x, output_size):
+    """Portable adaptive average pooling for MPS non-divisible dimensions.
+
+    PyTorch's MPS backend currently rejects adaptive pooling when an input
+    dimension is not divisible by the requested output dimension. The slices
+    below implement the same floor/ceil bin boundaries as adaptive average
+    pooling while keeping the tensor on the accelerator.
+    """
+    output_height, output_width = output_size
+    input_height, input_width = x.shape[-2:]
+    rows = []
+    for output_row in range(output_height):
+        height_start = output_row * input_height // output_height
+        height_end = (
+            (output_row + 1) * input_height + output_height - 1
+        ) // output_height
+        columns = []
+        for output_column in range(output_width):
+            width_start = output_column * input_width // output_width
+            width_end = (
+                (output_column + 1) * input_width + output_width - 1
+            ) // output_width
+            columns.append(
+                x[..., height_start:height_end, width_start:width_end].mean(
+                    dim=(-2, -1)
+                )
+            )
+        rows.append(torch.stack(columns, dim=-1))
+    return torch.stack(rows, dim=-2)
 
 def weights_init_kaiming(m):
     classname = m.__class__.__name__
@@ -46,7 +78,12 @@ class MLP_Decoder(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         self.beta_x = 1.0 / 0.0382
-        x = self.avgpool(x)
+        if x.device.type == "mps" and (
+            x.shape[-2] % 6 != 0 or x.shape[-1] % 6 != 0
+        ):
+            x = _adaptive_avg_pool2d_exact(x, (6, 6))
+        else:
+            x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.mlp(x)
         # (0.0382 * x): [-1.57, 1.57]

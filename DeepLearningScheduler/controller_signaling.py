@@ -92,6 +92,10 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
                     # before all handlers are ready, we need to warmup the handlers
                     if(not all(allReady.values())):
                         if("warmup" in args_dict):
+                            if args_dict["warmup"] != "true":
+                                raise RuntimeError(
+                                    f"handler {handler_id} failed warmup"
+                                )
                             warmup[handler_id] += 1
                             if(warmup[handler_id] >= 20):
                                 allReady[handler_id] = True
@@ -121,7 +125,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
     """
     SIMO Baseline handler
     """
@@ -141,17 +145,22 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     
     # register task scheduler with edf scheduler
     burst_enabled = burst_config is not None and burst_config.get('burst_enabled', False)
+    scheduler_name = 'llf_dag' if approach_module == 'llf-dag' else 'edf'
     task_scheduler = TaskSchedule(
         tasks_list, 
         handler_status=handler_status, 
         control_queue=control_queue, 
-        scheduler='edf', 
+        scheduler=scheduler_name,
         logger=logger, 
         approach_module=approach_module, 
         task_filename=task_filename,
         burst_enabled=burst_enabled,
         burst_config=burst_config,
-        burst_task_ratio=burst_task_ratio
+        burst_task_ratio=burst_task_ratio,
+        task_config_path=task_config_path,
+        output_dir=output_dir,
+        run_id=run_id,
+        merge_tick_seconds=merge_tick_seconds,
     )
     # controller signal response loop
     while True: 
@@ -190,6 +199,10 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                     # before all handlers are ready, we need to warmup the handlers
                     if(not all(allReady.values())):
                         if("warmup" in args_dict):
+                            if args_dict["warmup"] != "true":
+                                raise RuntimeError(
+                                    f"handler {handler_id} failed warmup"
+                                )
                             warmup[handler_id] += 1
                             if(warmup[handler_id] >= 20):
                                 allReady[handler_id] = True

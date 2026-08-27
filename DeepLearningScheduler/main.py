@@ -15,7 +15,14 @@ from logging_config import logging_basic_setting
 from control_signal import convert_args_to_dict, generate_signal, parse_signal, SignalCommand
 from controller_signaling import send_heart_ping, controller_signaling, controller_signaling_SIMO
 from handler_signaling import handle_signaling, handle_signaling_SIMO
-from task_generator import generate_tasks, load_task_config, load_dag_config, generate_tasks_from_dag
+from task_generator import (
+    generate_tasks,
+    generate_tasks_from_dag,
+    load_dag_experiment_config,
+    load_task_config,
+    task_stream_sha256,
+)
+from runtime_device import configure_torch_device
 
 def create_subprocess(control_queue, base_time, config=()):
     """
@@ -50,7 +57,7 @@ def create_subprocess(control_queue, base_time, config=()):
         loop.stop()
         loop.close()
 
-def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline', task_filename="task_config", burst_config=None, burst_task_ratio=0):
+def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='baseline', task_filename="task_config", burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
     """
     Function to run handlers concurrently.
     """
@@ -75,7 +82,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio, task_config_path=task_config_path, output_dir=output_dir, run_id=run_id, merge_tick_seconds=merge_tick_seconds))
     
     try:
         # loop.run_until_complete(heartping_handler)
@@ -101,8 +108,32 @@ def parseArguments():
     parser.add_argument("--approach", "-a", required=True, help="select approaches to adjust tasks: \n 1. baseline(do nothing), \n 2. feedback(according to the feedback of task execution to adjust next release time), \n 3. fine-grained(reconstruct dag in task generation), \n 4. feedback-fine-grained")
     parser.add_argument("--generate", "-g", required=False, help="path of handler folder to automatically infer the config file")
     parser.add_argument("--burst-config", "-b", required=False, help="path of burst task configuration file")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="override TaskSeed for deterministic paired task generation",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="directory for run-specific raw artifacts and summary.json",
+    )
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="stable run identifier recorded in machine-readable outputs",
+    )
+    parser.add_argument(
+        "--torch-device",
+        default="auto",
+        choices=("auto", "cpu", "mps", "cuda", "cuda:0"),
+        help="PyTorch execution device; auto prefers CUDA, then MPS, then CPU",
+    )
 
     args = parser.parse_args()
+    torch_device = configure_torch_device(args.torch_device)
+    print(f"PyTorch execution device: {torch_device}")
 
     # Load the handlers from the handler config file
     try:
@@ -121,8 +152,18 @@ def parseArguments():
 
     approach_module = args.approach
     # check if the approach is valid
-    if approach_module not in ["baseline", "feedback", "fine-grained", "feedback-fine-grained"]:
-        raise Exception("Error: `approach` must be one of the following: baseline, feedback, fine-grained, feedback-fine-grained")
+    valid_approaches = [
+        "baseline",
+        "llf-dag",
+        "feedback",
+        "fine-grained",
+        "feedback-fine-grained",
+    ]
+    if approach_module not in valid_approaches:
+        raise Exception(
+            "Error: `approach` must be one of the following: "
+            + ", ".join(valid_approaches)
+        )
     
     handlers = config["handler_list"]
     
@@ -132,11 +173,24 @@ def parseArguments():
     except ValueError as e:
         print(e)
     # for dag config
-    result = load_dag_config(args.task)
+    result = load_dag_experiment_config(args.task)
     if result is None:
         raise Exception("Error: Failed to load DAG config")
-    task_config, factor, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
-    tasks_list = generate_tasks_from_dag(task_config, time_factor=factor, non_partitionable_percentage=non_partitionable_percentage, non_partitionable_config=non_partitionable_config)
+    task_config, timing, non_partitionable_percentage, non_partitionable_config, burst_task_ratio = result
+    task_seed = timing.task_seed if args.seed is None else args.seed
+    tasks_list = generate_tasks_from_dag(
+        task_config,
+        deadline_factor=timing.deadline_factor,
+        arrival_scale=timing.arrival_scale,
+        dag_repeated_times=timing.dag_repeated_times,
+        parallel_stage_policy=timing.parallel_stage_policy,
+        non_partitionable_percentage=non_partitionable_percentage,
+        non_partitionable_config=non_partitionable_config,
+        seed=task_seed,
+    )
+    print(f"Task seed: {task_seed}")
+    print(f"Task stream SHA-256: {task_stream_sha256(tasks_list)}")
+    print(f"Merge threshold: {timing.merge_threshold_ms} ms")
 
     # get filename of taskconfig
     task_file_path = args.task[::-1]
@@ -160,12 +214,34 @@ def parseArguments():
     # task_config = load_task_config(args.task)
     # tasks_list = generate_tasks(task_config)
     
-    return handlers, tasks_list, approach_module, filename, burst_config, burst_task_ratio
+    return (
+        handlers,
+        tasks_list,
+        approach_module,
+        filename,
+        burst_config,
+        burst_task_ratio,
+        args.task,
+        args.output_dir,
+        args.run_id,
+        timing.merge_threshold_ms / 1000.0,
+    )
     
 
 if __name__ == "__main__":
     logger = logging_basic_setting()
-    handlers, tasks_list, approach_module, task_filename, burst_config, burst_task_ratio = parseArguments()
+    (
+        handlers,
+        tasks_list,
+        approach_module,
+        task_filename,
+        burst_config,
+        burst_task_ratio,
+        task_config_path,
+        output_dir,
+        run_id,
+        merge_tick_seconds,
+    ) = parseArguments()
     # logging.debug(f'Parse config files to generate handlers: {handlers}')
     freeze_support()
     # Set the start method to spawn, The child process will only inherit those resources necessary to run the process object's run() method
@@ -174,4 +250,4 @@ if __name__ == "__main__":
     control_queue = Queue()
 
     # Start the handlers concurrently
-    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio)
+    run_handlers(handlers, tasks_list, control_queue, logger, approach_module=approach_module, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio, task_config_path=task_config_path, output_dir=output_dir, run_id=run_id, merge_tick_seconds=merge_tick_seconds)

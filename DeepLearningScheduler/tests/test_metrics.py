@@ -1,0 +1,156 @@
+import math
+
+import pytest
+
+from matrics import (
+    QoEScore,
+    deadline_miss_rate_from_outcomes,
+    timeliness_qoe_score,
+    xrbench_realtime_score,
+)
+from visual_scripts.visual_task import statistics_compution, task_population_metrics
+
+
+def test_qoe_honors_the_requested_lambda() -> None:
+    assert QoEScore([2.0], [1.0], lambda_param=0.0) == pytest.approx(0.5)
+    assert QoEScore([2.0], [1.0], lambda_param=1.0) == pytest.approx(
+        1.0 / (1.0 + math.e)
+    )
+
+
+@pytest.mark.parametrize(
+    ("finished_times", "deadlines"),
+    [([], []), ([1.0], []), ([1.0, 2.0], [1.0])],
+)
+def test_qoe_rejects_empty_or_unpaired_samples(finished_times, deadlines) -> None:
+    with pytest.raises(ValueError):
+        QoEScore(finished_times, deadlines)
+
+
+def test_deadline_miss_rate_counts_every_unfinished_outcome() -> None:
+    outcomes = [
+        "success",
+        "failure",
+        "skip",
+        "burst_drop",
+        "execution_error",
+    ]
+    assert deadline_miss_rate_from_outcomes(outcomes) == pytest.approx(0.8)
+
+
+def test_xrbench_realtime_score_is_centered_at_the_deadline() -> None:
+    assert xrbench_realtime_score(1.0, 1.0, k=15.0) == pytest.approx(0.5)
+    assert xrbench_realtime_score(0.9, 1.0, k=15.0) > 0.5
+    assert xrbench_realtime_score(1.1, 1.0, k=15.0) < 0.5
+
+
+def test_timeliness_qoe_counts_invalid_outputs_as_zero() -> None:
+    records = [
+        {
+            "res": "success",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 1.0,
+        },
+        {
+            "res": "skip",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 0.0,
+        },
+    ]
+    assert timeliness_qoe_score(records, k=15.0) == pytest.approx(0.25)
+
+
+def test_statistics_excludes_nonexecuted_work_from_latency(tmp_path) -> None:
+    task_statistics = {
+        "success": {
+            "taskid": "success",
+            "res": "success",
+            "start_time": 1.0,
+            "end_time": 1.1,
+            "release_time": 1.0,
+            "deadline": 1.2,
+            "is_non_partitionable": False,
+        },
+        "failure": {
+            "taskid": "failure",
+            "res": "failure",
+            "start_time": 2.0,
+            "end_time": 2.2,
+            "release_time": 2.0,
+            "deadline": 2.1,
+            "is_non_partitionable": True,
+        },
+        "skip": {
+            "taskid": "skip",
+            "res": "skip",
+            "start_time": 3.0,
+            "end_time": 3.0,
+            "release_time": 3.0,
+            "deadline": 3.1,
+            "is_non_partitionable": False,
+        },
+        "burst_drop": {
+            "taskid": "burst_drop",
+            "res": "burst_drop",
+            "start_time": 4.0,
+            "end_time": 4.0,
+            "release_time": 4.0,
+            "deadline": 4.1,
+            "is_non_partitionable": True,
+        },
+    }
+
+    missing_rate, missing_info, average_latency, finished_info, _ = (
+        statistics_compution(
+            task_statistics,
+            task_config_path=str(tmp_path / "missing.json"),
+            now_time=10.0,
+            task_start_time=0.0,
+        )
+    )
+
+    assert missing_rate == pytest.approx(0.75)
+    assert set(missing_info) == {"failure", "skip", "burst_drop"}
+    assert average_latency == pytest.approx(0.15)
+    assert set(finished_info) == {"success", "failure"}
+
+
+def test_task_population_metrics_uses_the_offered_subgroup_denominator() -> None:
+    records = [
+        {
+            "res": "success",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 0.5,
+        },
+        {
+            "res": "skip",
+            "release_time": 0.0,
+            "deadline": 1.0,
+            "end_time": 0.0,
+        },
+    ]
+
+    metrics = task_population_metrics(records)
+
+    assert metrics["offered_node_count"] == 2
+    assert metrics["outcome_counts"] == {"skip": 1, "success": 1}
+    assert metrics["deadline_missing_rate"] == pytest.approx(0.5)
+    assert metrics["valid_output_rate"] == pytest.approx(0.5)
+    assert metrics["qoe_score"] == pytest.approx(
+        0.5 / (1.0 + math.exp(-7.5))
+    )
+
+
+def test_empty_task_population_metrics_are_explicitly_undefined() -> None:
+    metrics = task_population_metrics([])
+
+    assert metrics == {
+        "offered_node_count": 0,
+        "outcome_counts": {},
+        "deadline_missing_rate": None,
+        "qoe_score": None,
+        "valid_output_rate": None,
+    }

@@ -1,0 +1,59 @@
+{
+  "DeadlineFactor": 1.6,
+  "ArrivalScale": 1,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "MergeThresholdMs": 20,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      {
+        "TaskName": "S5_Stage1_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 406,
+        "WorstRunningTime": 485
+      },
+      {
+        "TaskName": "S5_Stage2_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 406,
+        "WorstRunningTime": 485
+      },
+      {
+        "TaskName": "S5_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 406,
+        "WorstRunningTime": 485
+      }
+    ]
+  ],
+  "Calibration": {
+    "kind": "edf-only-deadline-factor-grid",
+    "deadline_alpha": 1.6,
+    "source_config": "nano_loose_night_driving.json",
+    "selection_targets": {
+      "tight": 0.5,
+      "loose": 0.1
+    }
+  }
+}

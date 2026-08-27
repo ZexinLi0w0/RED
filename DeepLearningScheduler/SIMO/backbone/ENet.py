@@ -4,6 +4,7 @@ from torch.nn import init
 from torch import nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from runtime_device import configure_torch_device
 
 '''
 ENet: A Deep Neural Network Architecture for Real-Time Semantic Segmentation
@@ -11,7 +12,7 @@ Refence: https://arxiv.org/pdf/1606.02147.pdf
 Code is written by Iroh Cao
 '''
 
-DEVICE = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+DEVICE = configure_torch_device()
 
 def weights_init_kaiming(m):
     classname = m.__class__.__name__

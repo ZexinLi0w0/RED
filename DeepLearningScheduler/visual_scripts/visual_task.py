@@ -8,7 +8,17 @@ import json
 import pandas as pd
 import seaborn as sns
 from pathlib import Path
-from matrics import throughput_score, RTscore, QoEScore
+from matrics import (
+    DEFAULT_XRBENCH_RT_K,
+    DEADLINE_MISS_OUTCOMES,
+    EXECUTED_OUTCOMES,
+    QoEScore,
+    RTscore,
+    deadline_miss_rate_from_outcomes,
+    timeliness_qoe_score,
+    throughput_score,
+)
+from task_generator import overall_deadline_seconds, timing_config_from_mapping
 
 
 plt.rcParams['font.sans-serif']="Times New Roman"
@@ -61,86 +71,43 @@ def _resolve_task_config(task_config_path: str) -> Path:
     raise FileNotFoundError(f"Unable to locate task config file: {task_config_path}")
 
 
-def _task_duration_ms(task_node):
-    """
-    Extract a duration (ms) from a task node. Prefer RunningTime, fall back to
-    WorstRunningTime, defaulting to 0 if both are missing.
-    """
-    if not isinstance(task_node, dict):
-        return 0
-    return (
-        task_node.get("RunningTime")
-        or task_node.get("WorstRunningTime")
-        or 0
-    )
-
-
-def _task_worst_duration_ms(task_node):
-    """
-    Extract WorstRunningTime (ms) from a task node for deadline calculation.
-    This matches how subtask deadlines are calculated in task_generator.py.
-    Falls back to RunningTime if WorstRunningTime is missing.
-    """
-    if not isinstance(task_node, dict):
-        return 0
-    return (
-        task_node.get("WorstRunningTime")
-        or task_node.get("RunningTime")
-        or 0
-    )
-
-
-def _stage_duration_ms(stage_node):
-    """
-    Calculate the duration of a stage. A stage can be a single task dict or
-    a list of parallel tasks. We conservatively sum the durations of parallel
-    tasks to match how release times are constructed in generate_tasks_from_dag.
-    """
-    if isinstance(stage_node, list):
-        return sum(_task_duration_ms(task) for task in stage_node)
-    return _task_duration_ms(stage_node)
-
-
-def _stage_worst_duration_ms(stage_node):
-    """
-    Calculate the worst-case duration of a stage for deadline calculation.
-    For parallel tasks, we take the maximum (not sum) because parallel tasks
-    execute concurrently, matching the logic in task_generator.py where
-    parallel tasks share the same start_time.
-    """
-    if isinstance(stage_node, list):
-        # For parallel tasks, take the maximum worst time (they run concurrently)
-        return max(_task_worst_duration_ms(task) for task in stage_node)
-    return _task_worst_duration_ms(stage_node)
-
-
 def _overall_deadline_seconds(config: dict) -> float:
-    """
-    Compute the overall deadline (seconds) by summing every stage worst-case duration
-    across all DAGs, multiplying by the number of DAG periods (DagRepeatedTimes=10),
-    and scaling with RunningTimeFactor. This matches how subtask deadlines are 
-    calculated using WorstRunningTime in task_generator.py.
-    
-    The values in the configs are in milliseconds, so convert to seconds at the end
-    to stay consistent with wall-clock timings from time.time().
-    """
-    dag_list = config.get("dag_list", [])
-    running_time_factor = config.get("RunningTimeFactor", 1)
-    dag_repeated_times = 10  # Matches DagRepeatedTimes in task_generator.py
+    """Return the same maximum absolute deadline used by task generation."""
+    return overall_deadline_seconds(
+        config.get("dag_list", []), timing_config_from_mapping(config)
+    )
 
-    # Calculate single DAG worst-case duration
-    single_dag_ms = 0
-    for dag in dag_list:
-        if not isinstance(dag, list):
-            continue
-        for stage in dag:
-            single_dag_ms += _stage_worst_duration_ms(stage)
 
-    # Overall deadline = single DAG deadline * number of periods
-    # (Each period's deadline is cumulative, so the last period's deadline is the overall deadline)
-    total_ms = single_dag_ms * dag_repeated_times
+def task_population_metrics(task_records):
+    """Summarize one offered-node population using the headline definitions."""
+    records = list(task_records)
+    if not records:
+        return {
+            "offered_node_count": 0,
+            "outcome_counts": {},
+            "deadline_missing_rate": None,
+            "qoe_score": None,
+            "valid_output_rate": None,
+        }
 
-    return (total_ms * running_time_factor) / 1000.0
+    outcome_counts = defaultdict(int)
+    for record in records:
+        outcome_counts[record["res"]] += 1
+    outcomes = [record["res"] for record in records]
+    valid_output_count = sum(
+        count
+        for outcome, count in outcome_counts.items()
+        if outcome in {"success", "failure"}
+    )
+    return {
+        "offered_node_count": len(records),
+        "outcome_counts": dict(sorted(outcome_counts.items())),
+        "deadline_missing_rate": deadline_miss_rate_from_outcomes(outcomes),
+        "qoe_score": timeliness_qoe_score(
+            records, k=DEFAULT_XRBENCH_RT_K
+        ),
+        "valid_output_rate": valid_output_count / len(records),
+    }
 
 
 def statistics_compution(task_statistics, task_config_path='task_config.json', now_time = 0, task_start_time = 0):
@@ -149,63 +116,32 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     task_statistics: defaultdict(TaskFinishedObject), each dict contains the information of a task
     dict_values([{'taskid': 'Period[0]_#39_Id[1]', 'release_time': 0.9750000000000001, 'deadline': 0.9850000000000001, 'priority': 1, 'dependency': [], 'res': 'success', 'start_time': '0.9760010242462158', 'end_time': '0.9840006828308105'}])
     """
-    # calculate the missing deadline rate
-    missing_deadline_rate = 0
+    # Calculate task-level outcomes and execution latency. A skipped or
+    # proactively dropped task did not execute, so it counts as a deadline miss
+    # but not as a zero-duration latency sample.
     missing_deadline_info = defaultdict(int)
     finished_info = defaultdict(float)
-    avg_finished_time = 0
-    task_num = 0
-    
-    # Non-partitionable task statistics
-    non_partitionable_missing_rate = 0
-    non_partitionable_finished_info = defaultdict(float)
-    non_partitionable_task_num = 0
-    partitionable_missing_rate = 0
-    partitionable_finished_info = defaultdict(float)
-    partitionable_task_num = 0
-    
+    outcomes = []
+
     for task in task_statistics.values():
-        is_non_partitionable = task.get('is_non_partitionable', False)
-        
-        if task['res'] != 'skip':
-            finished_info[task['taskid']] = float(task['end_time']) - float(task['start_time'])
-            avg_finished_time += finished_info[task['taskid']]
-            task_num += 1
-            
-            # Track non-partitionable vs partitionable task performance
-            if is_non_partitionable:
-                non_partitionable_finished_info[task['taskid']] = finished_info[task['taskid']]
-                non_partitionable_task_num += 1
-            else:
-                partitionable_finished_info[task['taskid']] = finished_info[task['taskid']]
-                partitionable_task_num += 1
-                
-        if task['res'] == 'failure' or task['res'] == 'skip':
-            missing_deadline_rate += 1
+        outcome = task['res']
+        outcomes.append(outcome)
+
+        if outcome in EXECUTED_OUTCOMES:
+            duration = float(task['end_time']) - float(task['start_time'])
+            if duration < 0:
+                raise ValueError(
+                    f"task {task['taskid']} has end_time before start_time"
+                )
+            finished_info[task['taskid']] = duration
+
+        if outcome in DEADLINE_MISS_OUTCOMES:
             missing_deadline_info[task["taskid"]] = 1
-            
-            # Track missing deadlines by task type
-            if is_non_partitionable:
-                non_partitionable_missing_rate += 1
-            else:
-                partitionable_missing_rate += 1
-            
-    if(task_num!=0):
-        avg_finished_time = avg_finished_time/task_num
-    else:
-        avg_finished_time = 0
-    
-    if(len(task_statistics) != 0):
-        missing_deadline_rate /= len(task_statistics)
-    else:
-        missing_deadline_rate = 0
-        
-    # Calculate task type specific statistics
-    # 这里non_partitionable_missing_rate和partitionable_missing_rate的计算是错误的, 重复统计了任务
-    if non_partitionable_task_num > 0:
-        non_partitionable_missing_rate /= non_partitionable_task_num
-    if partitionable_task_num > 0:
-        partitionable_missing_rate /= partitionable_task_num
+
+    missing_deadline_rate = deadline_miss_rate_from_outcomes(outcomes)
+    avg_finished_time = (
+        sum(finished_info.values()) / len(finished_info) if finished_info else 0.0
+    )
     
     metrics1 = 1
     metrics2 = 0
@@ -222,9 +158,11 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
 
     finished_time = now_time - task_start_time
     print('metrics finished time', finished_time, deadline_time)
-    if deadline_time > 0:
+    if math.isfinite(deadline_time) and deadline_time > 0:
         metrics2 = RTscore([finished_time], [deadline_time])
-        metrics3 = QoEScore([finished_time], [deadline_time])
+        metrics3 = timeliness_qoe_score(
+            task_statistics.values(), k=DEFAULT_XRBENCH_RT_K
+        )
         
     metrics = (metrics1, metrics2, metrics3)
     return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics
@@ -1121,4 +1059,3 @@ if __name__ == "__main__":
         figure6(standard_deadline, name)
 
     # boxplot_vertical([1],[2])
-
