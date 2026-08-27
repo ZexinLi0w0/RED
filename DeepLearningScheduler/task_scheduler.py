@@ -361,9 +361,16 @@ class TaskSchedule:
                 #     self.consume_task_output(task["DagPeriod"], dep)
 
                 # send the signal to the handler
+                # Reserve the handler synchronously before enqueueing RUN. The
+                # subprocess reports Ready again on DELIVERY; without this
+                # reservation, one scheduler pass can enqueue multiple RUN
+                # commands while the controller still observes stale Ready
+                # state, hiding the real waiting backlog from Burst management.
+                handler_status[int(task["HandlerId"])] = HandlerStatus.Running
                 self.send_signal(signal_message)
                 # logger.debug(f"[CTRL] Send task signal {signal_message} on {now-TaskStartTime}")
             elif(self.missing_deadline_met(handler_status, task=task, now_time = now)):
+                    handler_status[int(task["HandlerId"])] = HandlerStatus.Running
                     # directly send this task
                     self.send_signal(signal_message)
                     continue

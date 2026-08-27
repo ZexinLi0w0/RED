@@ -13,8 +13,11 @@ conda activate schedule
 
 The wrapper performs planning, execution, validation, and summarization. It runs
 each of the 15 distinct Burst condition/method cells once by default and resumes
-runs whose manifests are already complete. Use `--repetitions N` to repeat each
-cell `N` times; for example:
+runs whose manifests are already complete. The default Mac/MPS TaskConfig is
+`TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json`. Artifact validation
+requires no ProactiveDrop activity in the 0% RED control and requires both an
+overload activation and proactive-drop records in every 50%/100% RED cell. Use
+`--repetitions N` to repeat each cell `N` times; for example:
 
 ```zsh
 ./experiments/run_burst_study.sh --repetitions 5

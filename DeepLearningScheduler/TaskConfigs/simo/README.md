@@ -39,6 +39,12 @@ Burst 工作负载；只有 `feedback-fine-grained`（RED）启用过载检测�
   一个完整 DAG。克隆 DAG 保留原始 release time、deadline 和 priority，但使用
   独立的 DAG-period identity。
 
+Mac/MPS 的正式 Burst 实验默认使用
+`burst/mac_mps_proactive_drop_v2.json`。该配置按 M3 Max 实测运行时间设置负载，
+每次 release 同时提供五个感知请求，其中三个关键请求不可主动丢弃，两个冗余
+请求具有正的 `DropThreshold`。0% control 的 ready queue 保持在阈值以下，而
+50%/100% Burst 会形成持续的已释放队列压力，从而实际触发 ProactiveDrop。
+
 ### 示例 1：索引型 RunArgs
 
 ```json
@@ -81,4 +87,3 @@ Burst 工作负载；只有 `feedback-fine-grained`（RED）启用过载检测�
 - 在同一条流水线中，不同任务通过不同 `RunArgs` 选择性激活 SIMO 的子模块，避免重复加载与冗余计算。
 - 串行/并行关系以 `dag_list` 的层次与 `Dependencies` 描述；并行任务置于同一数组层级。
 - 若迁移到不同硬件平台，可通过 `RunningTimeFactor` 进行统一的时间尺度调整。
-

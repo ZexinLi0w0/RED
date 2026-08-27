@@ -2,6 +2,7 @@ import logging
 from collections import defaultdict
 from queue import Queue
 
+from AbstractHandler import HandlerStatus
 from burst_task_manager import BurstTaskManager
 from task_generator import generate_tasks_from_dag
 from task_scheduler import TaskSchedule
@@ -108,3 +109,47 @@ def test_unreleased_work_is_not_counted_as_active_backlog(monkeypatch) -> None:
     assert scheduler.burst_manager.get_burst_statistics()[
         "dropped_tasks_count"
     ] == 0
+
+
+def test_dispatch_reserves_handler_and_leaves_real_backlog(monkeypatch) -> None:
+    dag = [[
+        {
+            "TaskName": "first",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [1],
+            "WorstRunningTime": 100,
+        },
+        {
+            "TaskName": "second",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [3],
+            "WorstRunningTime": 100,
+        },
+    ]]
+    scheduler = TaskSchedule(
+        generate_tasks_from_dag(
+            dag,
+            deadline_factor=1.0,
+            arrival_scale=1.0,
+            dag_repeated_times=1,
+            seed=101,
+        ),
+        handler_status=defaultdict(int),
+        control_queue=Queue(),
+        scheduler="edf",
+        logger=logging,
+        approach_module="baseline",
+    )
+    scheduler.generate_task_list()
+    scheduler.TaskStartTime = 100.0
+    scheduler.handler_status[5] = HandlerStatus.Ready
+    monkeypatch.setattr("task_scheduler.time.time", lambda: 100.0)
+
+    scheduler.distribute_tasks()
+
+    assert scheduler.handler_status[5] == HandlerStatus.Running
+    assert len(scheduler.TaskQueue) == 1

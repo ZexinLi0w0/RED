@@ -58,7 +58,7 @@ Transient example:
   "burst_start_seconds": 0.36,
   "transient_duration_seconds": 0.6,
   "release_horizon_seconds": 1.96,
-  "gpu_threshold": 90.0,
+  "gpu_threshold": 100.0,
   "queue_threshold": 8,
   "persistence_window": 3,
   "drop_threshold": 0.5,
@@ -79,6 +79,22 @@ The reproducible runner is `experiments/burst_study.py`. It generates a common
 0% control plus Transient and Sustained 50%/100% conditions, runs EDF, LLF-DAG,
 and RED once per condition by default, and validates identical offered-stream
 hashes across methods.
+
+The default base workload is
+`TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json`. It uses the measured
+M3 Max/MPS timing profile and places five independent perception requests at
+each base release. Three requests and the downstream control task are critical
+and have `DropThreshold=0`; two perception requests are explicitly redundant
+and have positive task-level drop thresholds. All nodes are non-partitionable,
+so refinement cannot merge away the ready-queue pressure being studied.
+
+For this Mac study, `gpu_threshold=100` disables utilization-based activation,
+which is not deterministic on MPS. The formal trigger is instead the released
+ready queue: `queue_threshold=8` with a three-tick persistence window. The base
+0% workload stays below that threshold, while the injected 50% and 100% Burst
+workloads cross it. Validation fails unless the 0% RED control has no overload
+activation or proactive drop, and every 50%/100% RED cell has at least one
+overload activation and a non-empty proactive-drop record.
 
 Run the full local Mac/MPS study with:
 
@@ -113,8 +129,10 @@ it selects one complete latency-median run from each group. It always truncates
 all three values from the selected run to three decimal places without rounding.
 
 The tracked `burst_mac_mps_v2` result files were generated earlier with five
-repetitions per cell. They remain available as validated historical artifacts;
-new default runs are written under `taskdata/major_revision_burst_mac_mps_v3/`.
+repetitions per cell and the historical lighter workload. They remain available
+as historical artifacts, but they do not demonstrate ProactiveDrop activation.
+New default runs use the dedicated workload and are written under
+`taskdata/major_revision_burst_mac_mps_v3/`.
 
 Compact validated results are stored in:
 

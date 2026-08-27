@@ -34,11 +34,16 @@ from task_generator import (  # noqa: E402
     generate_tasks_from_dag,
     load_dag_experiment_config,
     task_stream_sha256,
+    timing_config_from_mapping,
 )
 
 
 DEFAULT_BASE_TASK_CONFIG = (
-    REPOSITORY_ROOT / "TaskConfigs" / "simo" / "mac_loose_burst.json"
+    REPOSITORY_ROOT
+    / "TaskConfigs"
+    / "simo"
+    / "burst"
+    / "mac_mps_proactive_drop_v2.json"
 )
 DEFAULT_HANDLER_CONFIG = REPOSITORY_ROOT / "simo-handler_config.json"
 DEFAULT_OUTPUT_ROOT = (
@@ -47,12 +52,15 @@ DEFAULT_OUTPUT_ROOT = (
 DEFAULT_REPETITIONS = 1
 DEFAULT_SEED_STEP = 101
 DEFAULT_SEEDS = (DEFAULT_SEED_STEP,)
-DEFAULT_DEADLINE_FACTOR = 0.2
-DEFAULT_ARRIVAL_SCALE = 0.2
+DEFAULT_DEADLINE_FACTOR_OVERRIDE = None
+DEFAULT_ARRIVAL_SCALE_OVERRIDE = None
 DEFAULT_BURST_START_SECONDS = 0.36
 DEFAULT_TRANSIENT_DURATION_SECONDS = 0.6
 DEFAULT_RELEASE_HORIZON_SECONDS = 1.96
 DEFAULT_RUN_ORDER_SEED = 20260827
+DEFAULT_GPU_THRESHOLD = 100.0
+DEFAULT_QUEUE_THRESHOLD = 8
+DEFAULT_PERSISTENCE_WINDOW = 3
 METHODS = ("baseline", "llf-dag", "feedback-fine-grained")
 METHOD_LABELS = {
     "baseline": "EDF",
@@ -137,15 +145,18 @@ def _burst_config(
     condition,
     burst_start_seconds=DEFAULT_BURST_START_SECONDS,
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
+    gpu_threshold=DEFAULT_GPU_THRESHOLD,
+    queue_threshold=DEFAULT_QUEUE_THRESHOLD,
+    persistence_window=DEFAULT_PERSISTENCE_WINDOW,
 ):
     config = {
         "burst_enabled": True,
         "burst_regime": condition.regime,
         "burst_start_seconds": burst_start_seconds,
         "release_horizon_seconds": release_horizon_seconds,
-        "gpu_threshold": 90.0,
-        "queue_threshold": 8,
-        "persistence_window": 3,
+        "gpu_threshold": gpu_threshold,
+        "queue_threshold": queue_threshold,
+        "persistence_window": persistence_window,
         "drop_threshold": 0.5,
         "monitoring_interval": 0.05,
         "scheduler_tick_seconds": 0.005,
@@ -191,16 +202,30 @@ def generate_study_plan(
     base_task_config=DEFAULT_BASE_TASK_CONFIG,
     output_root=DEFAULT_OUTPUT_ROOT,
     seeds=DEFAULT_SEEDS,
-    deadline_factor=DEFAULT_DEADLINE_FACTOR,
-    arrival_scale=DEFAULT_ARRIVAL_SCALE,
+    deadline_factor=DEFAULT_DEADLINE_FACTOR_OVERRIDE,
+    arrival_scale=DEFAULT_ARRIVAL_SCALE_OVERRIDE,
     burst_start_seconds=DEFAULT_BURST_START_SECONDS,
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
+    gpu_threshold=DEFAULT_GPU_THRESHOLD,
+    queue_threshold=DEFAULT_QUEUE_THRESHOLD,
+    persistence_window=DEFAULT_PERSISTENCE_WINDOW,
 ):
     base_task_config = Path(base_task_config).resolve()
     output_root = Path(output_root).resolve()
     template = _load_json(base_task_config)
     if not template.get("dag_list"):
         raise ValueError("base task config must contain a non-empty dag_list")
+    template_timing = timing_config_from_mapping(template)
+    resolved_deadline_factor = (
+        template_timing.deadline_factor
+        if deadline_factor is None
+        else deadline_factor
+    )
+    resolved_arrival_scale = (
+        template_timing.arrival_scale
+        if arrival_scale is None
+        else arrival_scale
+    )
     generated_root = output_root / "generated_configs"
     condition_records = []
     for condition in CONDITIONS:
@@ -208,8 +233,8 @@ def generate_study_plan(
         task_config.pop("RunningTimeFactor", None)
         task_config.update(
             {
-                "DeadlineFactor": deadline_factor,
-                "ArrivalScale": arrival_scale,
+                "DeadlineFactor": resolved_deadline_factor,
+                "ArrivalScale": resolved_arrival_scale,
                 "BurstTaskRatio": condition.ratio_percent,
                 "ReleaseTimeSkewThresholdMs": 100.0,
                 "MovingAverageWindow": 8,
@@ -220,6 +245,9 @@ def generate_study_plan(
             condition,
             burst_start_seconds=burst_start_seconds,
             release_horizon_seconds=release_horizon_seconds,
+            gpu_threshold=gpu_threshold,
+            queue_threshold=queue_threshold,
+            persistence_window=persistence_window,
         )
         task_path = generated_root / condition.slug / "task.json"
         burst_path = generated_root / condition.slug / "burst.json"
@@ -251,15 +279,28 @@ def generate_study_plan(
         "repetitions_per_cell": len(seeds),
         "base_task_config": str(base_task_config),
         "base_task_config_sha256": _sha256(base_task_config),
-        "deadline_factor": deadline_factor,
-        "arrival_scale": arrival_scale,
+        "deadline_factor": resolved_deadline_factor,
+        "arrival_scale": resolved_arrival_scale,
+        "timing_source": {
+            "deadline_factor": (
+                "task-config" if deadline_factor is None else "cli-override"
+            ),
+            "arrival_scale": (
+                "task-config" if arrival_scale is None else "cli-override"
+            ),
+        },
         "burst_start_seconds": burst_start_seconds,
         "release_horizon_seconds": release_horizon_seconds,
+        "gpu_threshold": gpu_threshold,
+        "queue_threshold": queue_threshold,
+        "persistence_window": persistence_window,
         "conditions": condition_records,
         "planned_run_count": len(condition_records) * len(METHODS) * len(seeds),
         "run_order": "fixed pseudo-random permutation of all cases",
         "run_order_seed": DEFAULT_RUN_ORDER_SEED,
         "zero_burst_control_reused_between_regimes": True,
+        "require_proactive_drop_for_red_burst": True,
+        "require_no_proactive_drop_for_red_control": True,
     }
     _write_json_atomic(output_root / "study_plan.json", plan)
     return plan
@@ -300,6 +341,18 @@ def _validate_summary(manifest, summary):
     for field, expected in manifest["expected_workload"].items():
         if workload.get(field) != expected:
             problems.append(f"workload field mismatch: {field}")
+    activation_count = int(burst.get("overload_activation_count", 0))
+    dropped_count = int(burst.get("dropped_tasks_count", 0))
+    drop_records = burst.get("drop_records") or []
+    if manifest.get("require_proactive_drop"):
+        if activation_count <= 0:
+            problems.append("RED Burst run did not activate ProactiveDrop")
+        if dropped_count <= 0 or not drop_records:
+            problems.append("RED Burst run did not record proactive drops")
+    if manifest.get("require_no_proactive_drop") and (
+        activation_count or dropped_count or drop_records
+    ):
+        problems.append("RED zero-Burst control unexpectedly activated ProactiveDrop")
     return problems
 
 
@@ -384,6 +437,16 @@ def run_study(
             "burst_config_sha256": condition["burst_config_sha256"],
             **offered,
             "expected_workload": condition["expected_workload"],
+            "require_proactive_drop": (
+                plan.get("require_proactive_drop_for_red_burst", False)
+                and method == "feedback-fine-grained"
+                and condition["ratio_percent"] > 0
+            ),
+            "require_no_proactive_drop": (
+                plan.get("require_no_proactive_drop_for_red_control", False)
+                and method == "feedback-fine-grained"
+                and condition["ratio_percent"] == 0
+            ),
             "git_commit": git_commit,
             "git_status_porcelain": git_status,
             "python": python_executable,
@@ -633,11 +696,17 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
                 "repetitions_per_cell",
                 "deadline_factor",
                 "arrival_scale",
+                "timing_source",
                 "burst_start_seconds",
                 "release_horizon_seconds",
+                "gpu_threshold",
+                "queue_threshold",
+                "persistence_window",
                 "run_order",
                 "run_order_seed",
                 "zero_burst_control_reused_between_regimes",
+                "require_proactive_drop_for_red_burst",
+                "require_no_proactive_drop_for_red_control",
             )
         },
         "conditions": plan["conditions"],
@@ -726,10 +795,16 @@ def _build_parser():
         ),
     )
     plan_parser.add_argument(
-        "--deadline-factor", type=float, default=DEFAULT_DEADLINE_FACTOR
+        "--deadline-factor",
+        type=float,
+        default=DEFAULT_DEADLINE_FACTOR_OVERRIDE,
+        help="override DeadlineFactor; defaults to the base TaskConfig value",
     )
     plan_parser.add_argument(
-        "--arrival-scale", type=float, default=DEFAULT_ARRIVAL_SCALE
+        "--arrival-scale",
+        type=float,
+        default=DEFAULT_ARRIVAL_SCALE_OVERRIDE,
+        help="override ArrivalScale; defaults to the base TaskConfig value",
     )
     plan_parser.add_argument(
         "--burst-start-seconds",
@@ -740,6 +815,15 @@ def _build_parser():
         "--release-horizon-seconds",
         type=float,
         default=DEFAULT_RELEASE_HORIZON_SECONDS,
+    )
+    plan_parser.add_argument(
+        "--gpu-threshold", type=float, default=DEFAULT_GPU_THRESHOLD
+    )
+    plan_parser.add_argument(
+        "--queue-threshold", type=int, default=DEFAULT_QUEUE_THRESHOLD
+    )
+    plan_parser.add_argument(
+        "--persistence-window", type=int, default=DEFAULT_PERSISTENCE_WINDOW
     )
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
@@ -774,6 +858,9 @@ def main():
             args.arrival_scale,
             args.burst_start_seconds,
             args.release_horizon_seconds,
+            args.gpu_threshold,
+            args.queue_threshold,
+            args.persistence_window,
         )
         print(json.dumps(plan, indent=2, sort_keys=True))
         return 0
