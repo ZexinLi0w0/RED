@@ -1,9 +1,8 @@
 # Parameter-sensitivity study
 
-This experiment implements the revision's one-factor-at-a-time study on one
-representative high-load AGX Orin workload. It evaluates the complete MERIS method
-(`feedback-fine-grained`) at 18 table settings. Each setting runs once by
-default:
+This experiment implements the revision's two independent full-factorial
+parameter blocks. It evaluates the complete MERIS method
+(`feedback-fine-grained`) at 47 settings. Each setting runs once by default:
 
 - moving-average window: `1, 4, 8, 16`;
 - release-time skew threshold: `0, 50, 100, 150, 200` milliseconds;
@@ -11,13 +10,20 @@ default:
 - ready-queue threshold: `4, 8, 16`;
 - sustained-overload persistence window: `1, 3, 5` scheduler ticks.
 
-The fixed defaults are `8`, `100` milliseconds, `90` percent, `8`, and `3`
-ticks. Every generated point starts from these defaults and changes only its
-named parameter. The default frozen workload is
+The refinement block is the 4 x 5 Cartesian product of moving-average window
+and release-time skew threshold (20 settings) with burst generation and Burst
+Management disabled. The Burst Management block is the 3 x 3 x 3 Cartesian
+product of GPU threshold, ready-queue threshold, and persistence window (27
+settings), with the refinement parameters fixed at `8` and `100` milliseconds.
+
+The default frozen workload is
 `TaskConfigs/simo/parameter_sensitivity/agx_high_load.json`. It uses AGX Orin
-profiles, a 100 percent burst injection so burst-controller parameters are
-observable, and fixed 0/50/100/150/200 millisecond predicted release skews among
-compatible MIMONet requests so the release-time skew threshold changes the executed graph.
+profiles and fixed 0/50/100/150/200 millisecond predicted release skews among
+compatible MIMONet requests. The runner sets `BurstTaskRatio=0` in refinement
+configs. In Burst Management configs it retains the 100 percent burst and marks
+the offered nodes non-partitionable so merging cannot hide queue backlog from
+the `Q_max` grid.
+
 Override `--base-task-config` if a replacement frozen AGX workload is selected.
 
 ## One-command Jetson run
@@ -31,21 +37,21 @@ conda activate schedule
 ```
 
 The wrapper runs `git pull --ff-only` before the experiment, refuses a dirty
-source tree, generates all parameter configs, executes 18 isolated runs by
+source tree, generates all parameter configs, executes 47 isolated runs by
 default, resumes already completed runs, and creates the paper-table data after
 validating every artifact. To use another Conda environment, replace `schedule`
 with its name; the wrapper resolves `python3` from the active environment. A
 failed or interrupted run is retried on the next invocation; its old manifest
 and logs are retained with an `.attemptN` suffix.
 
-The default command executes 18 runs. To repeat every setting, pass a positive
+The default command executes 47 runs. To repeat every setting, pass a positive
 integer:
 
 ```bash
 ./experiments/run_parameter_sensitivity.sh --repetitions 5
 ```
 
-This example executes 90 runs. The runner generates deterministic seeds
+This example executes 235 runs. The runner generates deterministic seeds
 automatically. Advanced use can provide explicit seeds with `--seeds 7,11,19`;
 an explicit seed list overrides `--repetitions`.
 
@@ -84,7 +90,7 @@ The default output directory is
 - `report/parameter_sensitivity_runs.csv`: one row per repetition;
 - `report/parameter_sensitivity_report.json`: mean, sample standard deviation,
   range, and 95 percent confidence interval for every metric and table point;
-- `report/parameter_sensitivity_table.csv`: the 18 mean values ready to paste
+- `report/parameter_sensitivity_table.csv`: the 47 values ready to paste
   into the revision table;
 - `report/parameter_sensitivity_table_rows.tex`: generated LaTeX table rows.
 

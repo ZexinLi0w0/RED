@@ -1,0 +1,1195 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.0,
+      "offered_node_count": 84,
+      "outcome_counts": {
+        "success": 84
+      },
+      "qoe_score": 1.0
+    },
+    "atomic_offered_ratio": 1.0,
+    "partitionable": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.015312961169651576,
+  "burst_statistics": {
+    "burst_mode_active": false,
+    "consecutive_overload_ticks": 0,
+    "current_gpu_utilization": 60.27,
+    "current_queue_length": 0,
+    "drop_records": [],
+    "drop_threshold": 0.5,
+    "dropped_tasks_count": 0,
+    "gpu_threshold": 100.0,
+    "management_enabled": true,
+    "maximum_consecutive_overload_ticks": 0,
+    "overload_activation_count": 0,
+    "persistence_window": 3,
+    "queue_threshold": 8,
+    "workload": {
+      "added_dag_release_count": 0,
+      "added_node_count": 0,
+      "base_dag_release_count": 14,
+      "burst_end_seconds": 2.4,
+      "burst_ratio_percent": 0.0,
+      "burst_start_seconds": 0.36,
+      "eligible_dag_release_count": 11,
+      "regime": "sustained",
+      "release_horizon_seconds": 2.4,
+      "transient_duration_seconds": null
+    }
+  },
+  "deadline_missing_rate": 0.0,
+  "end_to_end_latency_seconds": 2.19342303276062,
+  "execution_task_count": 84,
+  "finished_execution_task_count": 84,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 84,
+    "events": [
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[0]_D0_S0_B1",
+        "completion_time_seconds": 0.023128032684326172,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.014451026916503906,
+        "observed_execution_seconds": 0.014451026916503906,
+        "reassigned_deadlines": {
+          "Burst_Control_[0]_D0_S1_Bsingle": 0.19963233600000002,
+          "Burst_Critical_LaneDetection_[0]_D0_S0_B0": 0.16792104123810309,
+          "Burst_Critical_ObjectDetection_[0]_D0_S0_B2": 0.16792104123810309,
+          "Burst_Redundant_LaneDetection_[0]_D0_S0_B3": 0.16792104123810309,
+          "Burst_Redundant_ObjectDetection_[0]_D0_S0_B4": 0.16792104123810309
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[0]_D0_S0_B0",
+        "completion_time_seconds": 0.06982588768005371,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.016371965408325195,
+        "observed_execution_seconds": 0.016371965408325195,
+        "reassigned_deadlines": {
+          "Burst_Control_[0]_D0_S1_Bsingle": 0.19963233600000002,
+          "Burst_Critical_ObjectDetection_[0]_D0_S0_B2": 0.17034597660299405,
+          "Burst_Redundant_LaneDetection_[0]_D0_S0_B3": 0.17034597660299405,
+          "Burst_Redundant_ObjectDetection_[0]_D0_S0_B4": 0.17034597660299405
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[0]_D0_S0_B3",
+        "completion_time_seconds": 0.09151792526245117,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.015863418579101562,
+        "observed_execution_seconds": 0.01535487174987793,
+        "reassigned_deadlines": {
+          "Burst_Control_[0]_D0_S1_Bsingle": 0.19963233600000002,
+          "Burst_Critical_ObjectDetection_[0]_D0_S0_B2": 0.168584823526719,
+          "Burst_Redundant_ObjectDetection_[0]_D0_S0_B4": 0.168584823526719
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[0]_D0_S0_B2",
+        "completion_time_seconds": 0.1173250675201416,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.018223285675048828,
+        "observed_execution_seconds": 0.018223285675048828,
+        "reassigned_deadlines": {
+          "Burst_Control_[0]_D0_S1_Bsingle": 0.19963233600000002,
+          "Burst_Redundant_ObjectDetection_[0]_D0_S0_B4": 0.1596293550913664
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[0]_D0_S0_B4",
+        "completion_time_seconds": 0.1442408561706543,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.017443537712097168,
+        "observed_execution_seconds": 0.016663789749145508,
+        "reassigned_deadlines": {
+          "Burst_Control_[0]_D0_S1_Bsingle": 0.19963233600000002
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[0]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.18189096450805664,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.014075040817260742,
+        "observed_execution_seconds": 0.014075040817260742,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[1]_D0_S0_B1",
+        "completion_time_seconds": 0.20496606826782227,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.014201164245605469,
+        "observed_execution_seconds": 0.013951301574707031,
+        "reassigned_deadlines": {
+          "Burst_Control_[1]_D0_S1_Bsingle": 0.37341673350000004,
+          "Burst_Critical_LaneDetection_[1]_D0_S0_B0": 0.34403290970575473,
+          "Burst_Critical_ObjectDetection_[1]_D0_S0_B2": 0.34403290970575473,
+          "Burst_Redundant_LaneDetection_[1]_D0_S0_B3": 0.34403290970575473,
+          "Burst_Redundant_ObjectDetection_[1]_D0_S0_B4": 0.34403290970575473
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[1]_D0_S0_B0",
+        "completion_time_seconds": 0.2341139316558838,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.01549061139424642,
+        "observed_execution_seconds": 0.014744997024536133,
+        "reassigned_deadlines": {
+          "Burst_Control_[1]_D0_S1_Bsingle": 0.37341673350000004,
+          "Burst_Critical_ObjectDetection_[1]_D0_S0_B2": 0.34299610284807613,
+          "Burst_Redundant_LaneDetection_[1]_D0_S0_B3": 0.34299610284807613,
+          "Burst_Redundant_ObjectDetection_[1]_D0_S0_B4": 0.34299610284807613
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[1]_D0_S0_B3",
+        "completion_time_seconds": 0.26736879348754883,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.015249967575073242,
+        "observed_execution_seconds": 0.014528036117553711,
+        "reassigned_deadlines": {
+          "Burst_Control_[1]_D0_S1_Bsingle": 0.37341673350000004,
+          "Burst_Critical_ObjectDetection_[1]_D0_S0_B2": 0.34293134604450654,
+          "Burst_Redundant_ObjectDetection_[1]_D0_S0_B4": 0.34293134604450654
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[1]_D0_S0_B2",
+        "completion_time_seconds": 0.2997438907623291,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.018087387084960938,
+        "observed_execution_seconds": 0.019375085830688477,
+        "reassigned_deadlines": {
+          "Burst_Control_[1]_D0_S1_Bsingle": 0.37341673350000004,
+          "Burst_Redundant_ObjectDetection_[1]_D0_S0_B4": 0.34117575120199634
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[1]_D0_S0_B4",
+        "completion_time_seconds": 0.3248319625854492,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.017596304416656494,
+        "observed_execution_seconds": 0.016123056411743164,
+        "reassigned_deadlines": {
+          "Burst_Control_[1]_D0_S1_Bsingle": 0.37341673350000004
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[1]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.3514080047607422,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.014299631118774414,
+        "observed_execution_seconds": 0.014524221420288086,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[2]_D0_S0_B1",
+        "completion_time_seconds": 0.3792858123779297,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.014253060022989908,
+        "observed_execution_seconds": 0.014356851577758789,
+        "reassigned_deadlines": {
+          "Burst_Control_[2]_D0_S1_Bsingle": 0.547201131,
+          "Burst_Critical_LaneDetection_[2]_D0_S0_B0": 0.5171841060545185,
+          "Burst_Critical_ObjectDetection_[2]_D0_S0_B2": 0.5171841060545185,
+          "Burst_Redundant_LaneDetection_[2]_D0_S0_B3": 0.5171841060545185,
+          "Burst_Redundant_ObjectDetection_[2]_D0_S0_B4": 0.5171841060545185
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[2]_D0_S0_B0",
+        "completion_time_seconds": 0.4023759365081787,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.015039730072021484,
+        "observed_execution_seconds": 0.014198780059814453,
+        "reassigned_deadlines": {
+          "Burst_Control_[2]_D0_S1_Bsingle": 0.547201131,
+          "Burst_Critical_ObjectDetection_[2]_D0_S0_B2": 0.5151093343732411,
+          "Burst_Redundant_LaneDetection_[2]_D0_S0_B3": 0.5151093343732411,
+          "Burst_Redundant_ObjectDetection_[2]_D0_S0_B4": 0.5151093343732411
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[2]_D0_S0_B3",
+        "completion_time_seconds": 0.4251518249511719,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.015020449956258139,
+        "observed_execution_seconds": 0.014924049377441406,
+        "reassigned_deadlines": {
+          "Burst_Control_[2]_D0_S1_Bsingle": 0.547201131,
+          "Burst_Critical_ObjectDetection_[2]_D0_S0_B2": 0.5119378239342822,
+          "Burst_Redundant_ObjectDetection_[2]_D0_S0_B4": 0.5119378239342822
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[2]_D0_S0_B2",
+        "completion_time_seconds": 0.45078587532043457,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.017560195922851563,
+        "observed_execution_seconds": 0.017415761947631836,
+        "reassigned_deadlines": {
+          "Burst_Control_[2]_D0_S1_Bsingle": 0.547201131,
+          "Burst_Redundant_ObjectDetection_[2]_D0_S0_B4": 0.5039271173451618
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[2]_D0_S0_B4",
+        "completion_time_seconds": 0.4792649745941162,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.017461140950520832,
+        "observed_execution_seconds": 0.016965866088867188,
+        "reassigned_deadlines": {
+          "Burst_Control_[2]_D0_S1_Bsingle": 0.547201131
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[2]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.5050721168518066,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.014131466547648111,
+        "observed_execution_seconds": 0.013795137405395508,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[3]_D0_S0_B1",
+        "completion_time_seconds": 0.5300650596618652,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.014643847942352295,
+        "observed_execution_seconds": 0.015816211700439453,
+        "reassigned_deadlines": {
+          "Burst_Control_[3]_D0_S1_Bsingle": 0.7209855285,
+          "Burst_Critical_LaneDetection_[3]_D0_S0_B0": 0.6868746717663516,
+          "Burst_Critical_ObjectDetection_[3]_D0_S0_B2": 0.6868746717663516,
+          "Burst_Redundant_LaneDetection_[3]_D0_S0_B3": 0.6868746717663516,
+          "Burst_Redundant_ObjectDetection_[3]_D0_S0_B4": 0.6868746717663516
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[3]_D0_S0_B0",
+        "completion_time_seconds": 0.5515339374542236,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.014891386032104492,
+        "observed_execution_seconds": 0.014117002487182617,
+        "reassigned_deadlines": {
+          "Burst_Control_[3]_D0_S1_Bsingle": 0.7209855285,
+          "Burst_Critical_ObjectDetection_[3]_D0_S0_B2": 0.6835378085170457,
+          "Burst_Redundant_LaneDetection_[3]_D0_S0_B3": 0.6835378085170457,
+          "Burst_Redundant_ObjectDetection_[3]_D0_S0_B4": 0.6835378085170457
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[3]_D0_S0_B3",
+        "completion_time_seconds": 0.5765469074249268,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.015016317367553711,
+        "observed_execution_seconds": 0.015890836715698242,
+        "reassigned_deadlines": {
+          "Burst_Control_[3]_D0_S1_Bsingle": 0.7209855285,
+          "Burst_Critical_ObjectDetection_[3]_D0_S0_B2": 0.6793754659367722,
+          "Burst_Redundant_ObjectDetection_[3]_D0_S0_B4": 0.6793754659367722
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[3]_D0_S0_B2",
+        "completion_time_seconds": 0.6013920307159424,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.017511401857648577,
+        "observed_execution_seconds": 0.01781296730041504,
+        "reassigned_deadlines": {
+          "Burst_Control_[3]_D0_S1_Bsingle": 0.7209855285,
+          "Burst_Redundant_ObjectDetection_[3]_D0_S0_B4": 0.667575973727502
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[3]_D0_S0_B4",
+        "completion_time_seconds": 0.6282050609588623,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.017350226640701294,
+        "observed_execution_seconds": 0.016222000122070312,
+        "reassigned_deadlines": {
+          "Burst_Control_[3]_D0_S1_Bsingle": 0.7209855285
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[3]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.6535310745239258,
+        "dag_index": 0,
+        "dag_period": 3,
+        "moving_average_seconds": 0.013920128345489502,
+        "observed_execution_seconds": 0.013286113739013672,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[4]_D0_S0_B1",
+        "completion_time_seconds": 0.6759951114654541,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.014309501647949219,
+        "observed_execution_seconds": 0.012972116470336914,
+        "reassigned_deadlines": {
+          "Burst_Control_[4]_D0_S1_Bsingle": 0.894769926,
+          "Burst_Critical_LaneDetection_[4]_D0_S0_B0": 0.8560509309233679,
+          "Burst_Critical_ObjectDetection_[4]_D0_S0_B2": 0.8560509309233679,
+          "Burst_Redundant_LaneDetection_[4]_D0_S0_B3": 0.8560509309233679,
+          "Burst_Redundant_ObjectDetection_[4]_D0_S0_B4": 0.8560509309233679
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[4]_D0_S0_B0",
+        "completion_time_seconds": 0.7000508308410645,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.014785051345825195,
+        "observed_execution_seconds": 0.01452183723449707,
+        "reassigned_deadlines": {
+          "Burst_Control_[4]_D0_S1_Bsingle": 0.894769926,
+          "Burst_Critical_ObjectDetection_[4]_D0_S0_B2": 0.8520211248470131,
+          "Burst_Redundant_LaneDetection_[4]_D0_S0_B3": 0.8520211248470131,
+          "Burst_Redundant_ObjectDetection_[4]_D0_S0_B4": 0.8520211248470131
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[4]_D0_S0_B3",
+        "completion_time_seconds": 0.7230367660522461,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.014663279056549072,
+        "observed_execution_seconds": 0.014380693435668945,
+        "reassigned_deadlines": {
+          "Burst_Control_[4]_D0_S1_Bsingle": 0.894769926,
+          "Burst_Critical_ObjectDetection_[4]_D0_S0_B2": 0.8456025251245034,
+          "Burst_Redundant_ObjectDetection_[4]_D0_S0_B4": 0.8456025251245034
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[4]_D0_S0_B2",
+        "completion_time_seconds": 0.7543280124664307,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.017214208841323853,
+        "observed_execution_seconds": 0.017135143280029297,
+        "reassigned_deadlines": {
+          "Burst_Control_[4]_D0_S1_Bsingle": 0.894769926,
+          "Burst_Redundant_ObjectDetection_[4]_D0_S0_B4": 0.8319784989738472
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[4]_D0_S0_B4",
+        "completion_time_seconds": 0.7823359966278076,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.017316997051239014,
+        "observed_execution_seconds": 0.017486095428466797,
+        "reassigned_deadlines": {
+          "Burst_Control_[4]_D0_S1_Bsingle": 0.894769926
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[4]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.8070728778839111,
+        "dag_index": 0,
+        "dag_period": 4,
+        "moving_average_seconds": 0.013923454284667968,
+        "observed_execution_seconds": 0.013936758041381836,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[5]_D0_S0_B1",
+        "completion_time_seconds": 0.8305988311767578,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.014388600985209147,
+        "observed_execution_seconds": 0.014784097671508789,
+        "reassigned_deadlines": {
+          "Burst_Control_[5]_D0_S1_Bsingle": 1.0685543235,
+          "Burst_Critical_LaneDetection_[5]_D0_S0_B0": 1.0260146216019224,
+          "Burst_Critical_ObjectDetection_[5]_D0_S0_B2": 1.0260146216019224,
+          "Burst_Redundant_LaneDetection_[5]_D0_S0_B3": 1.0260146216019224,
+          "Burst_Redundant_ObjectDetection_[5]_D0_S0_B4": 1.0260146216019224
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[5]_D0_S0_B0",
+        "completion_time_seconds": 0.8527259826660156,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.01462516188621521,
+        "observed_execution_seconds": 0.014440059661865234,
+        "reassigned_deadlines": {
+          "Burst_Control_[5]_D0_S1_Bsingle": 1.0685543235,
+          "Burst_Critical_ObjectDetection_[5]_D0_S0_B2": 1.020992565226067,
+          "Burst_Redundant_LaneDetection_[5]_D0_S0_B3": 1.020992565226067,
+          "Burst_Redundant_ObjectDetection_[5]_D0_S0_B4": 1.020992565226067
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[5]_D0_S0_B3",
+        "completion_time_seconds": 0.8760528564453125,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.014700502157211304,
+        "observed_execution_seconds": 0.015130758285522461,
+        "reassigned_deadlines": {
+          "Burst_Control_[5]_D0_S1_Bsingle": 1.0685543235,
+          "Burst_Critical_ObjectDetection_[5]_D0_S0_B2": 1.0133560899582026,
+          "Burst_Redundant_ObjectDetection_[5]_D0_S0_B4": 1.0133560899582026
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[5]_D0_S0_B2",
+        "completion_time_seconds": 0.8997809886932373,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.01692861318588257,
+        "observed_execution_seconds": 0.016268014907836914,
+        "reassigned_deadlines": {
+          "Burst_Control_[5]_D0_S1_Bsingle": 1.0685543235,
+          "Burst_Redundant_ObjectDetection_[5]_D0_S0_B4": 0.9923873757291254
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[5]_D0_S0_B4",
+        "completion_time_seconds": 0.9231348037719727,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.01702222228050232,
+        "observed_execution_seconds": 0.016871929168701172,
+        "reassigned_deadlines": {
+          "Burst_Control_[5]_D0_S1_Bsingle": 1.0685543235
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[5]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.9443719387054443,
+        "dag_index": 0,
+        "dag_period": 5,
+        "moving_average_seconds": 0.014106074968973795,
+        "observed_execution_seconds": 0.01501917839050293,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[6]_D0_S0_B1",
+        "completion_time_seconds": 0.9670608043670654,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.01448263440813337,
+        "observed_execution_seconds": 0.015046834945678711,
+        "reassigned_deadlines": {
+          "Burst_Control_[6]_D0_S1_Bsingle": 1.242338721,
+          "Burst_Critical_LaneDetection_[6]_D0_S0_B0": 1.1922676103778787,
+          "Burst_Critical_ObjectDetection_[6]_D0_S0_B2": 1.1922676103778787,
+          "Burst_Redundant_LaneDetection_[6]_D0_S0_B3": 1.1922676103778787,
+          "Burst_Redundant_ObjectDetection_[6]_D0_S0_B4": 1.1922676103778787
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[6]_D0_S0_B0",
+        "completion_time_seconds": 0.9952528476715088,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.014791280031204224,
+        "observed_execution_seconds": 0.014925003051757812,
+        "reassigned_deadlines": {
+          "Burst_Control_[6]_D0_S1_Bsingle": 1.242338721,
+          "Burst_Critical_ObjectDetection_[6]_D0_S0_B2": 1.1869635668536993,
+          "Burst_Redundant_LaneDetection_[6]_D0_S0_B3": 1.1869635668536993,
+          "Burst_Redundant_ObjectDetection_[6]_D0_S0_B4": 1.1869635668536993
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[6]_D0_S0_B3",
+        "completion_time_seconds": 1.0170259475708008,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.014749258756637573,
+        "observed_execution_seconds": 0.014587879180908203,
+        "reassigned_deadlines": {
+          "Burst_Control_[6]_D0_S1_Bsingle": 1.242338721,
+          "Burst_Critical_ObjectDetection_[6]_D0_S0_B2": 1.1763315645978578,
+          "Burst_Redundant_ObjectDetection_[6]_D0_S0_B4": 1.1763315645978578
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[6]_D0_S0_B2",
+        "completion_time_seconds": 1.0490968227386475,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.01715010404586792,
+        "observed_execution_seconds": 0.01843881607055664,
+        "reassigned_deadlines": {
+          "Burst_Control_[6]_D0_S1_Bsingle": 1.242338721,
+          "Burst_Redundant_ObjectDetection_[6]_D0_S0_B4": 1.155127654582474
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[6]_D0_S0_B4",
+        "completion_time_seconds": 1.075547695159912,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.017192333936691284,
+        "observed_execution_seconds": 0.0173037052154541,
+        "reassigned_deadlines": {
+          "Burst_Control_[6]_D0_S1_Bsingle": 1.242338721
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[6]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.099698781967163,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.014067479542323522,
+        "observed_execution_seconds": 0.013835906982421875,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[7]_D0_S0_B1",
+        "completion_time_seconds": 1.1217458248138428,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.014396518468856812,
+        "observed_execution_seconds": 0.013793706893920898,
+        "reassigned_deadlines": {
+          "Burst_Control_[7]_D0_S1_Bsingle": 1.4161231184999998,
+          "Burst_Critical_LaneDetection_[7]_D0_S0_B0": 1.3629978942260637,
+          "Burst_Critical_ObjectDetection_[7]_D0_S0_B2": 1.3629978942260637,
+          "Burst_Redundant_LaneDetection_[7]_D0_S0_B3": 1.3629978942260637,
+          "Burst_Redundant_ObjectDetection_[7]_D0_S0_B4": 1.3629978942260637
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[7]_D0_S0_B0",
+        "completion_time_seconds": 1.1496639251708984,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.014794886112213135,
+        "observed_execution_seconds": 0.01448202133178711,
+        "reassigned_deadlines": {
+          "Burst_Control_[7]_D0_S1_Bsingle": 1.4161231184999998,
+          "Burst_Critical_ObjectDetection_[7]_D0_S0_B2": 1.3568569515047288,
+          "Burst_Redundant_LaneDetection_[7]_D0_S0_B3": 1.3568569515047288,
+          "Burst_Redundant_ObjectDetection_[7]_D0_S0_B4": 1.3568569515047288
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[7]_D0_S0_B3",
+        "completion_time_seconds": 1.183962106704712,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.01465955376625061,
+        "observed_execution_seconds": 0.014808177947998047,
+        "reassigned_deadlines": {
+          "Burst_Control_[7]_D0_S1_Bsingle": 1.4161231184999998,
+          "Burst_Critical_ObjectDetection_[7]_D0_S0_B2": 1.3487180506516205,
+          "Burst_Redundant_ObjectDetection_[7]_D0_S0_B4": 1.3487180506516205
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[7]_D0_S0_B2",
+        "completion_time_seconds": 1.2151899337768555,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.017121583223342896,
+        "observed_execution_seconds": 0.01724696159362793,
+        "reassigned_deadlines": {
+          "Burst_Control_[7]_D0_S1_Bsingle": 1.4161231184999998,
+          "Burst_Redundant_ObjectDetection_[7]_D0_S0_B4": 1.3254944424572443
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[7]_D0_S0_B4",
+        "completion_time_seconds": 1.242358922958374,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.017196953296661377,
+        "observed_execution_seconds": 0.016824960708618164,
+        "reassigned_deadlines": {
+          "Burst_Control_[7]_D0_S1_Bsingle": 1.4161231184999998
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[7]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.2621688842773438,
+        "dag_index": 0,
+        "dag_period": 7,
+        "moving_average_seconds": 0.014011174440383911,
+        "observed_execution_seconds": 0.01361703872680664,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[8]_D0_S0_B1",
+        "completion_time_seconds": 1.289416790008545,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.014243513345718384,
+        "observed_execution_seconds": 0.013226985931396484,
+        "reassigned_deadlines": {
+          "Burst_Control_[8]_D0_S1_Bsingle": 1.5899075159999998,
+          "Burst_Critical_LaneDetection_[8]_D0_S0_B0": 1.5357386908600954,
+          "Burst_Critical_ObjectDetection_[8]_D0_S0_B2": 1.5357386908600954,
+          "Burst_Redundant_LaneDetection_[8]_D0_S0_B3": 1.5357386908600954,
+          "Burst_Redundant_ObjectDetection_[8]_D0_S0_B4": 1.5357386908600954
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[8]_D0_S0_B0",
+        "completion_time_seconds": 1.3186180591583252,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.01464623212814331,
+        "observed_execution_seconds": 0.014415264129638672,
+        "reassigned_deadlines": {
+          "Burst_Control_[8]_D0_S1_Bsingle": 1.5899075159999998,
+          "Burst_Critical_ObjectDetection_[8]_D0_S0_B2": 1.5296219531301436,
+          "Burst_Redundant_LaneDetection_[8]_D0_S0_B3": 1.5296219531301436,
+          "Burst_Redundant_ObjectDetection_[8]_D0_S0_B4": 1.5296219531301436
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[8]_D0_S0_B3",
+        "completion_time_seconds": 1.3436269760131836,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.01489076018333435,
+        "observed_execution_seconds": 0.016336917877197266,
+        "reassigned_deadlines": {
+          "Burst_Control_[8]_D0_S1_Bsingle": 1.5899075159999998,
+          "Burst_Critical_ObjectDetection_[8]_D0_S0_B2": 1.518619966566411,
+          "Burst_Redundant_ObjectDetection_[8]_D0_S0_B4": 1.518619966566411
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[8]_D0_S0_B2",
+        "completion_time_seconds": 1.3710839748382568,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.017094552516937256,
+        "observed_execution_seconds": 0.016315937042236328,
+        "reassigned_deadlines": {
+          "Burst_Control_[8]_D0_S1_Bsingle": 1.5899075159999998,
+          "Burst_Redundant_ObjectDetection_[8]_D0_S0_B4": 1.4913412676983155
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[8]_D0_S0_B4",
+        "completion_time_seconds": 1.400810956954956,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.017168402671813965,
+        "observed_execution_seconds": 0.01807689666748047,
+        "reassigned_deadlines": {
+          "Burst_Control_[8]_D0_S1_Bsingle": 1.5899075159999998
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[8]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.4233551025390625,
+        "dag_index": 0,
+        "dag_period": 8,
+        "moving_average_seconds": 0.01381632685661316,
+        "observed_execution_seconds": 0.012516260147094727,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[9]_D0_S0_B1",
+        "completion_time_seconds": 1.4468929767608643,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.014130085706710815,
+        "observed_execution_seconds": 0.013043880462646484,
+        "reassigned_deadlines": {
+          "Burst_Control_[9]_D0_S1_Bsingle": 1.7636919134999995,
+          "Burst_Critical_LaneDetection_[9]_D0_S0_B0": 1.7075295067444476,
+          "Burst_Critical_ObjectDetection_[9]_D0_S0_B2": 1.7075295067444476,
+          "Burst_Redundant_LaneDetection_[9]_D0_S0_B3": 1.7075295067444476,
+          "Burst_Redundant_ObjectDetection_[9]_D0_S0_B4": 1.7075295067444476
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[9]_D0_S0_B0",
+        "completion_time_seconds": 1.470667839050293,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.014839500188827515,
+        "observed_execution_seconds": 0.014029979705810547,
+        "reassigned_deadlines": {
+          "Burst_Control_[9]_D0_S1_Bsingle": 1.7636919134999995,
+          "Burst_Critical_ObjectDetection_[9]_D0_S0_B2": 1.699422232492729,
+          "Burst_Redundant_LaneDetection_[9]_D0_S0_B3": 1.699422232492729,
+          "Burst_Redundant_ObjectDetection_[9]_D0_S0_B4": 1.699422232492729
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[9]_D0_S0_B3",
+        "completion_time_seconds": 1.493074893951416,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.014765292406082153,
+        "observed_execution_seconds": 0.01453709602355957,
+        "reassigned_deadlines": {
+          "Burst_Control_[9]_D0_S1_Bsingle": 1.7636919134999995,
+          "Burst_Critical_ObjectDetection_[9]_D0_S0_B2": 1.6860451847369018,
+          "Burst_Redundant_ObjectDetection_[9]_D0_S0_B4": 1.6860451847369018
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[9]_D0_S0_B2",
+        "completion_time_seconds": 1.5288407802581787,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.01722964644432068,
+        "observed_execution_seconds": 0.016757965087890625,
+        "reassigned_deadlines": {
+          "Burst_Control_[9]_D0_S1_Bsingle": 1.7636919134999995,
+          "Burst_Redundant_ObjectDetection_[9]_D0_S0_B4": 1.6591765875328344
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[9]_D0_S0_B4",
+        "completion_time_seconds": 1.5518279075622559,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.0172823965549469,
+        "observed_execution_seconds": 0.017293930053710938,
+        "reassigned_deadlines": {
+          "Burst_Control_[9]_D0_S1_Bsingle": 1.7636919134999995
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[9]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.5756778717041016,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.01366192102432251,
+        "observed_execution_seconds": 0.01328897476196289,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[10]_D0_S0_B1",
+        "completion_time_seconds": 1.5999279022216797,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.014146596193313599,
+        "observed_execution_seconds": 0.014488935470581055,
+        "reassigned_deadlines": {
+          "Burst_Control_[10]_D0_S1_Bsingle": 1.9374763109999995,
+          "Burst_Critical_LaneDetection_[10]_D0_S0_B0": 1.878169213594325,
+          "Burst_Critical_ObjectDetection_[10]_D0_S0_B2": 1.878169213594325,
+          "Burst_Redundant_LaneDetection_[10]_D0_S0_B3": 1.878169213594325,
+          "Burst_Redundant_ObjectDetection_[10]_D0_S0_B4": 1.878169213594325
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[10]_D0_S0_B0",
+        "completion_time_seconds": 1.6232349872589111,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.014736443758010864,
+        "observed_execution_seconds": 0.0146942138671875,
+        "reassigned_deadlines": {
+          "Burst_Control_[10]_D0_S1_Bsingle": 1.9374763109999995,
+          "Burst_Critical_ObjectDetection_[10]_D0_S0_B2": 1.8692913550472217,
+          "Burst_Redundant_LaneDetection_[10]_D0_S0_B3": 1.8692913550472217,
+          "Burst_Redundant_ObjectDetection_[10]_D0_S0_B4": 1.8692913550472217
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[10]_D0_S0_B3",
+        "completion_time_seconds": 1.6455409526824951,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.014729470014572144,
+        "observed_execution_seconds": 0.014532089233398438,
+        "reassigned_deadlines": {
+          "Burst_Control_[10]_D0_S1_Bsingle": 1.9374763109999995,
+          "Burst_Critical_ObjectDetection_[10]_D0_S0_B2": 1.8547753042832404,
+          "Burst_Redundant_ObjectDetection_[10]_D0_S0_B4": 1.8547753042832404
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[10]_D0_S0_B2",
+        "completion_time_seconds": 1.6720497608184814,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.017216026782989502,
+        "observed_execution_seconds": 0.01790785789489746,
+        "reassigned_deadlines": {
+          "Burst_Control_[10]_D0_S1_Bsingle": 1.9374763109999995,
+          "Burst_Redundant_ObjectDetection_[10]_D0_S0_B4": 1.8200385658179972
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[10]_D0_S0_B4",
+        "completion_time_seconds": 1.70461106300354,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.017202317714691162,
+        "observed_execution_seconds": 0.017194032669067383,
+        "reassigned_deadlines": {
+          "Burst_Control_[10]_D0_S1_Bsingle": 1.9374763109999995
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[10]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.736041784286499,
+        "dag_index": 0,
+        "dag_period": 10,
+        "moving_average_seconds": 0.013841509819030762,
+        "observed_execution_seconds": 0.015231847763061523,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[11]_D0_S0_B1",
+        "completion_time_seconds": 1.7592968940734863,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.014104455709457397,
+        "observed_execution_seconds": 0.015479087829589844,
+        "reassigned_deadlines": {
+          "Burst_Control_[11]_D0_S1_Bsingle": 2.1112607084999993,
+          "Burst_Critical_LaneDetection_[11]_D0_S0_B0": 2.0485658336932002,
+          "Burst_Critical_ObjectDetection_[11]_D0_S0_B2": 2.0485658336932002,
+          "Burst_Redundant_LaneDetection_[11]_D0_S0_B3": 2.0485658336932002,
+          "Burst_Redundant_ObjectDetection_[11]_D0_S0_B4": 2.0485658336932002
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[11]_D0_S0_B0",
+        "completion_time_seconds": 1.7798960208892822,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.014562755823135376,
+        "observed_execution_seconds": 0.013148307800292969,
+        "reassigned_deadlines": {
+          "Burst_Control_[11]_D0_S1_Bsingle": 2.1112607084999993,
+          "Burst_Critical_ObjectDetection_[11]_D0_S0_B2": 2.038236224724698,
+          "Burst_Redundant_LaneDetection_[11]_D0_S0_B3": 2.038236224724698,
+          "Burst_Redundant_ObjectDetection_[11]_D0_S0_B4": 2.038236224724698
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[11]_D0_S0_B3",
+        "completion_time_seconds": 1.803945779800415,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.014556974172592163,
+        "observed_execution_seconds": 0.014761924743652344,
+        "reassigned_deadlines": {
+          "Burst_Control_[11]_D0_S1_Bsingle": 2.1112607084999993,
+          "Burst_Critical_ObjectDetection_[11]_D0_S0_B2": 2.0230940253126013,
+          "Burst_Redundant_ObjectDetection_[11]_D0_S0_B4": 2.0230940253126013
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[11]_D0_S0_B2",
+        "completion_time_seconds": 1.8276751041412354,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.017055213451385498,
+        "observed_execution_seconds": 0.016070127487182617,
+        "reassigned_deadlines": {
+          "Burst_Control_[11]_D0_S1_Bsingle": 2.1112607084999993,
+          "Burst_Redundant_ObjectDetection_[11]_D0_S0_B4": 1.9842163972663207
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[11]_D0_S0_B4",
+        "completion_time_seconds": 1.8495910167694092,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.016940832138061523,
+        "observed_execution_seconds": 0.015909910202026367,
+        "reassigned_deadlines": {
+          "Burst_Control_[11]_D0_S1_Bsingle": 2.1112607084999993
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[11]_D0_S1_Bsingle",
+        "completion_time_seconds": 1.8699438571929932,
+        "dag_index": 0,
+        "dag_period": 11,
+        "moving_average_seconds": 0.01385536789894104,
+        "observed_execution_seconds": 0.013396978378295898,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[12]_D0_S0_B1",
+        "completion_time_seconds": 1.8971550464630127,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.014041304588317871,
+        "observed_execution_seconds": 0.012466907501220703,
+        "reassigned_deadlines": {
+          "Burst_Control_[12]_D0_S1_Bsingle": 2.2850451059999997,
+          "Burst_Critical_LaneDetection_[12]_D0_S0_B0": 2.2151128885729094,
+          "Burst_Critical_ObjectDetection_[12]_D0_S0_B2": 2.2151128885729094,
+          "Burst_Redundant_LaneDetection_[12]_D0_S0_B3": 2.2151128885729094,
+          "Burst_Redundant_ObjectDetection_[12]_D0_S0_B4": 2.2151128885729094
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[12]_D0_S0_B0",
+        "completion_time_seconds": 1.9215798377990723,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.014622658491134644,
+        "observed_execution_seconds": 0.014940738677978516,
+        "reassigned_deadlines": {
+          "Burst_Control_[12]_D0_S1_Bsingle": 2.2850451059999997,
+          "Burst_Critical_ObjectDetection_[12]_D0_S0_B2": 2.204288691790575,
+          "Burst_Redundant_LaneDetection_[12]_D0_S0_B3": 2.204288691790575,
+          "Burst_Redundant_ObjectDetection_[12]_D0_S0_B4": 2.204288691790575
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[12]_D0_S0_B3",
+        "completion_time_seconds": 1.945356845855713,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.014569908380508423,
+        "observed_execution_seconds": 0.0159149169921875,
+        "reassigned_deadlines": {
+          "Burst_Control_[12]_D0_S1_Bsingle": 2.2850451059999997,
+          "Burst_Critical_ObjectDetection_[12]_D0_S0_B2": 2.186452763728065,
+          "Burst_Redundant_ObjectDetection_[12]_D0_S0_B4": 2.186452763728065
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[12]_D0_S0_B2",
+        "completion_time_seconds": 1.9701869487762451,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.01715308427810669,
+        "observed_execution_seconds": 0.018013954162597656,
+        "reassigned_deadlines": {
+          "Burst_Control_[12]_D0_S1_Bsingle": 2.2850451059999997,
+          "Burst_Redundant_ObjectDetection_[12]_D0_S0_B4": 2.1443584448467927
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[12]_D0_S0_B4",
+        "completion_time_seconds": 2.0013060569763184,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.016942501068115234,
+        "observed_execution_seconds": 0.016392230987548828,
+        "reassigned_deadlines": {
+          "Burst_Control_[12]_D0_S1_Bsingle": 2.2850451059999997
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[12]_D0_S1_Bsingle",
+        "completion_time_seconds": 2.0211827754974365,
+        "dag_index": 0,
+        "dag_period": 12,
+        "moving_average_seconds": 0.013797640800476074,
+        "observed_execution_seconds": 0.01347494125366211,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_Segmentation_[13]_D0_S0_B1",
+        "completion_time_seconds": 2.044924736022949,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.013967901468276978,
+        "observed_execution_seconds": 0.01419687271118164,
+        "reassigned_deadlines": {
+          "Burst_Control_[13]_D0_S1_Bsingle": 2.458829503499999,
+          "Burst_Critical_LaneDetection_[13]_D0_S0_B0": 2.384490445238602,
+          "Burst_Critical_ObjectDetection_[13]_D0_S0_B2": 2.384490445238602,
+          "Burst_Redundant_LaneDetection_[13]_D0_S0_B3": 2.384490445238602,
+          "Burst_Redundant_ObjectDetection_[13]_D0_S0_B4": 2.384490445238602
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_LaneDetection_[13]_D0_S0_B0",
+        "completion_time_seconds": 2.0674359798431396,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.014597803354263306,
+        "observed_execution_seconds": 0.01425313949584961,
+        "reassigned_deadlines": {
+          "Burst_Control_[13]_D0_S1_Bsingle": 2.458829503499999,
+          "Burst_Critical_ObjectDetection_[13]_D0_S0_B2": 2.372119989155479,
+          "Burst_Redundant_LaneDetection_[13]_D0_S0_B3": 2.372119989155479,
+          "Burst_Redundant_ObjectDetection_[13]_D0_S0_B4": 2.372119989155479
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_LaneDetection_[13]_D0_S0_B3",
+        "completion_time_seconds": 2.102301836013794,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.014694780111312866,
+        "observed_execution_seconds": 0.015312910079956055,
+        "reassigned_deadlines": {
+          "Burst_Control_[13]_D0_S1_Bsingle": 2.458829503499999,
+          "Burst_Critical_ObjectDetection_[13]_D0_S0_B2": 2.3556632277141545,
+          "Burst_Redundant_ObjectDetection_[13]_D0_S0_B4": 2.3556632277141545
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Critical_ObjectDetection_[13]_D0_S0_B2",
+        "completion_time_seconds": 2.125736951828003,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.01686999201774597,
+        "observed_execution_seconds": 0.016177892684936523,
+        "reassigned_deadlines": {
+          "Burst_Control_[13]_D0_S1_Bsingle": 2.458829503499999,
+          "Burst_Redundant_ObjectDetection_[13]_D0_S0_B4": 2.3089682015688817
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Redundant_ObjectDetection_[13]_D0_S0_B4",
+        "completion_time_seconds": 2.149927854537964,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.016870886087417603,
+        "observed_execution_seconds": 0.017301082611083984,
+        "reassigned_deadlines": {
+          "Burst_Control_[13]_D0_S1_Bsingle": 2.458829503499999
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "Burst_Control_[13]_D0_S1_Bsingle",
+        "completion_time_seconds": 2.185731887817383,
+        "dag_index": 0,
+        "dag_period": 13,
+        "moving_average_seconds": 0.013687968254089355,
+        "observed_execution_seconds": 0.01414179801940918,
+        "reassigned_deadlines": {},
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 84,
+  "offered_task_stream_sha256": "38d32352569483584b8328435b098f74abfbefb04ba741ec571bedfa77f25fb5",
+  "outcome_counts": {
+    "success": 84
+  },
+  "overall_deadline_hit": 1.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 1.0,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 100.0,
+  "run_id": "burst-mac-control-000-feedback-fine-grained-seed202-task480b842b-burst61badf84",
+  "schema_version": 1,
+  "task_config_path": "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/taskdata/burst_calibration/mac_mps_candidate_v7/generated_configs/control-000/task.json",
+  "torch_device": "mps"
+}

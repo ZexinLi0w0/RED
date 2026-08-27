@@ -139,7 +139,7 @@ and Sustained Burst definitions and the complete protocol.
 ### Parameter Sensitivity Experiment
 
 On the Jetson server, activate the `schedule` environment and run each of the
-18 parameter settings once with:
+47 parameter settings once with:
 
 ```bash
 cd /experiment/zexin/ATC23/DeepLearningScheduler
@@ -148,7 +148,7 @@ conda activate schedule
 ```
 
 The wrapper pulls the latest commit with `git pull --ff-only`, resumes completed
-runs, executes all 18 runs, validates the artifacts, and writes the CSV, JSON,
+runs, executes all 47 runs, validates the artifacts, and writes the CSV, JSON,
 and LaTeX table files under
 `taskdata/parameter_sensitivity/agx_high_load_v1/report/`. The source tree must
 be clean. To use another Conda environment, replace `schedule` with that
@@ -167,11 +167,15 @@ cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
 conda activate schedule
 SKIP_GIT_PULL=1 ./experiments/run_parameter_sensitivity.sh \
   --device mac --power-mode AC --torch-device mps \
+  --base-task-config TaskConfigs/simo/parameter_sensitivity/mac_mps_parameter_sensitivity.json \
   --output-root taskdata/parameter_sensitivity/mac_validation
 ```
 
-The default workload uses AGX Orin timing profiles. A Mac run validates the
-pipeline but does not replace the final AGX Orin paper measurements. See
+The Mac task config uses the measured MPS runtime profile and a sensitivity-only
+near-saturation workload. The refinement block runs the 4 x 5 Cartesian product
+with burst disabled; the independent Burst Management block runs the 3 x 3 x 3
+Cartesian product with `k=8` and `gamma=100 ms` fixed. A Mac run does not replace
+the final AGX Orin paper measurements. See
 [`experiments/PARAMETER_SENSITIVITY.md`](experiments/PARAMETER_SENSITIVITY.md)
 for the parameter grid, workload definition, dry-run command, and artifact
 schema.

@@ -61,8 +61,8 @@ def test_plan_defaults_to_one_run_per_point(tmp_path) -> None:
 
     plan = generate_study_plan(task_path, burst_path, tmp_path / "study")
 
-    assert len(plan["points"]) == 18
-    assert plan["planned_run_count"] == 18
+    assert len(plan["points"]) == 47
+    assert plan["planned_run_count"] == 47
     assert plan["repetitions_per_point"] == 1
     assert plan["seeds"] == list(DEFAULT_SEEDS) == [101]
     assert [point["point_slug"] for point in plan["points"]] == [
@@ -75,25 +75,13 @@ def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
-def test_generated_points_follow_one_factor_at_a_time(tmp_path) -> None:
+def test_generated_points_keep_the_two_blocks_independent(tmp_path) -> None:
     task_path, burst_path = _base_configs(tmp_path)
     plan = generate_study_plan(
         task_path, burst_path, tmp_path / "study", seeds=(1, 2)
     )
 
     for point in plan["points"]:
-        changed = {
-            key
-            for key, value in point["executed_parameters"].items()
-            if value != PAPER_DEFAULTS[key]
-        }
-        expected = (
-            set()
-            if point["value"] == PAPER_DEFAULTS[point["parameter_key"]]
-            else {point["parameter_key"]}
-        )
-        assert changed == expected
-
         generated_task = json.loads(
             open(point["task_config_path"], encoding="utf-8").read()
         )
@@ -115,6 +103,26 @@ def test_generated_points_follow_one_factor_at_a_time(tmp_path) -> None:
         assert generated_burst["persistence_window"] == point[
             "executed_parameters"
         ]["persistence_window"]
+        assert generated_burst["burst_enabled"] == point["executed_parameters"][
+            "burst_enabled"
+        ]
+        if point["block"] == "refinement":
+            assert generated_task["BurstTaskRatio"] == 0
+            assert generated_task["NonPartitionablePercentage"] == 0
+        else:
+            assert generated_task["BurstTaskRatio"] == 100
+            assert generated_task["NonPartitionablePercentage"] == 100
+            assert generated_task["MovingAverageWindow"] == PAPER_DEFAULTS[
+                "moving_average_window"
+            ]
+            assert generated_task["ReleaseTimeSkewThresholdMs"] == PAPER_DEFAULTS[
+                "release_time_skew_threshold_ms"
+            ]
+
+    refinement = [point for point in plan["points"] if point["block"] == "refinement"]
+    burst = [point for point in plan["points"] if point["block"] == "burst-management"]
+    assert len(refinement) == 4 * 5
+    assert len(burst) == 3 * 3 * 3
 
 
 def test_summarizer_extracts_table_values_from_validated_run_artifacts(tmp_path) -> None:
@@ -139,11 +147,15 @@ def test_summarizer_extracts_table_values_from_validated_run_artifacts(tmp_path)
                 "moving_average_reassignment": {
                     "window": parameters["moving_average_window"]
                 },
-                "burst_statistics": {
-                    "gpu_threshold": parameters["gpu_threshold"],
-                    "queue_threshold": parameters["queue_threshold"],
-                    "persistence_window": parameters["persistence_window"],
-                },
+                "burst_statistics": (
+                    {
+                        "gpu_threshold": parameters["gpu_threshold"],
+                        "queue_threshold": parameters["queue_threshold"],
+                        "persistence_window": parameters["persistence_window"],
+                    }
+                    if parameters["burst_enabled"]
+                    else None
+                ),
             }
             summary_path = run_dir / "summary.json"
             _write_json(summary_path, summary)
@@ -164,15 +176,15 @@ def test_summarizer_extracts_table_values_from_validated_run_artifacts(tmp_path)
 
     report = summarize_study(output_root)
 
-    assert report["complete_run_count"] == 36
+    assert report["complete_run_count"] == 94
     assert report["aggregation"] == "arithmetic mean across 2 configured repetitions"
-    assert len(report["points"]) == 18
+    assert len(report["points"]) == 47
     first = report["points"][0]
     assert first["metrics"]["end_to_end_latency_seconds"]["mean"] == 2.5
     table_path = output_root / "report" / "parameter_sensitivity_table.csv"
     with table_path.open(newline="", encoding="utf-8") as input_file:
         rows = list(csv.DictReader(input_file))
-    assert len(rows) == 18
+    assert len(rows) == 47
     assert rows[0]["end_to_end_latency_seconds"] == "2.500"
     assert rows[0]["deadline_missing_rate"] == "0.150"
     assert rows[0]["qoe_score"] == "0.850"

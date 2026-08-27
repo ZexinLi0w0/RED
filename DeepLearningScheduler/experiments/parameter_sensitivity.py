@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run and summarize the paper's one-factor-at-a-time sensitivity study."""
+"""Run and summarize the paper's two-block parameter sensitivity study."""
 
 import argparse
 import csv
@@ -53,6 +53,14 @@ METRICS = (
     "deadline_missing_rate",
     "qoe_score",
 )
+EXECUTION_SOURCE_FILES = (
+    "main.py",
+    "task_scheduler.py",
+    "task_generator.py",
+    "burst_task_manager.py",
+    "deadline_reassignment.py",
+    "visual_scripts/visual_task.py",
+)
 PAPER_DEFAULTS = {
     "moving_average_window": 8,
     "release_time_skew_threshold_ms": 100.0,
@@ -64,90 +72,79 @@ PAPER_DEFAULTS = {
 
 @dataclass(frozen=True)
 class SensitivityPoint:
+    block: str
     group: str
     parameter: str
-    parameter_key: str
-    value: int | float
     setting: str
     slug: str
-    task_config_key: str | None = None
-    burst_config_key: str | None = None
+    moving_average_window: int
+    release_time_skew_threshold_ms: float
+    gpu_threshold: float
+    queue_threshold: int
+    persistence_window: int
+    burst_enabled: bool
+
+    @property
+    def executed_parameters(self):
+        return {
+            "moving_average_window": self.moving_average_window,
+            "release_time_skew_threshold_ms": self.release_time_skew_threshold_ms,
+            "gpu_threshold": self.gpu_threshold,
+            "queue_threshold": self.queue_threshold,
+            "persistence_window": self.persistence_window,
+            "burst_enabled": self.burst_enabled,
+        }
 
 
-SENSITIVITY_POINTS = (
-    SensitivityPoint(
-        "Moving-average window", "k", "moving_average_window", 1, "1", "k-1",
-        task_config_key="MovingAverageWindow",
-    ),
-    SensitivityPoint(
-        "Moving-average window", "k", "moving_average_window", 4, "4", "k-4",
-        task_config_key="MovingAverageWindow",
-    ),
-    SensitivityPoint(
-        "Moving-average window", "k", "moving_average_window", 8,
-        "8 (default)", "k-8", task_config_key="MovingAverageWindow",
-    ),
-    SensitivityPoint(
-        "Moving-average window", "k", "moving_average_window", 16, "16", "k-16",
-        task_config_key="MovingAverageWindow",
-    ),
-    SensitivityPoint(
-        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 0.0,
-        "0 ms", "gamma-000ms", task_config_key="ReleaseTimeSkewThresholdMs",
-    ),
-    SensitivityPoint(
-        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 50.0,
-        "50 ms", "gamma-050ms", task_config_key="ReleaseTimeSkewThresholdMs",
-    ),
-    SensitivityPoint(
-        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 100.0,
-        "100 ms (default)", "gamma-100ms", task_config_key="ReleaseTimeSkewThresholdMs",
-    ),
-    SensitivityPoint(
-        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 150.0,
-        "150 ms", "gamma-150ms", task_config_key="ReleaseTimeSkewThresholdMs",
-    ),
-    SensitivityPoint(
-        "Release-time skew threshold", "gamma", "release_time_skew_threshold_ms", 200.0,
-        "200 ms", "gamma-200ms", task_config_key="ReleaseTimeSkewThresholdMs",
-    ),
-    SensitivityPoint(
-        "Burst management", "theta_u", "gpu_threshold", 70.0,
-        "70%", "gpu-070pct", burst_config_key="gpu_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "theta_u", "gpu_threshold", 80.0,
-        "80%", "gpu-080pct", burst_config_key="gpu_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "theta_u", "gpu_threshold", 90.0,
-        "90% (default)", "gpu-090pct", burst_config_key="gpu_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "Q_max", "queue_threshold", 4,
-        "4", "queue-04", burst_config_key="queue_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "Q_max", "queue_threshold", 8,
-        "8 (default)", "queue-08", burst_config_key="queue_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "Q_max", "queue_threshold", 16,
-        "16", "queue-16", burst_config_key="queue_threshold",
-    ),
-    SensitivityPoint(
-        "Burst management", "W", "persistence_window", 1,
-        "1 tick", "window-1tick", burst_config_key="persistence_window",
-    ),
-    SensitivityPoint(
-        "Burst management", "W", "persistence_window", 3,
-        "3 ticks (default)", "window-3ticks", burst_config_key="persistence_window",
-    ),
-    SensitivityPoint(
-        "Burst management", "W", "persistence_window", 5,
-        "5 ticks", "window-5ticks", burst_config_key="persistence_window",
-    ),
-)
+def _sensitivity_points():
+    points = []
+    for window in (1, 4, 8, 16):
+        for skew_ms in (0.0, 50.0, 100.0, 150.0, 200.0):
+            points.append(
+                SensitivityPoint(
+                    block="refinement",
+                    group="Refinement sensitivity",
+                    parameter="k x gamma",
+                    setting=f"k={window}, gamma={skew_ms:g} ms",
+                    slug=f"refinement-k{window:02d}-gamma{int(skew_ms):03d}ms",
+                    moving_average_window=window,
+                    release_time_skew_threshold_ms=skew_ms,
+                    gpu_threshold=PAPER_DEFAULTS["gpu_threshold"],
+                    queue_threshold=PAPER_DEFAULTS["queue_threshold"],
+                    persistence_window=PAPER_DEFAULTS["persistence_window"],
+                    burst_enabled=False,
+                )
+            )
+    for gpu_threshold in (70.0, 80.0, 90.0):
+        for queue_threshold in (4, 8, 16):
+            for persistence_window in (1, 3, 5):
+                points.append(
+                    SensitivityPoint(
+                        block="burst-management",
+                        group="Burst Management sensitivity",
+                        parameter="theta_u x Q_max x W",
+                        setting=(
+                            f"theta_u={gpu_threshold:g}%, Q_max={queue_threshold}, "
+                            f"W={persistence_window} ticks"
+                        ),
+                        slug=(
+                            f"burst-gpu{int(gpu_threshold):03d}pct-"
+                            f"queue{queue_threshold:02d}-window{persistence_window}tick"
+                        ),
+                        moving_average_window=PAPER_DEFAULTS["moving_average_window"],
+                        release_time_skew_threshold_ms=PAPER_DEFAULTS[
+                            "release_time_skew_threshold_ms"
+                        ],
+                        gpu_threshold=gpu_threshold,
+                        queue_threshold=queue_threshold,
+                        persistence_window=persistence_window,
+                        burst_enabled=True,
+                    )
+                )
+    return tuple(points)
+
+
+SENSITIVITY_POINTS = _sensitivity_points()
 
 
 def _csv_ints(raw_value):
@@ -188,6 +185,13 @@ def _sha256(path):
     return digest.hexdigest()
 
 
+def _execution_source_hashes():
+    return {
+        relative_path: _sha256(REPOSITORY_ROOT / relative_path)
+        for relative_path in EXECUTION_SOURCE_FILES
+    }
+
+
 def _write_json_atomic(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = path.with_suffix(f"{path.suffix}.tmp")
@@ -218,25 +222,21 @@ def _utc_now():
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def _executed_parameters(point):
-    values = dict(PAPER_DEFAULTS)
-    values[point.parameter_key] = point.value
-    return values
-
-
-def _validate_one_factor(point, executed_parameters):
-    changed = {
-        key
-        for key, value in executed_parameters.items()
-        if value != PAPER_DEFAULTS[key]
-    }
-    allowed = set() if point.value == PAPER_DEFAULTS[point.parameter_key] else {
-        point.parameter_key
-    }
-    if changed != allowed:
-        raise ValueError(
-            f"{point.slug} violates one-factor-at-a-time: changed={sorted(changed)}"
-        )
+def _validate_block_isolation(point):
+    if point.block == "refinement":
+        if point.burst_enabled:
+            raise ValueError(f"{point.slug} must disable Burst Management")
+    elif point.block == "burst-management":
+        if not point.burst_enabled:
+            raise ValueError(f"{point.slug} must enable Burst Management")
+        if (
+            point.moving_average_window != PAPER_DEFAULTS["moving_average_window"]
+            or point.release_time_skew_threshold_ms
+            != PAPER_DEFAULTS["release_time_skew_threshold_ms"]
+        ):
+            raise ValueError(f"{point.slug} must hold refinement parameters fixed")
+    else:
+        raise ValueError(f"unknown sensitivity block: {point.block}")
 
 
 def generate_study_plan(
@@ -262,37 +262,39 @@ def generate_study_plan(
     config_root = output_root / "generated_configs"
     plan_points = []
     for order, point in enumerate(SENSITIVITY_POINTS, start=1):
+        _validate_block_isolation(point)
         task_config = json.loads(json.dumps(task_template))
         burst_config = json.loads(json.dumps(burst_template))
-        task_config["MovingAverageWindow"] = PAPER_DEFAULTS[
-            "moving_average_window"
-        ]
-        task_config["ReleaseTimeSkewThresholdMs"] = PAPER_DEFAULTS["release_time_skew_threshold_ms"]
+        task_config["MovingAverageWindow"] = point.moving_average_window
+        task_config["ReleaseTimeSkewThresholdMs"] = (
+            point.release_time_skew_threshold_ms
+        )
+        if not point.burst_enabled:
+            task_config["BurstTaskRatio"] = 0
+            task_config["NonPartitionablePercentage"] = 0
+        else:
+            # Keep burst backlog visible to Burst Management. If these nodes
+            # were merged first, the queue would never cross the paper's
+            # Q_max grid and the burst block would be degenerate.
+            task_config["NonPartitionablePercentage"] = 100
         burst_config.update(
             {
-                "burst_enabled": True,
-                "gpu_threshold": PAPER_DEFAULTS["gpu_threshold"],
-                "queue_threshold": PAPER_DEFAULTS["queue_threshold"],
-                "persistence_window": PAPER_DEFAULTS["persistence_window"],
+                "burst_enabled": point.burst_enabled,
+                "gpu_threshold": point.gpu_threshold,
+                "queue_threshold": point.queue_threshold,
+                "persistence_window": point.persistence_window,
             }
         )
-        if point.task_config_key:
-            task_config[point.task_config_key] = point.value
-        if point.burst_config_key:
-            burst_config[point.burst_config_key] = point.value
-
-        executed_parameters = _executed_parameters(point)
-        _validate_one_factor(point, executed_parameters)
+        executed_parameters = point.executed_parameters
         metadata = {
             "study": "parameter-sensitivity",
-            "protocol": "one-factor-at-a-time",
+            "protocol": "independent-block-full-factorial",
             "point_order": order,
             "point_slug": point.slug,
+            "block": point.block,
             "group": point.group,
             "parameter": point.parameter,
-            "parameter_key": point.parameter_key,
             "setting": point.setting,
-            "value": point.value,
             "executed_parameters": executed_parameters,
         }
         task_config["ParameterSensitivityStudy"] = metadata
@@ -316,8 +318,8 @@ def generate_study_plan(
     plan = {
         "schema_version": 1,
         "study": "parameter-sensitivity",
-        "protocol": "one-factor-at-a-time",
-        "representative_scenario": "AGX Orin high-load burst workload",
+        "protocol": "independent-block-full-factorial",
+        "representative_scenario": base_task_config.stem,
         "method": method,
         "repetitions_per_point": len(seeds),
         "seeds": list(seeds),
@@ -327,6 +329,7 @@ def generate_study_plan(
         "base_burst_config": str(base_burst_config),
         "base_burst_config_sha256": _sha256(base_burst_config),
         "points": plan_points,
+        "point_counts": {"refinement": 20, "burst-management": 27},
         "planned_run_count": len(plan_points) * len(seeds),
     }
     _write_json_atomic(output_root / "study_plan.json", plan)
@@ -395,6 +398,7 @@ def _summary_parameters(summary):
         "gpu_threshold": burst.get("gpu_threshold"),
         "queue_threshold": burst.get("queue_threshold"),
         "persistence_window": burst.get("persistence_window"),
+        "burst_enabled": summary.get("burst_statistics") is not None,
     }
 
 
@@ -409,11 +413,18 @@ def _validate_completed_run(manifest, summary):
     ):
         problems.append("offered_task_stream_sha256 mismatch")
     actual_parameters = _summary_parameters(summary)
-    if actual_parameters != manifest.get("executed_parameters"):
+    expected_parameters = manifest.get("executed_parameters", {})
+    compared_keys = (
+        ("moving_average_window", "release_time_skew_threshold_ms", "burst_enabled")
+        if not expected_parameters.get("burst_enabled")
+        else tuple(expected_parameters)
+    )
+    actual_compared = {key: actual_parameters.get(key) for key in compared_keys}
+    expected_compared = {key: expected_parameters.get(key) for key in compared_keys}
+    if actual_compared != expected_compared:
         problems.append(
             "executed parameter mismatch: "
-            f"expected={manifest.get('executed_parameters')}, "
-            f"actual={actual_parameters}"
+            f"expected={expected_compared}, actual={actual_compared}"
         )
     for metric in METRICS:
         value = summary.get(metric)
@@ -452,6 +463,7 @@ def run_study(
     )
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
+    execution_source_hashes = _execution_source_hashes()
     runs_root = output_root / "runs"
     failures = 0
 
@@ -459,6 +471,22 @@ def run_study(
         task_path = Path(point["task_config_path"])
         burst_path = Path(point["burst_config_path"])
         for seed in plan["seeds"]:
+            if _git_output("rev-parse", "HEAD") != git_commit:
+                raise RuntimeError(
+                    "git HEAD changed during the study; refusing to mix "
+                    "provenance in one parameter-sensitivity batch"
+                )
+            if _git_output("status", "--porcelain", "--", ".") != git_status:
+                raise RuntimeError(
+                    "source-tree status changed during the study; refusing to "
+                    "mix workspace states in one parameter-sensitivity batch"
+                )
+            current_source_hashes = _execution_source_hashes()
+            if current_source_hashes != execution_source_hashes:
+                raise RuntimeError(
+                    "execution source changed during the study; refusing to "
+                    "mix code versions in one parameter-sensitivity batch"
+                )
             offered_count, offered_hash = _offered_stream(task_path, burst_path, seed)
             run_id = _run_id(
                 point,
@@ -488,17 +516,16 @@ def run_study(
                 "status": "planned" if dry_run else "running",
                 "device": device,
                 "power_mode": power_mode,
-                "scenario": "agx_high_load",
+                "scenario": plan["representative_scenario"],
                 "profile": "sensitivity",
                 "method": plan["method"],
                 "seed": seed,
                 "point_order": point["point_order"],
                 "point_slug": point["point_slug"],
+                "sensitivity_block": point["block"],
                 "sensitivity_group": point["group"],
                 "parameter": point["parameter"],
-                "parameter_key": point["parameter_key"],
                 "setting": point["setting"],
-                "value": point["value"],
                 "executed_parameters": point["executed_parameters"],
                 "task_config_path": str(task_path),
                 "task_config_sha256": point["task_config_sha256"],
@@ -508,6 +535,7 @@ def run_study(
                 "offered_task_stream_sha256": offered_hash,
                 "git_commit": git_commit,
                 "git_status_porcelain": git_status,
+                "execution_source_hashes": execution_source_hashes,
                 "python": python_executable,
                 "torch_runtime": runtime_info,
                 "command": command,
@@ -691,6 +719,7 @@ def summarize_study(output_root):
             raw_rows.append(
                 {
                     "point_order": point["point_order"],
+                    "sensitivity_block": point["block"],
                     "sensitivity_group": point["group"],
                     "parameter": point["parameter"],
                     "setting": point["setting"],
@@ -701,6 +730,7 @@ def summarize_study(output_root):
             )
         aggregate_row = {
             "point_order": point["point_order"],
+            "sensitivity_block": point["block"],
             "sensitivity_group": point["group"],
             "parameter": point["parameter"],
             "setting": point["setting"],
@@ -717,8 +747,8 @@ def summarize_study(output_root):
         report_points.append(
             {
                 **{key: point[key] for key in (
-                    "point_order", "point_slug", "group", "parameter",
-                    "parameter_key", "setting", "value", "executed_parameters",
+                    "point_order", "point_slug", "block", "group", "parameter",
+                    "setting", "executed_parameters",
                 )},
                 "n": len(ordered),
                 "seeds": sorted(seeds),
@@ -749,7 +779,7 @@ def summarize_study(output_root):
         report_dir / "parameter_sensitivity_runs.csv",
         raw_rows,
         (
-            "point_order", "sensitivity_group", "parameter", "setting",
+            "point_order", "sensitivity_block", "sensitivity_group", "parameter", "setting",
             "seed", "run_id", *METRICS,
         ),
     )
@@ -757,7 +787,7 @@ def summarize_study(output_root):
         report_dir / "parameter_sensitivity_table.csv",
         aggregate_rows,
         (
-            "point_order", "sensitivity_group", "parameter", "setting", "n",
+            "point_order", "sensitivity_block", "sensitivity_group", "parameter", "setting", "n",
             *METRICS,
         ),
         decimal_digits=3,
@@ -789,11 +819,8 @@ def _latex_escape_setting(setting):
 
 def _write_latex_rows(path, rows, repetition_count):
     parameter_labels = {
-        "k": "$k$",
-        "gamma": r"$\gamma$",
-        "theta_u": r"$\theta_u$",
-        "Q_max": r"$Q_{\max}$",
-        "W": "$W$",
+        "k x gamma": r"$k \times \gamma$",
+        "theta_u x Q_max x W": r"$\theta_u \times Q_{\max} \times W$",
     }
     value_description = (
         "one run per point"
@@ -896,7 +923,7 @@ def main():
         method=args.method,
     )
     print(
-        f"Generated {len(plan['points'])} one-factor-at-a-time points "
+        f"Generated {len(plan['points'])} independent full-factorial points "
         f"({plan['planned_run_count']} runs)."
     )
     if args.command == "generate":
