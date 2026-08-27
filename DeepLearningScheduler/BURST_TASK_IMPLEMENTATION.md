@@ -80,12 +80,21 @@ The reproducible runner is `experiments/burst_study.py`. It generates a common
 and RED five times each, and validates identical offered-stream hashes across
 methods.
 
-```bash
+Run the full local Mac/MPS study with:
+
+```zsh
 eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
 conda activate schedule
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
+./experiments/run_burst_study.sh
+```
 
+The wrapper executes these three stages and resumes runs already marked
+complete:
+
+```bash
 python experiments/burst_study.py plan
-python experiments/burst_study.py run --keep-going
+python experiments/burst_study.py run --resume --keep-going
 python experiments/burst_study.py summarize
 ```
 

@@ -106,6 +106,27 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 
 ## SIMO Experiment
 
+### Burst Experiment
+
+The formal Burst study currently runs locally on the M3 Max with MPS. Initialize
+Conda, activate the `schedule` environment, and launch the complete experiment
+with:
+
+```zsh
+eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
+conda activate schedule
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
+./experiments/run_burst_study.sh
+```
+
+The wrapper generates the study plan, resumes completed runs, executes the 75
+Mac/MPS runs in the fixed randomized order, and validates and summarizes the
+results. Raw artifacts are written under
+`taskdata/major_revision_burst_mac_mps_v2/`. Set `BURST_OUTPUT_ROOT` before the
+command to use another output directory. See
+[`BURST_TASK_IMPLEMENTATION.md`](BURST_TASK_IMPLEMENTATION.md) for the Transient
+and Sustained Burst definitions and the complete protocol.
+
 ### Parameter Sensitivity Experiment
 
 On the Jetson server, activate the `schedule` environment and launch the

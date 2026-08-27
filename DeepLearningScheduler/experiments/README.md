@@ -1,5 +1,22 @@
 # New Scenarios Metrics Extraction
 
+## Burst experiment
+
+The formal M3 Max/MPS Burst study has a one-command runner. From the repository
+root, initialize Conda and run:
+
+```zsh
+eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
+conda activate schedule
+./experiments/run_burst_study.sh
+```
+
+The wrapper performs planning, all 75 runs, validation, and summarization. It
+resumes runs whose manifests are already complete and stores the raw artifacts
+under `taskdata/major_revision_burst_mac_mps_v2/`. Set `BURST_OUTPUT_ROOT` to
+override that path. The workload semantics and output files are documented in
+[`../BURST_TASK_IMPLEMENTATION.md`](../BURST_TASK_IMPLEMENTATION.md).
+
 The revision's automated parameter-sensitivity experiment is documented in
 [`PARAMETER_SENSITIVITY.md`](PARAMETER_SENSITIVITY.md). Its one-command runner
 generates the complete 18-point, five-repetition AGX Orin matrix and writes CSV,
