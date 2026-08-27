@@ -22,18 +22,22 @@ Override `--base-task-config` if a replacement frozen AGX workload is selected.
 
 ## One-command Jetson run
 
-On the AGX Orin server:
+On the AGX Orin server, activate whichever Python environment should run the
+experiment and pass its interpreter to the wrapper:
 
 ```bash
+conda activate <environment-name>
 cd /experiment/zexin/ATC23/DeepLearningScheduler
-./experiments/run_parameter_sensitivity.sh
+PYTHON_BIN="$(command -v python)" ./experiments/run_parameter_sensitivity.sh
 ```
 
 The wrapper runs `git pull --ff-only` before the experiment, refuses a dirty
 source tree, generates all parameter configs, executes 90 isolated runs, resumes
 already completed runs, and creates the paper-table data after validating every
-artifact. A failed or interrupted run is retried on the next invocation; its old
-manifest and logs are retained with an `.attemptN` suffix.
+artifact. `PYTHON_BIN` makes the command independent of the environment name and
+also works after activating a `venv` or another environment manager. A failed or
+interrupted run is retried on the next invocation; its old manifest and logs are
+retained with an `.attemptN` suffix.
 
 Useful overrides:
 

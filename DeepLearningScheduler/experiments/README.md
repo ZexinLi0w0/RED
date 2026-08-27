@@ -5,6 +5,17 @@ The revision's automated parameter-sensitivity experiment is documented in
 generates the complete 18-point, five-repetition AGX Orin matrix and writes CSV,
 JSON, and LaTeX values for the paper table.
 
+Activate the environment to use and run:
+
+```bash
+cd /experiment/zexin/ATC23/DeepLearningScheduler
+PYTHON_BIN="$(command -v python)" ./experiments/run_parameter_sensitivity.sh
+```
+
+For Conda, run `conda activate <environment-name>` first. The wrapper uses the
+active environment's Python through `PYTHON_BIN`, pulls the latest commit,
+resumes completed runs, and creates the validated table artifacts automatically.
+
 This directory contains scripts for extracting and analyzing metrics from new scenarios experiment log files.
 
 ## Scripts
