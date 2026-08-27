@@ -3,6 +3,8 @@ import json
 
 from experiments.burst_study import (
     DEFAULT_BASE_TASK_CONFIG,
+    DEFAULT_SEEDS,
+    _seeds_for_repetitions,
     generate_study_plan,
     summarize_study,
 )
@@ -13,11 +15,12 @@ def _write_json(path, value):
     path.write_text(json.dumps(value, sort_keys=True), encoding="utf-8")
 
 
-def test_default_plan_has_a_paired_75_run_matrix(tmp_path) -> None:
+def test_default_plan_runs_each_cell_once(tmp_path) -> None:
     plan = generate_study_plan(DEFAULT_BASE_TASK_CONFIG, tmp_path / "study")
 
-    assert plan["planned_run_count"] == 75
-    assert plan["repetitions_per_cell"] == 5
+    assert plan["planned_run_count"] == 15
+    assert plan["repetitions_per_cell"] == 1
+    assert plan["seeds"] == list(DEFAULT_SEEDS) == [101]
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
@@ -26,6 +29,11 @@ def test_default_plan_has_a_paired_75_run_matrix(tmp_path) -> None:
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
     ] == [0, 3, 6, 8, 16]
+
+
+def test_repetition_count_generates_deterministic_seeds() -> None:
+    assert _seeds_for_repetitions(1) == (101,)
+    assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
 def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:

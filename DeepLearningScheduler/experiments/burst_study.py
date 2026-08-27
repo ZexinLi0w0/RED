@@ -41,8 +41,12 @@ DEFAULT_BASE_TASK_CONFIG = (
     REPOSITORY_ROOT / "TaskConfigs" / "simo" / "mac_loose_burst.json"
 )
 DEFAULT_HANDLER_CONFIG = REPOSITORY_ROOT / "simo-handler_config.json"
-DEFAULT_OUTPUT_ROOT = REPOSITORY_ROOT / "taskdata" / "major_revision_burst_mac_mps_v2"
-DEFAULT_SEEDS = (101, 202, 303, 404, 505)
+DEFAULT_OUTPUT_ROOT = (
+    REPOSITORY_ROOT / "taskdata" / "major_revision_burst_mac_mps_v3"
+)
+DEFAULT_REPETITIONS = 1
+DEFAULT_SEED_STEP = 101
+DEFAULT_SEEDS = (DEFAULT_SEED_STEP,)
 DEFAULT_DEADLINE_FACTOR = 0.2
 DEFAULT_ARRIVAL_SCALE = 0.2
 DEFAULT_BURST_START_SECONDS = 0.36
@@ -603,13 +607,20 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
                 }
             )
 
+    repetition_count = len(plan["seeds"])
+    selection_rule = (
+        "the single configured run supplies the complete paper metric tuple"
+        if repetition_count == 1
+        else (
+            "one complete median run by end-to-end latency from "
+            f"{repetition_count} configured repetitions; all paper metrics "
+            "come from that same run"
+        )
+    )
     report = {
         "schema_version": 1,
         "study": plan["study"],
-        "selection_rule": (
-            "one complete median run by end-to-end latency from five repetitions; "
-            "all paper metrics come from that same run"
-        ),
+        "selection_rule": selection_rule,
         "precision_rule": "truncate to three decimal places without rounding",
         "protocol": {
             field: plan[field]
@@ -658,7 +669,37 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
 
 
 def _csv_ints(value):
-    return tuple(int(item.strip()) for item in value.split(",") if item.strip())
+    try:
+        values = tuple(
+            int(item.strip()) for item in value.split(",") if item.strip()
+        )
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "seeds must be comma-separated integers"
+        ) from exc
+    if not values or any(value < 0 for value in values):
+        raise argparse.ArgumentTypeError("seeds must be non-negative integers")
+    if len(values) != len(set(values)):
+        raise argparse.ArgumentTypeError("seeds cannot contain duplicates")
+    return values
+
+
+def _positive_int(value):
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            "value must be a positive integer"
+        ) from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("value must be a positive integer")
+    return parsed
+
+
+def _seeds_for_repetitions(repetitions):
+    return tuple(
+        DEFAULT_SEED_STEP * index for index in range(1, repetitions + 1)
+    )
 
 
 def _build_parser():
@@ -669,7 +710,21 @@ def _build_parser():
         "--base-task-config", type=Path, default=DEFAULT_BASE_TASK_CONFIG
     )
     plan_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
-    plan_parser.add_argument("--seeds", type=_csv_ints, default=DEFAULT_SEEDS)
+    plan_parser.add_argument(
+        "--repetitions",
+        type=_positive_int,
+        default=DEFAULT_REPETITIONS,
+        help="runs per Burst condition and method; defaults to 1",
+    )
+    plan_parser.add_argument(
+        "--seeds",
+        type=_csv_ints,
+        default=None,
+        help=(
+            "optional comma-separated seeds; when provided, overrides "
+            "--repetitions"
+        ),
+    )
     plan_parser.add_argument(
         "--deadline-factor", type=float, default=DEFAULT_DEADLINE_FACTOR
     )
@@ -706,10 +761,15 @@ def _build_parser():
 def main():
     args = _build_parser().parse_args()
     if args.command == "plan":
+        seeds = (
+            args.seeds
+            if args.seeds is not None
+            else _seeds_for_repetitions(args.repetitions)
+        )
         plan = generate_study_plan(
             args.base_task_config,
             args.output_root,
-            args.seeds,
+            seeds,
             args.deadline_factor,
             args.arrival_scale,
             args.burst_start_seconds,

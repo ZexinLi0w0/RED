@@ -119,11 +119,17 @@ cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
 ./experiments/run_burst_study.sh
 ```
 
-The wrapper generates the study plan, resumes completed runs, executes the 75
-Mac/MPS runs in the fixed randomized order, and validates and summarizes the
-results. Raw artifacts are written under
-`taskdata/major_revision_burst_mac_mps_v2/`. Set `BURST_OUTPUT_ROOT` before the
-command to use another output directory. See
+The wrapper generates the study plan, resumes completed runs, executes each of
+the 15 distinct Burst condition/method cells once by default, and validates and
+summarizes the results. Raw artifacts are written under
+`taskdata/major_revision_burst_mac_mps_v3/`. To repeat each cell, pass a
+positive count:
+
+```zsh
+./experiments/run_burst_study.sh --repetitions 5
+```
+
+Set `BURST_OUTPUT_ROOT` before the command to use another output directory. See
 [`BURST_TASK_IMPLEMENTATION.md`](BURST_TASK_IMPLEMENTATION.md) for the Transient
 and Sustained Burst definitions and the complete protocol.
 

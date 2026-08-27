@@ -77,8 +77,8 @@ The task configuration separately supplies `BurstTaskRatio` and may supply a
 
 The reproducible runner is `experiments/burst_study.py`. It generates a common
 0% control plus Transient and Sustained 50%/100% conditions, runs EDF, LLF-DAG,
-and RED five times each, and validates identical offered-stream hashes across
-methods.
+and RED once per condition by default, and validates identical offered-stream
+hashes across methods.
 
 Run the full local Mac/MPS study with:
 
@@ -98,11 +98,23 @@ python experiments/burst_study.py run --resume --keep-going
 python experiments/burst_study.py summarize
 ```
 
-The formal M3 Max protocol uses a fixed pseudo-random permutation of all 75
-runs and a two-second cooldown. Raw artifacts retain full precision. The
-paper-facing summarizer selects one complete latency-median run from each group
-and truncates all three values from that same run to three decimal places
-without rounding.
+The default command executes 15 distinct condition/method cells once. To repeat
+each cell, pass a positive integer:
+
+```zsh
+./experiments/run_burst_study.sh --repetitions 5
+```
+
+An explicit seed list, such as `--seeds 7,11,19`, overrides `--repetitions`.
+Every execution uses a fixed pseudo-random permutation of its planned runs and a
+two-second cooldown. Raw artifacts retain full precision. With one repetition,
+the paper-facing summarizer uses that run directly. With multiple repetitions,
+it selects one complete latency-median run from each group. It always truncates
+all three values from the selected run to three decimal places without rounding.
+
+The tracked `burst_mac_mps_v2` result files were generated earlier with five
+repetitions per cell. They remain available as validated historical artifacts;
+new default runs are written under `taskdata/major_revision_burst_mac_mps_v3/`.
 
 Compact validated results are stored in:
 

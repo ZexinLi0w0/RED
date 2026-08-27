@@ -11,10 +11,18 @@ conda activate schedule
 ./experiments/run_burst_study.sh
 ```
 
-The wrapper performs planning, all 75 runs, validation, and summarization. It
-resumes runs whose manifests are already complete and stores the raw artifacts
-under `taskdata/major_revision_burst_mac_mps_v2/`. Set `BURST_OUTPUT_ROOT` to
-override that path. The workload semantics and output files are documented in
+The wrapper performs planning, execution, validation, and summarization. It runs
+each of the 15 distinct Burst condition/method cells once by default and resumes
+runs whose manifests are already complete. Use `--repetitions N` to repeat each
+cell `N` times; for example:
+
+```zsh
+./experiments/run_burst_study.sh --repetitions 5
+```
+
+Raw artifacts are stored under `taskdata/major_revision_burst_mac_mps_v3/`.
+Set `BURST_OUTPUT_ROOT` to override that path. The workload semantics and output
+files are documented in
 [`../BURST_TASK_IMPLEMENTATION.md`](../BURST_TASK_IMPLEMENTATION.md).
 
 The revision's automated parameter-sensitivity experiment is documented in
