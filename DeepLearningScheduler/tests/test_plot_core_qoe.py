@@ -8,6 +8,7 @@ from experiments.plot_core_qoe import (
     SCENARIOS,
     format_truncated,
     load_representative_runs,
+    plot_qoe,
     select_representative,
 )
 
@@ -79,3 +80,14 @@ def test_format_truncated_never_rounds_up():
     assert format_truncated(0.8867) == "0.886"
     assert format_truncated(0.0009) == "0.000"
     assert format_truncated(1.0) == "1.000"
+
+
+def test_plot_qoe_renders_tight_profile_only(tmp_path):
+    runs_root = tmp_path / "runs"
+    runs_root.mkdir()
+    _write_matrix(runs_root)
+    output_path = tmp_path / "tight-qoe.pdf"
+
+    plot_qoe(runs_root, output_path, profiles=("tight",))
+
+    assert output_path.read_bytes().startswith(b"%PDF")
