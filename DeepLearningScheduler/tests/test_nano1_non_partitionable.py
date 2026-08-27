@@ -22,7 +22,7 @@ def _source(path):
     return path
 
 
-def test_calibration_grid_changes_timing_and_shortens_run(tmp_path):
+def test_calibration_grid_changes_timing_and_uses_formal_length(tmp_path):
     index = build_calibration(_source(tmp_path / "source.json"), tmp_path / "cal")
     assert len(index["configs"]) == 12
     config = json.loads(
@@ -30,7 +30,7 @@ def test_calibration_grid_changes_timing_and_shortens_run(tmp_path):
     )
     assert config["DeadlineFactor"] == 0.1
     assert config["ArrivalScale"] == 0.25
-    assert config["DagRepeatedTimes"] == 3
+    assert config["DagRepeatedTimes"] == 10
     assert config["NonPartitionablePercentage"] == 50
 
 
@@ -86,3 +86,35 @@ def test_selection_penalizes_saturated_qoe(tmp_path):
 def test_selection_requires_complete_pairs(tmp_path):
     with pytest.raises(ValueError, match="no complete paired"):
         select_calibration(tmp_path)
+
+
+def test_selection_aggregates_repeated_seeds(tmp_path):
+    for method, values in {
+        "baseline": ((0.4, 0.6), (0.8, 0.4)),
+        "feedback-fine-grained": ((0.2, 1.0), (0.4, 0.8)),
+    }.items():
+        for seed, (deadline_rate, qoe) in enumerate(values):
+            run_dir = tmp_path / f"d025_a025_p050-{method}-{seed}"
+            run_dir.mkdir()
+            (run_dir / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "status": "complete",
+                        "scenario": "d025_a025_p050",
+                        "method": method,
+                    }
+                )
+            )
+            (run_dir / "summary.json").write_text(
+                json.dumps(
+                    {
+                        "deadline_missing_rate": deadline_rate,
+                        "qoe_score": qoe,
+                        "end_to_end_latency_seconds": 2.0,
+                    }
+                )
+            )
+    metrics = select_calibration(tmp_path)["selected"]["metrics"]
+    assert metrics["baseline"]["sample_count"] == 2
+    assert metrics["baseline"]["deadline_missing_rate"] == pytest.approx(0.6)
+    assert metrics["feedback-fine-grained"]["qoe_score"] == pytest.approx(0.9)

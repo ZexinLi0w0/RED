@@ -4,12 +4,14 @@
 import argparse
 import json
 import math
+import statistics
 from pathlib import Path
 
 
 DEFAULT_DEADLINE_FACTORS = (0.1, 0.25, 0.5, 1.0)
 DEFAULT_ARRIVAL_SCALES = (0.25, 0.5, 1.0)
 METHODS = ("baseline", "feedback-fine-grained")
+FORMAL_SEEDS = (101, 202, 303)
 
 
 def _factor_label(value):
@@ -48,7 +50,7 @@ def build_calibration(source_path, output_dir):
                 {
                     "DeadlineFactor": deadline_factor,
                     "ArrivalScale": arrival_scale,
-                    "DagRepeatedTimes": 3,
+                    "DagRepeatedTimes": 10,
                     "NonPartitionablePercentage": 50,
                     "Calibration": {
                         "device": "nano1",
@@ -132,6 +134,7 @@ def build_formal(
         "device": "nano1",
         "phase": "formal",
         "methods": list(METHODS),
+        "seeds": list(FORMAL_SEEDS),
         "deadline_factor": deadline_factor,
         "arrival_scale": arrival_scale,
         "dag_repeated_times": repetitions,
@@ -154,9 +157,18 @@ def _candidate_score(records):
     if set(records) != set(METHODS):
         return math.inf
     deadline_rates = [
-        _metric(records[method], "deadline_missing_rate") for method in METHODS
+        statistics.mean(
+            _metric(summary, "deadline_missing_rate")
+            for summary in records[method]
+        )
+        for method in METHODS
     ]
-    qoe_scores = [_metric(records[method], "qoe_score") for method in METHODS]
+    qoe_scores = [
+        statistics.mean(
+            _metric(summary, "qoe_score") for summary in records[method]
+        )
+        for method in METHODS
+    ]
     score = abs(deadline_rates[0] - 0.65) + abs(deadline_rates[1] - 0.35)
     score += 0.5 * sum(
         max(0.0, 0.05 - value) + max(0.0, value - 0.95)
@@ -183,8 +195,8 @@ def select_calibration(runs_root):
         summary_path = manifest_path.with_name("summary.json")
         if not summary_path.is_file():
             continue
-        grouped.setdefault(scenario, {})[method] = json.loads(
-            summary_path.read_text(encoding="utf-8")
+        grouped.setdefault(scenario, {}).setdefault(method, []).append(
+            json.loads(summary_path.read_text(encoding="utf-8"))
         )
     ranked = []
     for scenario, records in grouped.items():
@@ -201,12 +213,38 @@ def select_calibration(runs_root):
                     "score": score,
                     "metrics": {
                         method: {
-                            "deadline_missing_rate": _metric(
-                                records[method], "deadline_missing_rate"
+                            "sample_count": len(records[method]),
+                            "deadline_missing_rate": statistics.mean(
+                                _metric(summary, "deadline_missing_rate")
+                                for summary in records[method]
                             ),
-                            "qoe_score": _metric(records[method], "qoe_score"),
-                            "end_to_end_latency_seconds": _metric(
-                                records[method], "end_to_end_latency_seconds"
+                            "deadline_missing_rate_range": [
+                                min(
+                                    _metric(summary, "deadline_missing_rate")
+                                    for summary in records[method]
+                                ),
+                                max(
+                                    _metric(summary, "deadline_missing_rate")
+                                    for summary in records[method]
+                                ),
+                            ],
+                            "qoe_score": statistics.mean(
+                                _metric(summary, "qoe_score")
+                                for summary in records[method]
+                            ),
+                            "qoe_score_range": [
+                                min(
+                                    _metric(summary, "qoe_score")
+                                    for summary in records[method]
+                                ),
+                                max(
+                                    _metric(summary, "qoe_score")
+                                    for summary in records[method]
+                                ),
+                            ],
+                            "end_to_end_latency_seconds": statistics.mean(
+                                _metric(summary, "end_to_end_latency_seconds")
+                                for summary in records[method]
                             ),
                         }
                         for method in METHODS
