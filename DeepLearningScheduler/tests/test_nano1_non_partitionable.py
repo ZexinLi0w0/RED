@@ -25,6 +25,7 @@ def _source(path):
 def test_calibration_grid_changes_timing_and_uses_formal_length(tmp_path):
     index = build_calibration(_source(tmp_path / "source.json"), tmp_path / "cal")
     assert len(index["configs"]) == 12
+    assert index["methods"] == ["baseline", "llf-dag", "feedback-fine-grained"]
     config = json.loads(
         (tmp_path / "cal" / "nano1_cal_d010_a025_p050.json").read_text()
     )
@@ -36,7 +37,10 @@ def test_calibration_grid_changes_timing_and_uses_formal_length(tmp_path):
 
 def test_formal_configs_differ_only_by_percentage(tmp_path):
     output_dir = tmp_path / "formal"
-    build_formal(_source(tmp_path / "source.json"), output_dir, 0.5, 0.25, 10)
+    index = build_formal(
+        _source(tmp_path / "source.json"), output_dir, 0.5, 0.25, 10
+    )
+    assert index["methods"] == ["baseline", "llf-dag", "feedback-fine-grained"]
     configs = []
     for percentage in (0, 50, 100):
         config = json.loads(
@@ -52,12 +56,12 @@ def test_formal_configs_differ_only_by_percentage(tmp_path):
 
 def test_selection_penalizes_saturated_qoe(tmp_path):
     cases = {
-        "d010_a025_p050": ((0.6, 1.0), (0.3, 1.0)),
-        "d050_a050_p050": ((0.7, 0.55), (0.4, 0.8)),
+        "d010_a025_p050": ((0.6, 1.0), (0.5, 1.0), (0.3, 1.0)),
+        "d050_a050_p050": ((0.7, 0.55), (0.55, 0.65), (0.4, 0.8)),
     }
     for scenario, metrics in cases.items():
         for method, (deadline_rate, qoe) in zip(
-            ("baseline", "feedback-fine-grained"), metrics
+            ("baseline", "llf-dag", "feedback-fine-grained"), metrics
         ):
             run_dir = tmp_path / f"{scenario}-{method}"
             run_dir.mkdir()
@@ -91,6 +95,7 @@ def test_selection_requires_complete_pairs(tmp_path):
 def test_selection_aggregates_repeated_seeds(tmp_path):
     for method, values in {
         "baseline": ((0.4, 0.6), (0.8, 0.4)),
+        "llf-dag": ((0.3, 0.8), (0.5, 0.6)),
         "feedback-fine-grained": ((0.2, 1.0), (0.4, 0.8)),
     }.items():
         for seed, (deadline_rate, qoe) in enumerate(values):
@@ -117,4 +122,5 @@ def test_selection_aggregates_repeated_seeds(tmp_path):
     metrics = select_calibration(tmp_path)["selected"]["metrics"]
     assert metrics["baseline"]["sample_count"] == 2
     assert metrics["baseline"]["deadline_missing_rate"] == pytest.approx(0.6)
+    assert metrics["llf-dag"]["deadline_missing_rate"] == pytest.approx(0.4)
     assert metrics["feedback-fine-grained"]["qoe_score"] == pytest.approx(0.9)

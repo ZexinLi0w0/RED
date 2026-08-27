@@ -10,7 +10,7 @@ from pathlib import Path
 
 DEFAULT_DEADLINE_FACTORS = (0.1, 0.25, 0.5, 1.0)
 DEFAULT_ARRIVAL_SCALES = (0.25, 0.5, 1.0)
-METHODS = ("baseline", "feedback-fine-grained")
+METHODS = ("baseline", "llf-dag", "feedback-fine-grained")
 FORMAL_SEEDS = (101, 202, 303)
 
 
@@ -83,7 +83,7 @@ def build_calibration(source_path, output_dir):
         "phase": "calibration",
         "methods": list(METHODS),
         "selection_rule": (
-            "prefer interior Deadline Missing Rate for both methods and "
+            "prefer interior Deadline Missing Rate across all methods and "
             "non-saturated QoE"
         ),
         "configs": entries,
@@ -169,7 +169,15 @@ def _candidate_score(records):
         )
         for method in METHODS
     ]
-    score = abs(deadline_rates[0] - 0.65) + abs(deadline_rates[1] - 0.35)
+    targets = {
+        "baseline": 0.65,
+        "llf-dag": 0.50,
+        "feedback-fine-grained": 0.35,
+    }
+    score = sum(
+        abs(deadline_rate - targets[method])
+        for method, deadline_rate in zip(METHODS, deadline_rates)
+    )
     score += 0.5 * sum(
         max(0.0, 0.05 - value) + max(0.0, value - 0.95)
         for value in deadline_rates
