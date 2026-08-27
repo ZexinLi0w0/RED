@@ -566,6 +566,43 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
             **_drop_composition(representative["summary"]),
         }
 
+    raw_runs = []
+    representative_runs = []
+    for condition in plan["conditions"]:
+        for method in plan["methods"]:
+            key = (condition["slug"], method)
+            for run in sorted(
+                runs_by_group[key], key=lambda item: item["manifest"]["seed"]
+            ):
+                raw_runs.append(
+                    {
+                        "condition_slug": condition["slug"],
+                        "regime": condition["regime"],
+                        "ratio_percent": condition["ratio_percent"],
+                        "method": method,
+                        "run_id": run["manifest"]["run_id"],
+                        "seed": run["manifest"]["seed"],
+                        "run_order_index": run["manifest"].get("run_order_index"),
+                        "raw_metrics": {
+                            metric: run["summary"][metric] for metric in METRICS
+                        },
+                    }
+                )
+            presentation = representatives[key]
+            representative_runs.append(
+                {
+                    "condition_slug": condition["slug"],
+                    "regime": condition["regime"],
+                    "ratio_percent": condition["ratio_percent"],
+                    "method": method,
+                    "run_id": presentation["run_id"],
+                    "seed": presentation["seed"],
+                    "raw_metrics": presentation["raw_metrics"],
+                    "display_metrics": presentation["display_metrics"],
+                    "outcome_counts": presentation["summary"]["outcome_counts"],
+                }
+            )
+
     report = {
         "schema_version": 1,
         "study": plan["study"],
@@ -574,6 +611,27 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
             "all paper metrics come from that same run"
         ),
         "precision_rule": "truncate to three decimal places without rounding",
+        "protocol": {
+            field: plan[field]
+            for field in (
+                "device",
+                "platform_label",
+                "power_mode",
+                "torch_device",
+                "seeds",
+                "repetitions_per_cell",
+                "deadline_factor",
+                "arrival_scale",
+                "burst_start_seconds",
+                "release_horizon_seconds",
+                "run_order",
+                "run_order_seed",
+                "zero_burst_control_reused_between_regimes",
+            )
+        },
+        "conditions": plan["conditions"],
+        "raw_runs": raw_runs,
+        "representative_runs": representative_runs,
         "table_rows": table_rows,
         "drop_composition": drop_composition,
     }

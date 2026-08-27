@@ -1,274 +1,116 @@
-# Burst Task Management Implementation
+# Burst Workload and Management Implementation
 
-## Overview
+## Semantics
 
-This implementation adds burst task support to the existing Deep Learning Scheduler system. The burst task management mechanism provides proactive task dropping capabilities to handle dynamic and unpredictable workload patterns in real-time deployment scenarios.
+The experiment code supports two distinct workload regimes:
 
-## Key Features
+- **Transient Burst** duplicates eligible complete DAG releases inside a finite
+  interval `[burst_start_seconds, burst_start_seconds +
+  transient_duration_seconds)`.
+- **Sustained Burst** duplicates eligible complete DAG releases from
+  `burst_start_seconds` through `release_horizon_seconds`.
 
-### 1. System Health Monitoring
-- **GPU Utilization Monitoring**: Continuous monitoring of GPU usage percentage
-- **Queue Length Tracking**: Real-time tracking of task queue length
-- **Deadline Slack Calculation**: Dynamic calculation of task deadline slack time
+`BurstTaskRatio` is an offered-work definition, not a utilization label. At
+100%, the generator adds one complete DAG release for every eligible base DAG
+release. At 50%, it adds one complete DAG for a deterministic, temporally
+distributed half of the eligible releases. A clone preserves the source release
+times, deadlines, priorities, dependencies, and task-level `DropThreshold`, but
+receives a unique DAG-period identity so its dependency state is independent.
 
-### 2. Proactive Task Dropping
-- **Overload Detection**: Automatic detection of system overload conditions
-- **Criticality Scoring**: Criticality score calculation per spec without extra weights
-- **Intelligent Task Selection**: Drop lower criticality tasks while preserving high-priority tasks
+Every scheduling method receives the same augmented offered stream. EDF
+(`baseline`) and LLF-DAG (`llf-dag`) do not use RED's active overload
+management. Only RED (`feedback-fine-grained`) starts system monitoring and may
+invoke `ProactiveDrop`.
 
-### 3. Enhanced Task Data Structure
-- Drop-related control is global via burst_config; per-task `DropThreshold` is not required.
+## Overload and ProactiveDrop
 
-## Architecture
+The controller detects raw overload when either:
 
-### Core Components
+- GPU utilization exceeds `gpu_threshold`; or
+- the number of already-released waiting tasks exceeds `queue_threshold`.
 
-#### 1. SystemHealthMonitor
-```python
-class SystemHealthMonitor:
-    - Monitors GPU utilization using nvidia-smi or tegrastats
-    - Tracks queue length in real-time
-    - Provides system health metrics
+Future releases are not counted as active backlog and cannot be dropped before
+their release time. Raw overload must persist for `persistence_window`
+consecutive scheduler ticks before active management begins.
+
+For an already-released task, RED computes
+
+```text
+C_i = 1 - S_i / D_i
 ```
 
-#### 2. BurstTaskManager
-```python
-class BurstTaskManager:
-    - Implements proactive task dropping algorithm
-    - Calculates enhanced criticality scores
-    - Manages burst mode state transitions
-```
+where `D_i` is the relative intermediate-deadline duration and `S_i` is the
+current slack. A task is dropped only when its score is below its task-level
+`DropThreshold`, or below the global `drop_threshold` when no task-level value
+is supplied. Retained tasks preserve the underlying scheduler order.
 
-#### 3. BurstAwareTaskScheduler
-```python
-class BurstAwareTaskScheduler:
-    - Integrates burst management with existing schedulers
-    - Provides burst-aware task scheduling
-    - Maintains compatibility with existing scheduling algorithms
-```
+Run summaries record the full workload definition, added DAG/node counts,
+overload activations, and one JSON-safe decision record per proactive drop.
 
-### Criticality Score Formula
+## Burst Configuration
 
-The criticality score is calculated as:
+Transient example:
 
-```
-C_i = 1 - (S_i / D_i)
-```
-
-Where:
-- `S_i = D_i - t` is the slack time
-- `D_i` is the task deadline duration (relative intermediate deadline)
-- `t` is the elapsed time since task release
-
-### Overload Detection
-
-System overload is detected when:
-- GPU utilization > `gpu_threshold` (default: 80%)
-- Queue length > `queue_threshold` (default: 10)
-
-## Configuration
-
-### Burst Configuration File (`burst_config.json`)
 ```json
 {
-    "burst_enabled": true,
-    "gpu_threshold": 80.0,
-    "queue_threshold": 10,
-    "drop_threshold": 0.5
+  "burst_enabled": true,
+  "burst_regime": "transient",
+  "burst_start_seconds": 0.36,
+  "transient_duration_seconds": 0.6,
+  "release_horizon_seconds": 1.96,
+  "gpu_threshold": 90.0,
+  "queue_threshold": 8,
+  "persistence_window": 3,
+  "drop_threshold": 0.5,
+  "monitoring_interval": 0.05,
+  "scheduler_tick_seconds": 0.005
 }
 ```
 
-### Task Configuration with Burst Attributes
-```json
-{
-    "task_list": [
-        {
-            "HandlerId": 5,
-            "ReleaseTimeDelay": 0,
-            "Deadline": 0.01,
-            "Period": 40,
-            "RunningTime": 1,
-            "Dependencies": [],
-            "Priority": 1
-        }
-    ]
-}
-```
+For a Sustained Burst, set `burst_regime` to `sustained` and omit
+`transient_duration_seconds`.
 
-## Usage
+The task configuration separately supplies `BurstTaskRatio` and may supply a
+`DropThreshold` for each DAG node.
 
-### 1. Basic Usage with Burst Management
+## Major-revision M3 Max Study
+
+The reproducible runner is `experiments/burst_study.py`. It generates a common
+0% control plus Transient and Sustained 50%/100% conditions, runs EDF, LLF-DAG,
+and RED five times each, and validates identical offered-stream hashes across
+methods.
+
 ```bash
-# Nano Tight Burst Task Config - Baseline Approach(EDF)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach baseline --burst-config burst_config.json
+eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
+conda activate schedule
 
-# Feedback-fine-grained Approach(RED)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback-fine-grained --burst-config burst_config.json
-
-
-# # Feedback Approach(RED-IDA)
-# python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach feedback --burst-config burst_config.json
-# # Fine-grained Approach(RED-FG)
-# python main.py --config handler-config.json --task TaskConfigs/simo/nano_tight_burst.json --approach fine-grained --burst-config burst_config.json
-
-
-#Dag config
-python main.py --config handler-config.json --task TaskConfigs/simo/burst-dag-config.json --approach baseline --burst-config burst_config.json
-
-# Mac Experiment
-## Baseline Approach(EDF)
-python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_burst.json --approach baseline --burst-config burst_config.json
-
-## Fine-grained Approach(RED-FG)
-python main.py --config handler-config.json --task TaskConfigs/simo/mac_loose_burst.json --approach fine-grained --burst-config burst_config.json
-
-## Nano Experiment
-## Baseline Approach(EDF)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_burst.json --approach baseline --burst-config burst_config.json
-
-## Fine-grained Approach(RED-FG)
-python main.py --config handler-config.json --task TaskConfigs/simo/nano_loose_burst.json --approach fine-grained --burst-config burst_config.json
-
-## AGX Experiment
-## Baseline Approach(EDF)
-python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_burst.json --approach baseline --burst-config burst_config.json
-
-## Fine-grained Approach(RED-FG)
-python main.py --config handler-config.json --task TaskConfigs/simo/agx_loose_burst.json --approach fine-grained --burst-config burst_config.json
+python experiments/burst_study.py plan
+python experiments/burst_study.py run --keep-going
+python experiments/burst_study.py summarize
 ```
 
-### 2. Testing Burst Functionality
+The formal M3 Max protocol uses a fixed pseudo-random permutation of all 75
+runs and a two-second cooldown. Raw artifacts retain full precision. The
+paper-facing summarizer selects one complete latency-median run from each group
+and truncates all three values from that same run to three decimal places
+without rounding.
+
+Compact validated results are stored in:
+
+- `experiments/results/burst_mac_mps_v2_summary.json`
+- `experiments/results/burst_mac_mps_v2_table.csv`
+
+Large per-run logs remain under
+`taskdata/major_revision_burst_mac_mps_v2/` and are intentionally ignored by
+Git.
+
+## Tests
+
 ```bash
-python test_burst_tasks.py
+python -m pytest -q
 ```
 
-### 3. Integration with Existing System
-The burst task management is seamlessly integrated with the existing scheduling system:
-- Compatible with all existing schedulers (EDF, Priority, FCFS, etc.)
-- Works with all approach modules (baseline, feedback, fine-grained)
-- Maintains backward compatibility
-
-## Implementation Details
-
-### Task Data Structure Enhancements
-
-#### Attributes Used:
-- No per-task burst attributes are required. Global `drop_threshold` in burst_config is applied.
-
-#### Enhanced Task Generation:
-```python
-# In task_generator.py
-task = {
-    # ... existing attributes ...
-    "BurstPriority": config.get("BurstPriority", config["Priority"]),
-    "CriticalityWeight": config.get("CriticalityWeight", 1.0),
-    "DropThreshold": config.get("DropThreshold", 0.5)
-}
-```
-
-### Scheduling Integration
-
-#### Modified TaskSchedule Class:
-```python
-class TaskSchedule:
-    def __init__(self, ..., burst_enabled=False, burst_config=None):
-        # Initialize burst management if enabled
-        if burst_enabled:
-            self.burst_manager = BurstTaskManager(...)
-            self.burst_scheduler = BurstAwareTaskScheduler(...)
-```
-
-#### Runtime Burst Management:
-```python
-def distribute_tasks(self):
-    # ... existing distribution logic ...
-    
-    # Apply burst-aware scheduling to putback tasks
-    if self.burst_enabled and self.burst_scheduler:
-        remaining_tasks, dropped_tasks = self.burst_scheduler.burst_manager.proactive_drop(putback, current_time)
-        # Handle dropped tasks
-        for dropped_task in dropped_tasks:
-            self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
-```
-
-## Monitoring and Statistics
-
-### Burst Statistics
-The system provides comprehensive burst management statistics:
-```python
-{
-    "burst_mode_active": bool,
-    "dropped_tasks_count": int,
-    "current_gpu_utilization": float,
-    "current_queue_length": int,
-    "gpu_threshold": float,
-    "queue_threshold": int
-}
-```
-
-### Logging
-Burst management events are logged with `[BURST]` prefix:
-- Overload detection and resolution
-- Task dropping decisions
-- Criticality score calculations
-- System health metrics
-
-## Performance Considerations
-
-### Monitoring Overhead
-- GPU monitoring interval: 100ms (configurable)
-- Minimal CPU overhead for health monitoring
-- Asynchronous monitoring thread
-
-### Task Dropping Efficiency
-- O(n log n) complexity for criticality sorting
-- Individual task drop thresholds for fine-grained control
-- Configurable drop percentages
-
-### Memory Usage
-- Minimal additional memory for burst management
-- Efficient task statistics tracking
-- Cleanup of dropped task references
-
-## Testing and Validation
-
-### Test Scenarios
-1. **Normal Operation**: System under normal load
-2. **Overload Detection**: GPU utilization above threshold
-3. **Task Dropping**: Proactive task dropping under overload
-4. **Recovery**: System recovery after overload resolution
-
-### Validation Metrics
-- Task completion rates
-- Deadline miss rates
-- System responsiveness
-- Resource utilization
-
-## Future Enhancements
-
-### Potential Improvements
-1. **Adaptive Thresholds**: Dynamic threshold adjustment based on historical data
-2. **Machine Learning**: ML-based criticality prediction
-3. **Multi-GPU Support**: Extension to multi-GPU environments
-4. **Advanced Metrics**: Additional system health indicators
-
-### Integration Opportunities
-1. **Container Orchestration**: Integration with Kubernetes/Docker
-2. **Cloud Platforms**: AWS, Azure, GCP integration
-3. **Edge Computing**: IoT and edge device support
-
-## Troubleshooting
-
-### Common Issues
-1. **GPU Monitoring Not Available**: Falls back to 0% utilization
-2. **High Drop Rates**: Adjust thresholds in burst configuration
-3. **Performance Impact**: Reduce monitoring interval
-
-### Debug Information
-- Enable debug logging for detailed burst management information
-- Monitor burst statistics for system health
-- Check task criticality scores for unexpected behavior
-
-## Conclusion
-
-The burst task management implementation provides a robust solution for handling dynamic workload patterns in real-time deep learning systems. The proactive task dropping mechanism ensures system stability while preserving high-priority tasks, making it suitable for production deployment scenarios. 
+The test suite covers workload-window semantics, complete-DAG cloning,
+temporally distributed 50% selection, independent DAG identities, method
+fairness, released-queue accounting, task-level drop-threshold propagation,
+artifact validation, representative-run selection, and precision formatting.
