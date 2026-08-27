@@ -138,11 +138,11 @@ and Sustained Burst definitions and the complete protocol.
 
 ### Parameter Sensitivity Experiment
 
-On the Jetson server, activate the `schedule` environment and run each of the
-47 parameter settings once with:
+On a Mac with the profiled MPS environment, activate the `schedule` environment
+and run each of the 47 parameter settings once with:
 
 ```bash
-cd /experiment/zexin/ATC23/DeepLearningScheduler
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
 conda activate schedule
 ./experiments/run_parameter_sensitivity.sh
 ```
@@ -150,7 +150,7 @@ conda activate schedule
 The wrapper pulls the latest commit with `git pull --ff-only`, resumes completed
 runs, executes all 47 runs, validates the artifacts, and writes the CSV, JSON,
 and LaTeX table files under
-`taskdata/parameter_sensitivity/agx_high_load_v1/report/`. The source tree must
+`taskdata/parameter_sensitivity/mac_mps_v4/report/`. The source tree must
 be clean. To use another Conda environment, replace `schedule` with that
 environment's name; the runner resolves `python3` from the active environment.
 
@@ -160,22 +160,11 @@ To run every parameter setting more than once, pass the desired count:
 ./experiments/run_parameter_sensitivity.sh --repetitions 5
 ```
 
-For a Mac/MPS validation run, use:
-
-```bash
-cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
-conda activate schedule
-SKIP_GIT_PULL=1 ./experiments/run_parameter_sensitivity.sh \
-  --device mac --power-mode AC --torch-device mps \
-  --base-task-config TaskConfigs/simo/parameter_sensitivity/mac_mps_parameter_sensitivity.json \
-  --output-root taskdata/parameter_sensitivity/mac_validation
-```
-
-The Mac task config uses the measured MPS runtime profile and a sensitivity-only
-near-saturation workload. The refinement block runs the 4 x 5 Cartesian product
-with burst disabled; the independent Burst Management block runs the 3 x 3 x 3
-Cartesian product with `k=8` and `gamma=100 ms` fixed. A Mac run does not replace
-the final AGX Orin paper measurements. See
+The Mac study uses two independent task configs. The refinement block uses
+`mac_mps_refinement_sensitivity_v2.json` and runs the 4 x 5 Cartesian product
+with Burst Management disabled. The Burst Management block uses
+`mac_mps_burst_management_sensitivity_v2.json` and runs the 3 x 3 x 3 Cartesian
+product with `k=8` and `gamma=100 ms` fixed. See
 [`experiments/PARAMETER_SENSITIVITY.md`](experiments/PARAMETER_SENSITIVITY.md)
 for the parameter grid, workload definition, dry-run command, and artifact
 schema.
@@ -197,12 +186,27 @@ python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_lo
 python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/tx2_tight.json" -a "baseline"
 ```
 
-### Non-Partitionable Tasks Experiment (NEW)
+### Non-Partitionable Tasks Experiment
+
+The Mac/MPS matrix compares EDF, LLF-DAG, and MERIS at 0%, 50%, and 100%
+non-partitionable scheduling nodes. One seed runs nine experiments:
+
+```bash
+python experiments/run_matrix.py \
+  --device mac --power-mode mps-default-ac-power \
+  --handler-config handler-config.json \
+  --task-dir TaskConfigs/simo/nonpartitionable_mac_mps_v2 \
+  --output-root taskdata/major_revision_nonpartitionable_mac_mps_v2_final \
+  --profiles atomic0,atomic50,atomic100 \
+  --scenarios emergency_obstacle_avoidance \
+  --methods baseline,llf-dag,feedback-fine-grained \
+  --seeds 101 --torch-device mps --keep-going
 ```
-python "./main.py" -c "./simo-handler_config.json" -t "./TaskConfigs/simo/test_non_partitionable.json" -a "baseline"
-```
-- This will run with 15% of tasks as non-partitionable (see config for details).
-- You can change the percentage or config as needed.
+
+Pass an explicit comma-separated seed list, such as
+`--seeds 101,202,303,404,505`, when repeated runs are required. The generated
+configs all derive from the same EDF-only calibrated Tight workload; only the
+non-partitionable ratio changes.
 
 ### Task Progress Tracker(Execution Feedback to adjust release time)
 ```
