@@ -184,3 +184,8 @@ def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:
     assert report["drop_composition"]["transient"][
         "dropped_offered_nodes"
     ] == 0
+    assert report["representative_runs"][0]["burst_statistics"] == {
+        "overload_activation_count": 0,
+        "maximum_consecutive_overload_ticks": 0,
+        "dropped_tasks_count": 0,
+    }

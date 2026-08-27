@@ -656,6 +656,7 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
                     }
                 )
             presentation = representatives[key]
+            burst_statistics = presentation["summary"].get("burst_statistics") or {}
             representative_runs.append(
                 {
                     "condition_slug": condition["slug"],
@@ -667,6 +668,14 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
                     "raw_metrics": presentation["raw_metrics"],
                     "display_metrics": presentation["display_metrics"],
                     "outcome_counts": presentation["summary"]["outcome_counts"],
+                    "burst_statistics": {
+                        field: burst_statistics.get(field, 0)
+                        for field in (
+                            "overload_activation_count",
+                            "maximum_consecutive_overload_ticks",
+                            "dropped_tasks_count",
+                        )
+                    },
                 }
             )
 

@@ -136,12 +136,15 @@ New default runs use the dedicated workload and are written under
 
 Compact validated results are stored in:
 
+- `experiments/results/burst_mac_mps_v3_summary.json`
+- `experiments/results/burst_mac_mps_v3_table.csv`
 - `experiments/results/burst_mac_mps_v2_summary.json`
 - `experiments/results/burst_mac_mps_v2_table.csv`
 
-Large per-run logs remain under
-`taskdata/major_revision_burst_mac_mps_v2/` and are intentionally ignored by
-Git.
+The v3 summary includes the overload-activation and proactive-drop counts for
+each representative run. Large per-run logs remain under the corresponding
+`taskdata/major_revision_burst_mac_mps_v*/` directories and are intentionally
+ignored by Git.
 
 ## Tests
 
