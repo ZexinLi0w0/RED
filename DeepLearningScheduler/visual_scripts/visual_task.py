@@ -9,13 +9,13 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 from matrics import (
-    DEFAULT_XRBENCH_RT_K,
+    DEFAULT_QOE_LAMBDA,
     DEADLINE_MISS_OUTCOMES,
     EXECUTED_OUTCOMES,
     QoEScore,
     RTscore,
     deadline_miss_rate_from_outcomes,
-    timeliness_qoe_score,
+    qoe_score,
     throughput_score,
 )
 from task_generator import overall_deadline_seconds, timing_config_from_mapping
@@ -78,8 +78,14 @@ def _overall_deadline_seconds(config: dict) -> float:
     )
 
 
-def task_population_metrics(task_records):
-    """Summarize one offered-node population using the headline definitions."""
+def task_population_metrics(task_records, lambda_param=DEFAULT_QOE_LAMBDA):
+    """Summarize a task population without redefining the paper's QoE metric.
+
+    For each task, ``C_r`` is its release-to-completion time and ``S_r`` is its
+    release-to-deadline slack. Both are represented in seconds. Deadline Missing
+    Rate remains the binary outcome metric; QoE preserves the original
+    continuous lateness formula as its complement.
+    """
     records = list(task_records)
     if not records:
         return {
@@ -87,30 +93,37 @@ def task_population_metrics(task_records):
             "outcome_counts": {},
             "deadline_missing_rate": None,
             "qoe_score": None,
-            "valid_output_rate": None,
         }
 
     outcome_counts = defaultdict(int)
     for record in records:
         outcome_counts[record["res"]] += 1
     outcomes = [record["res"] for record in records]
-    valid_output_count = sum(
-        count
-        for outcome, count in outcome_counts.items()
-        if outcome in {"success", "failure"}
-    )
+    completion_times = [
+        float(record["end_time"]) - float(record["release_time"])
+        for record in records
+    ]
+    slack_values = [
+        float(record["deadline"]) - float(record["release_time"])
+        for record in records
+    ]
     return {
         "offered_node_count": len(records),
         "outcome_counts": dict(sorted(outcome_counts.items())),
         "deadline_missing_rate": deadline_miss_rate_from_outcomes(outcomes),
-        "qoe_score": timeliness_qoe_score(
-            records, k=DEFAULT_XRBENCH_RT_K
+        "qoe_score": qoe_score(
+            completion_times, slack_values, lambda_param=lambda_param
         ),
-        "valid_output_rate": valid_output_count / len(records),
     }
 
 
-def statistics_compution(task_statistics, task_config_path='task_config.json', now_time = 0, task_start_time = 0):
+def statistics_compution(
+    task_statistics,
+    task_config_path='task_config.json',
+    now_time=0,
+    task_start_time=0,
+    return_metadata=False,
+):
     """
     Calculate the statistics of tasks, including: missing deadline rate, finished time
     task_statistics: defaultdict(TaskFinishedObject), each dict contains the information of a task
@@ -147,12 +160,19 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     metrics2 = 0
     metrics3 = 0
     deadline_time = math.inf
+    qoe_lambda = DEFAULT_QOE_LAMBDA
     # matrics calculation
     try:
         config_path = _resolve_task_config(task_config_path)
         with open(config_path, "r") as f:
             config = json.load(f)
         deadline_time = _overall_deadline_seconds(config)
+        qoe_lambda = float(config.get("QoELambda", DEFAULT_QOE_LAMBDA))
+        if "QoELambda" not in config:
+            print(
+                f"[WARN] Task config '{config_path}' has no QoELambda; "
+                f"using the paper default {DEFAULT_QOE_LAMBDA}"
+            )
     except (FileNotFoundError, json.JSONDecodeError) as exc:
         print(f"[WARN] Failed to load task config '{task_config_path}' for metrics: {exc}")
 
@@ -160,11 +180,23 @@ def statistics_compution(task_statistics, task_config_path='task_config.json', n
     print('metrics finished time', finished_time, deadline_time)
     if math.isfinite(deadline_time) and deadline_time > 0:
         metrics2 = RTscore([finished_time], [deadline_time])
-        metrics3 = timeliness_qoe_score(
-            task_statistics.values(), k=DEFAULT_XRBENCH_RT_K
+        metrics3 = QoEScore(
+            [finished_time], [deadline_time], lambda_param=qoe_lambda
         )
         
     metrics = (metrics1, metrics2, metrics3)
+    if return_metadata:
+        return (
+            missing_deadline_rate,
+            missing_deadline_info,
+            avg_finished_time,
+            finished_info,
+            metrics,
+            {
+                "qoe_lambda": qoe_lambda,
+                "qoe_time_unit": "seconds",
+            },
+        )
     return missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics
     
 

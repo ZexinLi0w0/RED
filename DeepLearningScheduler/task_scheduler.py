@@ -15,7 +15,12 @@ import logging
 from copy import deepcopy
 from burst_task_manager import BurstTaskManager
 from task_generator import task_stream_sha256
-from matrics import DEFAULT_XRBENCH_RT_K, VALID_OUTPUT_OUTCOMES
+from deadline_reassignment import (
+    DEFAULT_MOVING_AVERAGE_WINDOW,
+    MovingAverageCostEstimator,
+    dag_instance_key,
+    proportional_residual_deadlines,
+)
 
 def liststr2list(s):
     return [i for i in s.strip('[').strip(']').split(',')]
@@ -66,6 +71,9 @@ def merge_tasks(first, second):
         "TaskPosition": f"merged:{first['MergeKey']}",
         "MergeKey": first["MergeKey"],
         "ConstituentTaskIds": constituent_ids,
+        "DagIndex": first.get("DagIndex"),
+        "StageIndex": first.get("StageIndex"),
+        "BranchIndex": None,
         "DagPeriod": first["DagPeriod"],
         "HandlerId": first["HandlerId"],
         "ReleaseTime": min(first["ReleaseTime"], second["ReleaseTime"]),
@@ -76,6 +84,10 @@ def merge_tasks(first, second):
             set(first["Dependencies"] + second["Dependencies"])
         ),
         "RunArgs": list2str(run_args),
+        "EstimatedExecutionTime": max(
+            float(first.get("EstimatedExecutionTime", 0.0)),
+            float(second.get("EstimatedExecutionTime", 0.0)),
+        ),
         "IsNonPartitionable": False,
     }
 
@@ -164,7 +176,7 @@ def annotate_remaining_critical_path_costs(tasks):
 
 
 class TaskSchedule:
-    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
+    def __init__(self, tasks, handler_status=None, control_queue=None, scheduler='priority', custom_scheduler=None, logger=logging, approach_module='baseline', task_filename='task_config', burst_enabled=False, burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02, moving_average_window=DEFAULT_MOVING_AVERAGE_WINDOW):
         self.tasks = tasks
         self.logger = logger
         # more approaches to adjust tasks, baseline(do nothing),
@@ -179,6 +191,11 @@ class TaskSchedule:
         if merge_tick_seconds < 0:
             raise ValueError("merge_tick_seconds cannot be negative")
         self.merge_tick_seconds = float(merge_tick_seconds)
+        self.moving_average_estimator = MovingAverageCostEstimator(
+            moving_average_window
+        )
+        self.moving_average_window = moving_average_window
+        self.deadline_reassignment_trace = []
         # control queue of signaling
         self.control_queue = [] if control_queue is None else control_queue
         # start time of generating tasks
@@ -253,25 +270,18 @@ class TaskSchedule:
             task["TaskId"]: deepcopy(task) for task in tasks_list
         }
         self.offered_task_stream_hash = task_stream_sha256(tasks_list)
+        self.dag_instance_deadlines = {}
+        for task in tasks_list:
+            group = dag_instance_key(task)
+            if group is not None:
+                self.dag_instance_deadlines[group] = max(
+                    self.dag_instance_deadlines.get(group, float("-inf")),
+                    float(task["Deadline"]),
+                )
         logger = self.logger
 
         for task in tasks_list:
-            handler_id = task["HandlerId"]
-            taskid = f"--taskid {task['TaskId']}"
-            release_time = f"--release_time {task['ReleaseTime']}"
-            deadline = f"--deadline {task['Deadline']}"
-            relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-            # only for simo
-            simo_args = f"--simo_args {task['RunArgs']}" if 'RunArgs' in task else ""
-            dag_period = f"--dag_period {task['DagPeriod']}" if 'DagPeriod' in task else ""
-            non_partitionable_flag = "--non_partitionable true" if task.get("IsNonPartitionable", False) else ""
-            # create signal message and save it to task
-            # for feedback-fine-grained approach, add skipmode
-            if(self.approach_module == 'feedback-fine-grained'):
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag, "--skipmode 1")
-            else:    
-                signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, non_partitionable_flag)
-            task['SignalMsg'] = signal_message
+            self._refresh_task_signal(task)
             TaskQueue.append(task)
             
         
@@ -410,11 +420,12 @@ class TaskSchedule:
         logger.info(f"[CTRL] Saved end2end time to: {end2end_path}")
         logger.info(f"[CTRL] Saved statistics to: {stats_path}")
         self.logger.info(f'[CTRL] Task End to End Finished time: {relative_end2end_runtime}')
-        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics = statistics_compution(
+        missing_deadline_rate, missing_deadline_info, avg_finished_time, finished_info, metrics, metrics_metadata = statistics_compution(
             task_statistics,
             task_config_path=self.task_config_path,
             now_time=now,
             task_start_time=self.TaskStartTime,
+            return_metadata=True,
         )
         logger.info(f"[CTRL] SubTask Missing deadline rate: {missing_deadline_rate}")
         logger.info(f"[CTRL] SubTask Average finished time: {avg_finished_time}")
@@ -423,10 +434,7 @@ class TaskSchedule:
         outcome_counts = Counter(
             task["res"] for task in task_statistics.values()
         )
-        valid_output_count = sum(
-            outcome_counts[outcome] for outcome in VALID_OUTPUT_OUTCOMES
-        )
-        atomic_records = [
+        non_partitionable_records = [
             task
             for task in task_statistics.values()
             if task.get("is_non_partitionable", False)
@@ -456,21 +464,33 @@ class TaskSchedule:
             "overall_deadline_hit": metrics[1],
             "qoe_score": metrics[2],
             "qoe_score_definition": (
-                "mean XRBench real-time sigmoid utility over offered nodes; "
-                "non-valid outputs score zero"
+                "original QoEScore(r) = 1 / (1 + exp(lambda) * "
+                "max(0, C_r - S_r)); C_r and S_r are in seconds"
             ),
-            "xrbench_rt_k_per_second": DEFAULT_XRBENCH_RT_K,
-            "valid_output_rate": valid_output_count / len(task_statistics),
+            "qoe_lambda": metrics_metadata["qoe_lambda"],
+            "qoe_time_unit": metrics_metadata["qoe_time_unit"],
+            "moving_average_reassignment": {
+                "enabled": self.approach_module
+                in {"feedback", "feedback-fine-grained"},
+                "window": self.moving_average_window,
+                "event_count": len(self.deadline_reassignment_trace),
+                "events": self.deadline_reassignment_trace,
+            },
             "atomic_node_statistics": {
                 "semantics": (
-                    "offered scheduling nodes marked indivisible for "
-                    "MIMONet-aware merge; not intra-kernel partitioning"
+                    "legacy schema name: tasks configured as non-partitionable "
+                    "remain one scheduling node; this does not assert that a "
+                    "specific model or GPU kernel is physically indivisible"
                 ),
-                "atomic_offered_ratio": len(atomic_records)
+                "atomic_offered_ratio": len(non_partitionable_records)
                 / len(task_statistics),
-                "atomic": task_population_metrics(atomic_records),
+                "atomic": task_population_metrics(
+                    non_partitionable_records,
+                    lambda_param=metrics_metadata["qoe_lambda"],
+                ),
                 "partitionable": task_population_metrics(
-                    partitionable_records
+                    partitionable_records,
+                    lambda_param=metrics_metadata["qoe_lambda"],
                 ),
             },
             "burst_statistics": burst_stats,
@@ -581,13 +601,94 @@ class TaskSchedule:
         self.control_queue.put(signal_message)
     
     # dag adjustment approaches
-    def feedback_adjust(self, end_time):
+    def _refresh_task_signal(self, task):
+        signal_parts = [
+            f"--release_time {task['ReleaseTime']}",
+            f"--deadline {task['Deadline']}",
+            f"--relative_time {self.TaskStartTime}",
+            f"--taskid {task['TaskId']}",
+        ]
+        if "RunArgs" in task:
+            signal_parts.append(f"--simo_args {task['RunArgs']}")
+        if "DagPeriod" in task:
+            signal_parts.append(f"--dag_period {task['DagPeriod']}")
+        if task.get("IsNonPartitionable", False):
+            signal_parts.append("--non_partitionable true")
+        if self.approach_module == "feedback-fine-grained":
+            signal_parts.append("--skipmode 1")
+        task["SignalMsg"] = generate_signal(
+            task["HandlerId"], SignalCommand.RUN, *signal_parts
+        )
+
+    def _update_statistics_deadline(self, task):
+        for constituent_id in self.execution_to_constituents.get(
+            task["TaskId"], _constituent_task_ids(task)
+        ):
+            if constituent_id in self.task_statistics:
+                self.task_statistics[constituent_id]["deadline"] = task[
+                    "Deadline"
+                ]
+
+    def _moving_average_reassign(
+        self, completed_taskid, start_time, end_time, outcome
+    ):
+        if outcome not in {"success", "failure"}:
+            return
+        completed_task = self.execution_tasks_by_id.get(completed_taskid)
+        if completed_task is None:
+            return
+        duration = float(end_time) - float(start_time)
+        if duration <= 0:
+            return
+        estimate = self.moving_average_estimator.observe(
+            completed_task, duration
+        )
+        group = dag_instance_key(completed_task)
+        if group is None or group not in self.dag_instance_deadlines:
+            return
+        remaining = [
+            task for task in self.TaskQueue if dag_instance_key(task) == group
+        ]
+        assignments = proportional_residual_deadlines(
+            remaining,
+            end_time,
+            self.dag_instance_deadlines[group],
+            self.moving_average_estimator.estimate,
+        )
+        for task in remaining:
+            task["Deadline"] = assignments[task["TaskId"]]
+            self._update_statistics_deadline(task)
+            self._refresh_task_signal(task)
+        self.deadline_reassignment_trace.append(
+            {
+                "completed_task_id": completed_taskid,
+                "dag_index": group[0],
+                "dag_period": group[1],
+                "completion_time_seconds": float(end_time),
+                "observed_execution_seconds": duration,
+                "moving_average_seconds": estimate,
+                "window": self.moving_average_window,
+                "reassigned_deadlines": dict(sorted(assignments.items())),
+            }
+        )
+
+    def feedback_adjust(
+        self,
+        end_time,
+        completed_taskid=None,
+        start_time=None,
+        outcome=None,
+    ):
         """
         adjust the release time of the next task according to the feedback of the previous task execution
         """
         TaskStartTime = self.TaskStartTime
         # feedback(according to the feedback of task execution to adjust next release time)
         TaskQueue = self.TaskQueue
+        if completed_taskid is not None and start_time is not None:
+            self._moving_average_reassign(
+                completed_taskid, start_time, end_time, outcome
+            )
         # self.logger.debug(f'[CTRL] adjust next task release time, tasknum: {len(TaskQueue)}')
         if(len(TaskQueue)>0):
             task = TaskQueue.pop(0)
@@ -606,22 +707,7 @@ class TaskSchedule:
                         "release_time"
                     ] = end_time
                 
-                # generate new signal message
-                handler_id = task["HandlerId"]
-                taskid = f"--taskid {task['TaskId']}"
-                release_time = f"--release_time {task['ReleaseTime']}"
-                deadline = f"--deadline {task['Deadline']}"
-                relative_time = f"--relative_time {TaskStartTime}" # relative start time of all tasks
-                # only for simo
-                simo_args = f"--simo_args {task['RunArgs']}"
-                dag_period = f"--dag_period {task['DagPeriod']}"
-                # create signal message and save it to task
-                # for feedback-fine-grained approach, add skipmode
-                if(self.approach_module == 'feedback-fine-grained'):
-                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period, "--skipmode 1")
-                else:    
-                    signal_message = generate_signal(handler_id, SignalCommand.RUN, release_time, deadline, relative_time, taskid, simo_args, dag_period)
-                task['SignalMsg'] = signal_message
+                self._refresh_task_signal(task)
             TaskQueue.insert(0, task)
         self.TaskQueue = TaskQueue
     
@@ -651,20 +737,7 @@ class TaskSchedule:
             pending = remaining
 
             if len(_constituent_task_ids(task)) > 1:
-                handler_id = task["HandlerId"]
-                signal_parts = [
-                    f"--release_time {task['ReleaseTime']}",
-                    f"--deadline {task['Deadline']}",
-                    f"--relative_time {self.TaskStartTime}",
-                    f"--taskid {task['TaskId']}",
-                    f"--simo_args {task['RunArgs']}",
-                    f"--dag_period {task['DagPeriod']}",
-                ]
-                if self.approach_module == 'feedback-fine-grained':
-                    signal_parts.append("--skipmode 1")
-                task['SignalMsg'] = generate_signal(
-                    handler_id, SignalCommand.RUN, *signal_parts
-                )
+                self._refresh_task_signal(task)
                 logger.debug(
                     f"[CTRL] fine-grained merged execution: {task['TaskId']}"
                 )
@@ -701,6 +774,9 @@ class TaskSchedule:
                     "execution_task_id": execution_task["TaskId"],
                 }
         self.execution_to_constituents = execution_to_constituents
+        self.execution_tasks_by_id = {
+            task["TaskId"]: deepcopy(task) for task in self.TaskQueue
+        }
         self.task_statistics = task_statistics
 
     def add_task_statistics(self, taskid, result, start_time, end_time):

@@ -3,8 +3,6 @@
 
 import argparse
 import json
-import math
-import random
 from collections import defaultdict
 from pathlib import Path
 
@@ -13,6 +11,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
+from experiments.result_presentation import (
+    format_truncated,
+    select_representative,
+    truncate_value,
+)
 
 
 METHODS = (
@@ -27,39 +31,12 @@ SCENARIOS = (
     ("emergency_obstacle_avoidance", "Emergency"),
     ("night_driving", "Night"),
 )
-PROFILES = (("tight", "(a) Tight Deadline"), ("loose", "(b) Loose Deadline"))
+PROFILES = (("tight", "Tight Deadline"), ("loose", "Loose Deadline"))
 METRICS = (
     "end_to_end_latency_seconds",
     "deadline_missing_rate",
     "qoe_score",
 )
-
-
-def truncate_value(value, digits=3):
-    """Truncate a non-negative experimental value without rounding."""
-    factor = 10**digits
-    return math.trunc(float(value) * factor) / factor
-
-
-def format_truncated(value, digits=3):
-    """Format a value after decimal truncation."""
-    return f"{truncate_value(value, digits):.{digits}f}"
-
-
-def select_representative(records, group_key):
-    """Select the latency-median run, preserving its complete metric tuple."""
-    ordered = sorted(
-        records,
-        key=lambda record: (record["end_to_end_latency_seconds"], record["seed"]),
-    )
-    midpoint = len(ordered) // 2
-    if len(ordered) % 2:
-        return ordered[midpoint]
-
-    # The protocol permits either central run for an even repetition count. Use a
-    # group-seeded pseudo-random choice so the selection is random but reproducible.
-    chooser = random.Random("|".join(group_key))
-    return chooser.choice((ordered[midpoint - 1], ordered[midpoint]))
 
 
 def load_representative_runs(runs_root):
@@ -109,12 +86,14 @@ def load_representative_runs(runs_root):
     return selected
 
 
-def selection_report(selected):
+def selection_report(selected, profiles=None):
     """Return an auditable text report of selected seeds and metric triples."""
+    if profiles is None:
+        profiles = [profile for profile, _ in PROFILES]
     lines = [
         "profile\tscenario\tmethod\tseed\tlatency / Deadline Missing Rate / QoE"
     ]
-    for profile, _ in PROFILES:
+    for profile in profiles:
         for scenario, scenario_label in SCENARIOS:
             for method, method_label, _ in METHODS:
                 record = selected[profile][method][scenario]
@@ -128,8 +107,14 @@ def selection_report(selected):
     return "\n".join(lines)
 
 
-def plot_qoe(runs_root, output_path):
+def plot_qoe(runs_root, output_path, profiles=("tight",)):
+    """Plot QoE for the requested profiles; the paper defaults to Tight only."""
     selected = load_representative_runs(runs_root)
+    profile_titles = dict(PROFILES)
+    profiles = tuple(profiles)
+    unknown_profiles = set(profiles) - set(profile_titles)
+    if not profiles or unknown_profiles:
+        raise ValueError(f"invalid QoE profiles: {sorted(unknown_profiles)}")
     output_path = Path(output_path)
     if output_path.suffix.lower() != ".pdf":
         raise ValueError("QoE figure output must be a PDF")
@@ -150,12 +135,20 @@ def plot_qoe(runs_root, output_path):
         }
     )
 
-    figure, axes = plt.subplots(1, 2, figsize=(7.1, 2.65), sharey=True)
+    figure_width = 4.15 if len(profiles) == 1 else 7.1
+    figure, axes = plt.subplots(
+        1,
+        len(profiles),
+        figsize=(figure_width, 2.65),
+        sharey=True,
+        squeeze=False,
+    )
+    axes = axes.ravel()
     x = np.arange(len(SCENARIOS), dtype=float)
     width = 0.155
     offsets = (np.arange(len(METHODS)) - (len(METHODS) - 1) / 2) * width
 
-    for axis, (profile, title) in zip(axes, PROFILES):
+    for profile_index, (axis, profile) in enumerate(zip(axes, profiles)):
         for offset, (method, label, shade) in zip(offsets, METHODS):
             values = [
                 truncate_value(selected[profile][method][scenario]["qoe_score"])
@@ -184,6 +177,9 @@ def plot_qoe(runs_root, output_path):
                         color="black",
                     )
 
+        title = profile_titles[profile]
+        if len(profiles) > 1:
+            title = f"({chr(ord('a') + profile_index)}) {title}"
         axis.set_title(title, pad=4)
         axis.set_xticks(x, [label for _, label in SCENARIOS])
         axis.set_ylim(0.0, 1.02)
@@ -226,9 +222,16 @@ def main():
     parser.add_argument("--runs-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path)
+    parser.add_argument(
+        "--profiles",
+        nargs="+",
+        choices=[profile for profile, _ in PROFILES],
+        default=["tight"],
+        help="deadline profiles to plot (default: tight)",
+    )
     args = parser.parse_args()
-    selected = plot_qoe(args.runs_root, args.output)
-    report = selection_report(selected)
+    selected = plot_qoe(args.runs_root, args.output, profiles=args.profiles)
+    report = selection_report(selected, profiles=args.profiles)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(report + "\n", encoding="utf-8")

@@ -125,7 +125,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, merge_tick_seconds=0.02, moving_average_window=8):
     """
     SIMO Baseline handler
     """
@@ -161,6 +161,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         output_dir=output_dir,
         run_id=run_id,
         merge_tick_seconds=merge_tick_seconds,
+        moving_average_window=moving_average_window,
     )
     # controller signal response loop
     while True: 
@@ -230,7 +231,12 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                 task_types = [int(i) for i in simo_args.strip('[').strip(']').split(',')]
                 if(approach_module == 'feedback' or approach_module == 'feedback-fine-grained'):
                     # adjust the release time of next task immediately
-                    task_scheduler.feedback_adjust(end_time)
+                    task_scheduler.feedback_adjust(
+                        end_time,
+                        completed_taskid=taskid,
+                        start_time=float(args_dict["start_time"]),
+                        outcome=args_dict["output"],
+                    )
                 # missing deadline or success will contribute the output, only skipped won't contribute
                 if(args_dict["output"] == "success" or args_dict["output"] == "failure"):
                     # add output for dependency consuming
