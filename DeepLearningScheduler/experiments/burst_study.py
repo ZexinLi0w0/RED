@@ -41,9 +41,7 @@ DEFAULT_BASE_TASK_CONFIG = (
     REPOSITORY_ROOT / "TaskConfigs" / "simo" / "mac_loose_burst.json"
 )
 DEFAULT_HANDLER_CONFIG = REPOSITORY_ROOT / "simo-handler_config.json"
-DEFAULT_OUTPUT_ROOT = (
-    REPOSITORY_ROOT / "taskdata" / "major_revision_burst_mac_mps_v2"
-)
+DEFAULT_OUTPUT_ROOT = REPOSITORY_ROOT / "taskdata" / "major_revision_burst_mac_mps_v2"
 DEFAULT_SEEDS = (101, 202, 303, 404, 505)
 DEFAULT_DEADLINE_FACTOR = 0.2
 DEFAULT_ARRIVAL_SCALE = 0.2
@@ -76,11 +74,15 @@ class BurstCondition:
 CONDITIONS = (
     BurstCondition("control-000", "sustained", 0),
     BurstCondition(
-        "transient-050", "transient", 50,
+        "transient-050",
+        "transient",
+        50,
         DEFAULT_TRANSIENT_DURATION_SECONDS,
     ),
     BurstCondition(
-        "transient-100", "transient", 100,
+        "transient-100",
+        "transient",
+        100,
         DEFAULT_TRANSIENT_DURATION_SECONDS,
     ),
     BurstCondition("sustained-050", "sustained", 50),
@@ -145,9 +147,7 @@ def _burst_config(
         "scheduler_tick_seconds": 0.005,
     }
     if condition.transient_duration_seconds is not None:
-        config["transient_duration_seconds"] = (
-            condition.transient_duration_seconds
-        )
+        config["transient_duration_seconds"] = condition.transient_duration_seconds
     return config
 
 
@@ -270,7 +270,12 @@ def _run_id(condition, method, seed, task_hash, burst_hash):
 
 def _validate_summary(manifest, summary):
     problems = []
-    for field in ("run_id", "method", "offered_task_count", "offered_task_stream_sha256"):
+    for field in (
+        "run_id",
+        "method",
+        "offered_task_count",
+        "offered_task_stream_sha256",
+    ):
         if summary.get(field) != manifest.get(field):
             problems.append(f"{field} mismatch")
     for metric in METRICS:
@@ -322,111 +327,117 @@ def run_study(
     ]
     random.Random(plan["run_order_seed"]).shuffle(cases)
     for run_order_index, (condition, seed, method) in enumerate(cases, start=1):
-                task_path = Path(condition["task_config_path"])
-                burst_path = Path(condition["burst_config_path"])
-                offered = _offered_stream(task_path, burst_path, seed)
-                run_id = _run_id(
-                    condition,
-                    method,
-                    seed,
-                    condition["task_config_sha256"],
-                    condition["burst_config_sha256"],
-                )
-                run_dir = output_root / "runs" / run_id
-                manifest_path = run_dir / "manifest.json"
-                command = [
-                    python_executable,
-                    str(REPOSITORY_ROOT / "main.py"),
-                    "--config", str(handler_config),
-                    "--task", str(task_path),
-                    "--approach", method,
-                    "--seed", str(seed),
-                    "--output-dir", str(run_dir),
-                    "--run-id", run_id,
-                    "--torch-device", runtime["resolved"],
-                    "--burst-config", str(burst_path),
-                ]
-                manifest = {
-                    "schema_version": 1,
-                    "study": plan["study"],
-                    "run_id": run_id,
-                    "status": "planned" if dry_run else "running",
-                    "device": plan["device"],
-                    "platform_label": plan["platform_label"],
-                    "power_mode": plan["power_mode"],
-                    "condition_slug": condition["slug"],
-                    "regime": condition["regime"],
-                    "ratio_percent": condition["ratio_percent"],
-                    "method": method,
-                    "seed": seed,
-                    "run_order_index": run_order_index,
-                    "run_order_seed": plan["run_order_seed"],
-                    "task_config_path": str(task_path),
-                    "task_config_sha256": condition["task_config_sha256"],
-                    "burst_config_path": str(burst_path),
-                    "burst_config_sha256": condition["burst_config_sha256"],
-                    **offered,
-                    "expected_workload": condition["expected_workload"],
-                    "git_commit": git_commit,
-                    "git_status_porcelain": git_status,
-                    "python": python_executable,
-                    "torch_runtime": runtime,
-                    "host": socket.gethostname(),
-                    "platform": platform.platform(),
-                    "command": command,
-                }
-                # Avoid duplicating workload metadata under two names.
-                manifest.pop("workload", None)
-                if dry_run:
-                    print(json.dumps(manifest, sort_keys=True))
+        task_path = Path(condition["task_config_path"])
+        burst_path = Path(condition["burst_config_path"])
+        offered = _offered_stream(task_path, burst_path, seed)
+        run_id = _run_id(
+            condition,
+            method,
+            seed,
+            condition["task_config_sha256"],
+            condition["burst_config_sha256"],
+        )
+        run_dir = output_root / "runs" / run_id
+        manifest_path = run_dir / "manifest.json"
+        command = [
+            python_executable,
+            str(REPOSITORY_ROOT / "main.py"),
+            "--config",
+            str(handler_config),
+            "--task",
+            str(task_path),
+            "--approach",
+            method,
+            "--seed",
+            str(seed),
+            "--output-dir",
+            str(run_dir),
+            "--run-id",
+            run_id,
+            "--torch-device",
+            runtime["resolved"],
+            "--burst-config",
+            str(burst_path),
+        ]
+        manifest = {
+            "schema_version": 1,
+            "study": plan["study"],
+            "run_id": run_id,
+            "status": "planned" if dry_run else "running",
+            "device": plan["device"],
+            "platform_label": plan["platform_label"],
+            "power_mode": plan["power_mode"],
+            "condition_slug": condition["slug"],
+            "regime": condition["regime"],
+            "ratio_percent": condition["ratio_percent"],
+            "method": method,
+            "seed": seed,
+            "run_order_index": run_order_index,
+            "run_order_seed": plan["run_order_seed"],
+            "task_config_path": str(task_path),
+            "task_config_sha256": condition["task_config_sha256"],
+            "burst_config_path": str(burst_path),
+            "burst_config_sha256": condition["burst_config_sha256"],
+            **offered,
+            "expected_workload": condition["expected_workload"],
+            "git_commit": git_commit,
+            "git_status_porcelain": git_status,
+            "python": python_executable,
+            "torch_runtime": runtime,
+            "host": socket.gethostname(),
+            "platform": platform.platform(),
+            "command": command,
+        }
+        # Avoid duplicating workload metadata under two names.
+        manifest.pop("workload", None)
+        if dry_run:
+            print(json.dumps(manifest, sort_keys=True))
+            continue
+        if run_dir.exists():
+            if resume and manifest_path.is_file():
+                existing = _load_json(manifest_path)
+                if existing.get("status") == "complete":
+                    print(f"SKIP complete {run_id}", flush=True)
                     continue
-                if run_dir.exists():
-                    if resume and manifest_path.is_file():
-                        existing = _load_json(manifest_path)
-                        if existing.get("status") == "complete":
-                            print(f"SKIP complete {run_id}", flush=True)
-                            continue
-                    raise FileExistsError(
-                        f"refusing to overwrite existing run directory: {run_dir}"
-                    )
-                run_dir.mkdir(parents=True)
-                manifest["started_at"] = _utc_now()
-                _write_json_atomic(manifest_path, manifest)
-                started = time.monotonic()
-                with open(run_dir / "stdout.log", "w", encoding="utf-8") as log:
-                    completed = subprocess.run(
-                        command,
-                        cwd=REPOSITORY_ROOT,
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
-                    )
-                manifest["return_code"] = completed.returncode
-                manifest["finished_at"] = _utc_now()
-                manifest["duration_seconds"] = time.monotonic() - started
-                summary_path = run_dir / "summary.json"
-                if completed.returncode == 0 and summary_path.is_file():
-                    summary = _load_json(summary_path)
-                    manifest["validation_problems"] = _validate_summary(
-                        manifest, summary
-                    )
-                    manifest["status"] = (
-                        "complete"
-                        if not manifest["validation_problems"]
-                        else "failed-validation"
-                    )
-                    manifest["summary_sha256"] = _sha256(summary_path)
-                else:
-                    manifest["status"] = "failed"
-                _write_json_atomic(manifest_path, manifest)
-                if manifest["status"] != "complete":
-                    failures += 1
-                    print(f"FAIL {run_id}: {manifest['status']}", flush=True)
-                    if not keep_going:
-                        return 1
-                else:
-                    print(f"DONE {run_id}", flush=True)
-                if cooldown_seconds:
-                    time.sleep(cooldown_seconds)
+            raise FileExistsError(
+                f"refusing to overwrite existing run directory: {run_dir}"
+            )
+        run_dir.mkdir(parents=True)
+        manifest["started_at"] = _utc_now()
+        _write_json_atomic(manifest_path, manifest)
+        started = time.monotonic()
+        with open(run_dir / "stdout.log", "w", encoding="utf-8") as log:
+            completed = subprocess.run(
+                command,
+                cwd=REPOSITORY_ROOT,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+            )
+        manifest["return_code"] = completed.returncode
+        manifest["finished_at"] = _utc_now()
+        manifest["duration_seconds"] = time.monotonic() - started
+        summary_path = run_dir / "summary.json"
+        if completed.returncode == 0 and summary_path.is_file():
+            summary = _load_json(summary_path)
+            manifest["validation_problems"] = _validate_summary(manifest, summary)
+            manifest["status"] = (
+                "complete"
+                if not manifest["validation_problems"]
+                else "failed-validation"
+            )
+            manifest["summary_sha256"] = _sha256(summary_path)
+        else:
+            manifest["status"] = "failed"
+        _write_json_atomic(manifest_path, manifest)
+        if manifest["status"] != "complete":
+            failures += 1
+            print(f"FAIL {run_id}: {manifest['status']}", flush=True)
+            if not keep_going:
+                return 1
+        else:
+            print(f"DONE {run_id}", flush=True)
+        if cooldown_seconds:
+            time.sleep(cooldown_seconds)
     return 1 if failures else 0
 
 
@@ -477,7 +488,9 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
     for manifest_path in sorted((output_root / "runs").glob("*/manifest.json")):
         manifest = _load_json(manifest_path)
         if manifest.get("status") != "complete":
-            problems.append(f"{manifest_path.parent.name}: status={manifest.get('status')}")
+            problems.append(
+                f"{manifest_path.parent.name}: status={manifest.get('status')}"
+            )
             continue
         summary_path = manifest_path.parent / "summary.json"
         if not summary_path.is_file() or _sha256(summary_path) != manifest.get(
@@ -546,9 +559,7 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
 
     drop_composition = {}
     for regime in ("transient", "sustained"):
-        representative = representatives[
-            (f"{regime}-100", "feedback-fine-grained")
-        ]
+        representative = representatives[(f"{regime}-100", "feedback-fine-grained")]
         drop_composition[regime] = {
             "run_id": representative["run_id"],
             "seed": representative["seed"],
@@ -569,7 +580,9 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
     report_root = output_root / "report"
     _write_json_atomic(report_root / "burst_report.json", report)
     report_root.mkdir(parents=True, exist_ok=True)
-    with open(report_root / "burst_table.csv", "w", newline="", encoding="utf-8") as output_file:
+    with open(
+        report_root / "burst_table.csv", "w", newline="", encoding="utf-8"
+    ) as output_file:
         fieldnames = ["regime", "ratio_percent"] + [
             f"{label}_{metric}"
             for label in ("EDF", "LLF-DAG", "RED")
@@ -594,7 +607,9 @@ def _build_parser():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
     plan_parser = subparsers.add_parser("plan")
-    plan_parser.add_argument("--base-task-config", type=Path, default=DEFAULT_BASE_TASK_CONFIG)
+    plan_parser.add_argument(
+        "--base-task-config", type=Path, default=DEFAULT_BASE_TASK_CONFIG
+    )
     plan_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     plan_parser.add_argument("--seeds", type=_csv_ints, default=DEFAULT_SEEDS)
     plan_parser.add_argument(
@@ -615,14 +630,18 @@ def _build_parser():
     )
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
-    run_parser.add_argument("--handler-config", type=Path, default=DEFAULT_HANDLER_CONFIG)
+    run_parser.add_argument(
+        "--handler-config", type=Path, default=DEFAULT_HANDLER_CONFIG
+    )
     run_parser.add_argument("--python", default=sys.executable)
     run_parser.add_argument("--cooldown-seconds", type=float, default=2.0)
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--keep-going", action="store_true")
     summarize_parser = subparsers.add_parser("summarize")
-    summarize_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
+    summarize_parser.add_argument(
+        "--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT
+    )
     return parser
 
 
