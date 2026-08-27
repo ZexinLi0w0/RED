@@ -1,7 +1,7 @@
 {
-  "DeadlineFactor": 3.0,
-  "ArrivalScale": 0.0025,
-  "DagRepeatedTimes": 40,
+  "DeadlineFactor": 6.0,
+  "ArrivalScale": 0.0001,
+  "DagRepeatedTimes": 180,
   "ParallelStagePolicy": "max",
   "TaskSeed": 0,
   "ReleaseTimeSkewThresholdMs": 100,
@@ -60,7 +60,7 @@
           "RunArgs": [4],
           "RunningTime": 16.460167,
           "WorstRunningTime": 21.386796,
-          "ReleaseTimeOffsetMs": 1000
+          "ReleaseTimeOffsetMs": 900
         }
       ],
       {
@@ -93,12 +93,12 @@
     "block": "refinement",
     "purpose": "Mac/MPS moving-average-window and release-time-skew sensitivity without Burst Management",
     "source_configs": [
-      "TaskConfigs/simo/frozen_mac_mps_v1/mac_tight_emergency_obstacle_avoidance.json",
+      "TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json",
       "TaskConfigs/simo/parameter_sensitivity/mac_mps_parameter_sensitivity.json"
     ],
-    "design": "40 releases populate the longest moving-average history; offsets 0/100/200/500/1000 ms make every release-time skew threshold cross a distinct merge boundary",
-    "load_calibration": "DeadlineFactor 3.0 inherits the validated Mac tight emergency-obstacle calibration; endpoint pilots selected ArrivalScale 0.0025 to place the expanded-offset workload near a 1.17-second overall deadline and avoid QoE saturation",
-    "expected_overall_deadline_seconds": 1.165425716613,
+    "design": "180 releases populate the longest moving-average history and leave enough late-release backlog for QoE to distinguish settings; offsets 0/100/200/500/900 ms make every release-time skew threshold cross a distinct merge boundary while gamma=1000 ms remains safely above the maximum skew",
+    "load_calibration": "DeadlineFactor 6.0 inherits the validated Mac proactive-drop workload so node deadlines do not saturate; endpoint pilots bracketed the stable region and selected ArrivalScale 0.0001 with 180 releases so global QoE reflects backlog without the complete overload observed at 400 releases",
+    "expected_overall_deadline_seconds": 1.045122051715,
     "burst_management": "disabled"
   }
 }

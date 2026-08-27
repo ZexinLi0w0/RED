@@ -3,6 +3,8 @@ import hashlib
 import json
 
 from experiments.parameter_sensitivity import (
+    DEFAULT_BURST_MANAGEMENT_TASK_CONFIG,
+    DEFAULT_REFINEMENT_TASK_CONFIG,
     DEFAULT_SEEDS,
     PAPER_DEFAULTS,
     SENSITIVITY_POINTS,
@@ -88,6 +90,26 @@ def test_plan_defaults_to_one_run_per_point(tmp_path) -> None:
 def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(1) == (101,)
     assert _seeds_for_repetitions(3) == (101, 202, 303)
+
+
+def test_default_mac_task_configs_are_block_specific() -> None:
+    refinement = json.loads(DEFAULT_REFINEMENT_TASK_CONFIG.read_text())
+    burst = json.loads(DEFAULT_BURST_MANAGEMENT_TASK_CONFIG.read_text())
+
+    assert refinement["BurstTaskRatio"] == 0
+    assert refinement["NonPartitionablePercentage"] == 0
+    assert refinement["DagRepeatedTimes"] == 180
+    assert [
+        task["ReleaseTimeOffsetMs"] for task in refinement["dag_list"][0][0]
+    ] == [0, 100, 200, 500, 900]
+    assert burst["BurstTaskRatio"] == 100
+    assert burst["NonPartitionablePercentage"] == 100
+    assert burst["MovingAverageWindow"] == PAPER_DEFAULTS[
+        "moving_average_window"
+    ]
+    assert burst["ReleaseTimeSkewThresholdMs"] == PAPER_DEFAULTS[
+        "release_time_skew_threshold_ms"
+    ]
 
 
 def test_generated_points_keep_the_two_blocks_independent(tmp_path) -> None:

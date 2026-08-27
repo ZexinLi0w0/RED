@@ -19,13 +19,17 @@ settings), with the refinement parameters fixed at `8` and `100` milliseconds.
 The two blocks use separate Mac/MPS task configs:
 
 - `TaskConfigs/simo/parameter_sensitivity/mac_mps_refinement_sensitivity_v2.json`
-  inherits the measured Mac runtime profile and `DeadlineFactor=3.0` from the
-  validated tight emergency-obstacle calibration. Forty releases populate the
-  longest moving-average history. Request offsets of 0, 100, 200, 500, and
-  1000 milliseconds ensure that every release-time skew threshold crosses a
-  distinct merge boundary. Endpoint pilots selected `ArrivalScale=0.0025` to
-  place the expanded-offset workload near a 1.17-second overall deadline and
-  avoid QoE saturation. Burst Management is off.
+  inherits the measured Mac runtime profile and `DeadlineFactor=6.0` from the
+  validated Mac proactive-drop workload so node deadlines do not saturate.
+  180 releases populate the longest moving-average history and leave enough
+  late-release backlog for QoE to distinguish settings. Request offsets of
+  0, 100, 200, 500, and
+  900 milliseconds ensure that every release-time skew threshold crosses a
+  distinct merge boundary while the 1000-millisecond endpoint safely includes
+  the maximum skew. Endpoint pilots selected `ArrivalScale=0.0001` together
+  with 180 releases after bracketing the stable region; unmerged requests incur
+  visible queueing without the complete overload observed at 400 releases.
+  Burst Management is off.
 - `TaskConfigs/simo/parameter_sensitivity/mac_mps_burst_management_sensitivity_v2.json`
   inherits the validated Mac proactive-drop workload. It keeps three critical
   perception requests and control protected, allows two redundant requests to

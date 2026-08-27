@@ -1,0 +1,53 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.15,
+      "offered_node_count": 20,
+      "outcome_counts": {
+        "failure": 3,
+        "success": 17
+      },
+      "qoe_score": 0.9987898582856527
+    },
+    "atomic_offered_ratio": 0.5,
+    "partitionable": {
+      "deadline_missing_rate": 0.1,
+      "offered_node_count": 20,
+      "outcome_counts": {
+        "failure": 2,
+        "success": 18
+      },
+      "qoe_score": 0.9996184362367782
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.01429002285003662,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.125,
+  "end_to_end_latency_seconds": 0.5963640213012695,
+  "execution_task_count": 40,
+  "finished_execution_task_count": 40,
+  "method": "llf-dag",
+  "moving_average_reassignment": {
+    "enabled": false,
+    "event_count": 0,
+    "events": [],
+    "window": 8
+  },
+  "offered_task_count": 40,
+  "offered_task_stream_sha256": "8db34581b95d6bf54fd4d0a3de7e5c3b15133f87ac7bf42d43027616a8e978ec",
+  "outcome_counts": {
+    "failure": 5,
+    "success": 35
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.9949865788027579,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "mac-emergency_obstacle_avoidance-atomic50-llf-dag-seed202-cfgd55baf145c58",
+  "schema_version": 1,
+  "task_config_path": "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler/TaskConfigs/simo/nonpartitionable_mac_mps_v2/mac_atomic50_emergency_obstacle_avoidance.json",
+  "torch_device": "mps"
+}
