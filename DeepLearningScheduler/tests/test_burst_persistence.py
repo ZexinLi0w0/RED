@@ -2,7 +2,10 @@ import logging
 
 import pytest
 
-from burst_task_manager import BurstTaskManager
+from burst_task_manager import (
+    BurstTaskManager,
+    BurstWorkloadConfig,
+)
 
 
 def _manager(**overrides):
@@ -10,6 +13,11 @@ def _manager(**overrides):
         "gpu_threshold": 90.0,
         "queue_threshold": 8,
         "persistence_window": 3,
+        "workload_config": BurstWorkloadConfig(
+            regime="sustained",
+            burst_start_seconds=0.0,
+            release_horizon_seconds=1.0,
+        ),
         "logger": logging,
     }
     arguments.update(overrides)
@@ -17,7 +25,7 @@ def _manager(**overrides):
 
 
 def test_paper_burst_defaults_are_exposed_in_statistics() -> None:
-    manager = BurstTaskManager(logger=logging)
+    manager = _manager()
 
     statistics = manager.get_burst_statistics()
 
@@ -71,9 +79,21 @@ def test_invalid_burst_sensitivity_parameters_are_rejected(arguments, message) -
 
 def test_burst_duplicates_have_independent_reporting_identities() -> None:
     manager = _manager()
-    base = [{"TaskId": "base", "ConstituentTaskIds": ["base"], "Priority": 1}]
+    base = [{
+        "TaskId": "base",
+        "ConstituentTaskIds": ["base"],
+        "Priority": 1,
+        "DagIndex": 0,
+        "DagPeriod": 0,
+        "StageIndex": 0,
+        "MergeKey": "dag=0/period=0/stage=0",
+        "ReleaseTime": 0.0,
+        "Deadline": 0.1,
+    }]
 
     duplicates = manager.generate_burst_tasks(base, 100)
 
-    assert duplicates[0]["TaskId"] == "base_burst_0"
-    assert duplicates[0]["ConstituentTaskIds"] == ["base_burst_0"]
+    assert duplicates[0]["TaskId"] == "base_burst_sustained_1"
+    assert duplicates[0]["ConstituentTaskIds"] == [
+        "base_burst_sustained_1"
+    ]

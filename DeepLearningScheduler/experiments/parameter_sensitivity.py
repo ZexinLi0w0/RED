@@ -21,7 +21,10 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from burst_task_manager import BurstTaskManager  # noqa: E402
+from burst_task_manager import (  # noqa: E402
+    BurstTaskManager,
+    burst_workload_config_from_mapping,
+)
 from runtime_device import torch_runtime_info  # noqa: E402
 from task_generator import (  # noqa: E402
     generate_tasks_from_dag,
@@ -334,6 +337,7 @@ def _offered_stream(task_config_path, burst_config_path, seed):
             persistence_window=burst_config["persistence_window"],
             default_drop_threshold=burst_config.get("drop_threshold", 0.5),
             monitoring_interval=burst_config.get("monitoring_interval", 0.05),
+            workload_config=burst_workload_config_from_mapping(burst_config),
         )
         tasks = tasks + manager.generate_burst_tasks(tasks, burst_ratio)
     return len(tasks), task_stream_sha256(tasks)

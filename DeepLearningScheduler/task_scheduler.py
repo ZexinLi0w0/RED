@@ -13,7 +13,10 @@ from visual_scripts.visual_task import (
 )
 import logging
 from copy import deepcopy
-from burst_task_manager import BurstTaskManager
+from burst_task_manager import (
+    BurstTaskManager,
+    burst_workload_config_from_mapping,
+)
 from task_generator import task_stream_sha256
 from deadline_reassignment import (
     DEFAULT_MOVING_AVERAGE_WINDOW,
@@ -230,8 +233,12 @@ class TaskSchedule:
         
         # Burst task management
         self.burst_enabled = burst_enabled
+        self.burst_management_enabled = (
+            burst_enabled and approach_module == 'feedback-fine-grained'
+        )
         if burst_enabled:
             burst_config = burst_config or {}
+            workload_config = burst_workload_config_from_mapping(burst_config)
             gpu_threshold = burst_config.get('gpu_threshold', 90.0)
             queue_threshold = burst_config.get('queue_threshold', 8)
             persistence_window = burst_config.get('persistence_window', 3)
@@ -243,14 +250,21 @@ class TaskSchedule:
                 persistence_window=persistence_window,
                 default_drop_threshold=default_drop_threshold,
                 monitoring_interval=monitoring_interval,
+                workload_config=workload_config,
+                management_enabled=self.burst_management_enabled,
                 logger=logger
             )
-            # Start burst monitoring
-            self.burst_manager.start_monitoring()
+            if self.burst_management_enabled:
+                self.burst_manager.start_monitoring()
             self.logger.info(
-                "[BURST] Burst task management enabled with GPU threshold: "
-                f"{gpu_threshold}%, Queue threshold: {queue_threshold}, "
-                f"Persistence window: {persistence_window} ticks"
+                "[BURST] %s workload enabled for %s; proactive management=%s; "
+                "GPU threshold=%s%%, queue threshold=%s, persistence=%s ticks",
+                workload_config.regime,
+                approach_module,
+                self.burst_management_enabled,
+                gpu_threshold,
+                queue_threshold,
+                persistence_window,
             )
         else:
             self.burst_manager = None
@@ -263,7 +277,7 @@ class TaskSchedule:
         TaskStartTime = time.time()
         # Set self.TaskStartTime early so it's available for fine_grained_adjust()
         self.TaskStartTime = TaskStartTime
-        if self.burst_enabled and self.burst_manager and self.burst_task_ratio > 0 and not self._burst_tasks_augmented:
+        if self.burst_enabled and self.burst_manager and not self._burst_tasks_augmented:
             extra_tasks = self.burst_manager.generate_burst_tasks(self.tasks, self.burst_task_ratio)
             if extra_tasks:
                 self.logger.info(f"[BURST] Augmenting task list with {len(extra_tasks)} burst tasks (ratio={self.burst_task_ratio}%).")
@@ -357,18 +371,31 @@ class TaskSchedule:
                 # put it back
                 putback.append(task)
         
-        # Apply burst-aware scheduling to putback tasks if enabled
-        if self.burst_enabled and self.burst_manager and len(putback) > 0:
-            self.burst_manager.update_queue_length(len(putback))
-            # Use time relative to TaskStartTime for consistent criticality calculation
+        # Apply burst management only to work that has already been released.
+        # Counting future releases as queue backlog would activate shedding at
+        # time zero and would let the controller drop work before it is offered.
+        if self.burst_management_enabled and self.burst_manager and len(putback) > 0:
             current_time = time.time() - TaskStartTime
-            remaining_tasks, dropped_tasks = self.burst_manager.proactive_drop(putback, current_time)
+            released_tasks = [
+                task
+                for task in putback
+                if float(task["ReleaseTime"]) <= current_time
+            ]
+            future_tasks = [
+                task
+                for task in putback
+                if float(task["ReleaseTime"]) > current_time
+            ]
+            self.burst_manager.update_queue_length(len(released_tasks))
+            remaining_tasks, dropped_tasks = self.burst_manager.proactive_drop(
+                released_tasks, current_time
+            )
             
             # Handle dropped tasks
             for dropped_task in dropped_tasks:
                 self.handle_dropped_task(dropped_task.get('TaskId', 'Unknown'))
             
-            putback = remaining_tasks
+            putback = remaining_tasks + future_tasks
         
         if(len(putback) > 0):
             # put back the tasks with the same orders
@@ -397,8 +424,8 @@ class TaskSchedule:
         # Log burst statistics if enabled
         if self.burst_enabled and self.burst_manager:
             burst_stats = self.burst_manager.get_burst_statistics()
-            # Stop burst monitoring
-            self.burst_manager.stop_monitoring()
+            if self.burst_management_enabled:
+                self.burst_manager.stop_monitoring()
 
         now_time_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         raw_data_save_path = self.output_dir

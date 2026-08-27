@@ -502,6 +502,15 @@ def generate_tasks_from_dag(
             "EstimatedExecutionTime": worst_running_time_ms / 1000.0,
             "IsNonPartitionable": is_non_partitionable
         }
+        if "DropThreshold" in config:
+            drop_threshold = config["DropThreshold"]
+            if (
+                isinstance(drop_threshold, bool)
+                or not isinstance(drop_threshold, (int, float))
+                or not 0 <= drop_threshold <= 1
+            ):
+                raise ValueError("DropThreshold must be between 0 and 1")
+            task["DropThreshold"] = float(drop_threshold)
         return task
 
     # Calculate total number of tasks to determine how many should be non-partitionable

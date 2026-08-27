@@ -144,6 +144,33 @@ def test_generated_stream_is_deterministic_for_a_seed() -> None:
     assert len({task["TaskId"] for task in first}) == len(first)
 
 
+def test_task_level_drop_threshold_is_preserved() -> None:
+    task_config = _task("drop-aware", 10)
+    task_config["DropThreshold"] = 0.25
+
+    generated = generate_tasks_from_dag(
+        [[task_config]],
+        deadline_factor=1.0,
+        arrival_scale=1.0,
+        dag_repeated_times=1,
+    )
+
+    assert generated[0]["DropThreshold"] == pytest.approx(0.25)
+
+
+def test_invalid_task_level_drop_threshold_is_rejected() -> None:
+    task_config = _task("invalid-drop-threshold", 10)
+    task_config["DropThreshold"] = 1.5
+
+    with pytest.raises(ValueError, match="DropThreshold"):
+        generate_tasks_from_dag(
+            [[task_config]],
+            deadline_factor=1.0,
+            arrival_scale=1.0,
+            dag_repeated_times=1,
+        )
+
+
 def test_parallel_release_offsets_create_fixed_predicted_skews() -> None:
     dag = [[[
         {

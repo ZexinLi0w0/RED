@@ -40,6 +40,9 @@ def _base_configs(tmp_path):
         burst_path,
         {
             "burst_enabled": True,
+            "burst_regime": "sustained",
+            "burst_start_seconds": 0.0,
+            "release_horizon_seconds": 0.1,
             "gpu_threshold": 10,
             "queue_threshold": 99,
             "persistence_window": 7,
