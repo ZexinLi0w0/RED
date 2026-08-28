@@ -392,6 +392,8 @@ def run_study(
     dry_run=False,
     resume=False,
     keep_going=False,
+    selected_conditions=None,
+    selected_methods=None,
 ):
     output_root = Path(output_root).resolve()
     handler_config = Path(handler_config).resolve()
@@ -408,11 +410,29 @@ def run_study(
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
     failures = 0
+    available_conditions = {condition["slug"] for condition in plan["conditions"]}
+    available_methods = set(plan["methods"])
+    selected_conditions = (
+        available_conditions
+        if selected_conditions is None
+        else set(selected_conditions)
+    )
+    selected_methods = (
+        available_methods if selected_methods is None else set(selected_methods)
+    )
+    unknown_conditions = selected_conditions.difference(available_conditions)
+    unknown_methods = selected_methods.difference(available_methods)
+    if unknown_conditions:
+        raise ValueError(f"unknown Burst conditions: {sorted(unknown_conditions)}")
+    if unknown_methods:
+        raise ValueError(f"unknown Burst methods: {sorted(unknown_methods)}")
     cases = [
         (condition, seed, method)
         for condition in plan["conditions"]
         for seed in plan["seeds"]
         for method in plan["methods"]
+        if condition["slug"] in selected_conditions
+        and method in selected_methods
     ]
     random.Random(plan["run_order_seed"]).shuffle(cases)
     for run_order_index, (condition, seed, method) in enumerate(cases, start=1):
@@ -808,6 +828,15 @@ def _csv_ints(value):
     return values
 
 
+def _csv_values(value):
+    values = tuple(item.strip() for item in value.split(",") if item.strip())
+    if not values:
+        raise argparse.ArgumentTypeError("value must contain at least one item")
+    if len(values) != len(set(values)):
+        raise argparse.ArgumentTypeError("items cannot contain duplicates")
+    return values
+
+
 def _positive_int(value):
     try:
         parsed = int(value)
@@ -909,6 +938,18 @@ def _build_parser():
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--keep-going", action="store_true")
+    run_parser.add_argument(
+        "--conditions",
+        type=_csv_values,
+        default=None,
+        help="optional comma-separated condition slugs for calibration runs",
+    )
+    run_parser.add_argument(
+        "--methods",
+        type=_csv_values,
+        default=None,
+        help="optional comma-separated methods for calibration runs",
+    )
     summarize_parser = subparsers.add_parser("summarize")
     summarize_parser.add_argument(
         "--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT
@@ -960,6 +1001,8 @@ def main():
             args.dry_run,
             args.resume,
             args.keep_going,
+            args.conditions,
+            args.methods,
         )
     report = summarize_study(args.output_root)
     print(json.dumps(report, indent=2, sort_keys=True))
