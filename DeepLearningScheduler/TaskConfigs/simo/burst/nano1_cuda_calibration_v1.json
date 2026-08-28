@@ -1,7 +1,7 @@
 {
-  "DeadlineFactor": 0.25,
+  "DeadlineFactor": 1.0,
   "ArrivalScale": 0.25,
-  "DagRepeatedTimes": 4,
+  "DagRepeatedTimes": 6,
   "ParallelStagePolicy": "max",
   "TaskSeed": 0,
   "ReleaseTimeSkewThresholdMs": 100,
@@ -15,7 +15,7 @@
         {
           "TaskName": "Nano1_Burst_Critical_LaneDetection",
           "HandlerId": 5,
-          "Priority": 2,
+          "Priority": 3,
           "Dependencies": [],
           "RunArgs": [1],
           "RunningTime": 481,
@@ -23,13 +23,13 @@
           "DropThreshold": 0.0
         },
         {
-          "TaskName": "Nano1_Burst_Critical_ObjectDetection",
+          "TaskName": "Nano1_Burst_Critical_Control",
           "HandlerId": 5,
-          "Priority": 2,
+          "Priority": 3,
           "Dependencies": [],
-          "RunArgs": [4],
-          "RunningTime": 507,
-          "WorstRunningTime": 620,
+          "RunArgs": [2],
+          "RunningTime": 406,
+          "WorstRunningTime": 485,
           "DropThreshold": 0.0
         },
         {
@@ -41,50 +41,18 @@
           "RunningTime": 524,
           "WorstRunningTime": 636,
           "DropThreshold": 0.4
-        }
-      ],
-      [
-        {
-          "TaskName": "Nano1_Burst_Critical_Segmentation",
-          "HandlerId": 5,
-          "Priority": 2,
-          "Dependencies": [1, 4],
-          "RunArgs": [3],
-          "RunningTime": 524,
-          "WorstRunningTime": 636,
-          "DropThreshold": 0.0
         },
         {
-          "TaskName": "Nano1_Burst_Critical_ObjectDetection_Refined",
+          "TaskName": "Nano1_Burst_Redundant_ObjectDetection",
           "HandlerId": 5,
-          "Priority": 2,
-          "Dependencies": [1, 4],
+          "Priority": 1,
+          "Dependencies": [],
           "RunArgs": [4],
           "RunningTime": 507,
           "WorstRunningTime": 620,
-          "DropThreshold": 0.0
-        },
-        {
-          "TaskName": "Nano1_Burst_Redundant_LaneDetection_Refined",
-          "HandlerId": 5,
-          "Priority": 1,
-          "Dependencies": [1, 4],
-          "RunArgs": [1],
-          "RunningTime": 481,
-          "WorstRunningTime": 552,
           "DropThreshold": 0.25
         }
-      ],
-      {
-        "TaskName": "Nano1_Burst_Control",
-        "HandlerId": 5,
-        "Priority": 3,
-        "Dependencies": [3, 4],
-        "RunArgs": [2],
-        "RunningTime": 406,
-        "WorstRunningTime": 485,
-        "DropThreshold": 0.0
-      }
+      ]
     ]
   ],
   "RuntimeProfile": {
@@ -95,7 +63,7 @@
   },
   "BurstStudyWorkload": {
     "purpose": "Nano1 Burst-task load calibration",
-    "base_dag": "validated three-stage Nano1 DAG with one redundant request in each perception stage",
-    "drop_policy": "retain the critical path and control; shed redundant perception requests"
+    "base_dag": "four independent co-released requests without failure-cascade dependencies",
+    "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests"
   }
 }
