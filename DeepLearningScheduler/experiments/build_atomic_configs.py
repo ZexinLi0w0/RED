@@ -40,7 +40,8 @@ def build_atomic_configs(
             "source_config": source_config.name,
             "source_config_sha256": source_sha256,
             "selection_rule": (
-                "frozen tight config whose EDF-only calibration DMR is "
+                "frozen tight config whose EDF-only calibration Deadline "
+                "Missing Rate is "
                 "closest to 0.50"
             ),
             "semantics": (

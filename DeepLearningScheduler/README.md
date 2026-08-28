@@ -106,6 +106,34 @@ python "./Autopilot/test.py" -width 100 -height 100 -input "./Autopilot/img.jpg"
 
 ## SIMO Experiment
 
+### Overall Performance Experiment
+
+The Table 11 Mac/MPS matrix uses the frozen EDF-only calibrated Tight configs
+for Urban Navigation, Emergency Obstacle Avoidance, and Night Driving. One seed
+runs 15 cells (three scenarios by five methods):
+
+```zsh
+eval "$(/Users/rentao/miniconda3/bin/conda shell.zsh hook)"
+conda activate schedule
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
+python experiments/run_matrix.py \
+  --device mac --power-mode mps-default-ac-power \
+  --handler-config handler-config.json \
+  --task-dir TaskConfigs/simo/overall_mac_mps_v3 \
+  --output-root taskdata/major_revision_overall_mac_mps_v3_final \
+  --profiles tight \
+  --scenarios urban_navigation,emergency_obstacle_avoidance,night_driving \
+  --methods baseline,llf-dag,fine-grained,feedback,feedback-fine-grained \
+  --seeds 101 --torch-device mps --cooldown-seconds 2 --keep-going
+```
+
+The Table 11 campaign explicitly passes
+`--seeds 101,202,303,404,505`, producing 75 runs. This does not change the
+one-run default. Each displayed cell is one complete median-latency run from
+those five repetitions; its latency, Deadline Missing Rate, and QoE are never
+mixed across seeds. The full EDF-only Tight/Loose selection evidence is stored
+in `TaskConfigs/simo/overall_mac_mps_v3/selection_report.json`.
+
 ### Burst Experiment
 
 The formal Burst study currently runs locally on the M3 Max with MPS. Initialize
