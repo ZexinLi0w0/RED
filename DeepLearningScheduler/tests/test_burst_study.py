@@ -127,7 +127,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
-    assert sum(threshold > 0 for threshold in drop_thresholds) == 1
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
