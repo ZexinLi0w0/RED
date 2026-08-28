@@ -1,0 +1,153 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.9935185185185185,
+      "offered_node_count": 1080,
+      "outcome_counts": {
+        "failure": 1,
+        "skip": 1072,
+        "success": 7
+      },
+      "qoe_score": 0.7896871699454455
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.01698794960975647,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.9935185185185185,
+  "end_to_end_latency_seconds": 1.0947818756103516,
+  "execution_task_count": 1080,
+  "finished_execution_task_count": 1080,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 8,
+    "events": [
+      {
+        "completed_task_id": "Refinement_Request0_LaneDetection_[0]_D0_S0_B0",
+        "completion_time_seconds": 0.10602688789367676,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.015150070190429688,
+        "observed_execution_seconds": 0.015150070190429688,
+        "reassigned_deadlines": {
+          "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle": 1.028320776,
+          "Refinement_Request1_Segmentation_[0]_D0_S0_B1": 0.8562919738270895,
+          "Refinement_Request2_ObjectDetection_[0]_D0_S0_B2": 0.8562919738270895,
+          "Refinement_Request3_LaneDetection_[0]_D0_S0_B3": 0.8562919738270895,
+          "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4": 0.8562919738270895
+        },
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request1_Segmentation_[0]_D0_S0_B1",
+        "completion_time_seconds": 0.5440278053283691,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.017920970916748047,
+        "observed_execution_seconds": 0.017920970916748047,
+        "reassigned_deadlines": {
+          "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle": 1.028320776,
+          "Refinement_Request2_ObjectDetection_[0]_D0_S0_B2": 0.9172802911711095,
+          "Refinement_Request3_LaneDetection_[0]_D0_S0_B3": 0.9172802911711095,
+          "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4": 0.9172802911711095
+        },
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request2_ObjectDetection_[0]_D0_S0_B2",
+        "completion_time_seconds": 0.7315769195556641,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.017077922821044922,
+        "observed_execution_seconds": 0.017077922821044922,
+        "reassigned_deadlines": {
+          "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle": 1.028320776,
+          "Refinement_Request3_LaneDetection_[0]_D0_S0_B3": 0.9249345461353942,
+          "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4": 0.9249345461353942
+        },
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.7463347911834717,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.013876914978027344,
+        "observed_execution_seconds": 0.013876914978027344,
+        "reassigned_deadlines": {
+          "Refinement_Request3_LaneDetection_[0]_D0_S0_B3": 1.028320776,
+          "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4": 1.028320776
+        },
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request3_LaneDetection_[0]_D0_S0_B3",
+        "completion_time_seconds": 0.8897976875305176,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.017580032348632812,
+        "observed_execution_seconds": 0.020009994506835938,
+        "reassigned_deadlines": {
+          "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4": 1.028320776
+        },
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request4_ObjectDetection_[0]_D0_S0_B4",
+        "completion_time_seconds": 1.0007948875427246,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.017826437950134277,
+        "observed_execution_seconds": 0.018574953079223633,
+        "reassigned_deadlines": {},
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request4_ObjectDetection_[1]_D0_S0_B4",
+        "completion_time_seconds": 1.0176258087158203,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.01734026273091634,
+        "observed_execution_seconds": 0.01636791229248047,
+        "reassigned_deadlines": {},
+        "window": 32
+      },
+      {
+        "completed_task_id": "Refinement_Request4_ObjectDetection_[2]_D0_S0_B4",
+        "completion_time_seconds": 1.035078763961792,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.017236411571502686,
+        "observed_execution_seconds": 0.01692485809326172,
+        "reassigned_deadlines": {},
+        "window": 32
+      }
+    ],
+    "window": 32
+  },
+  "offered_task_count": 1080,
+  "offered_task_stream_sha256": "e88160693989e9964c1a89368de4122b6b0bec304abd548fbe2e1eacb01f357f",
+  "outcome_counts": {
+    "failure": 1,
+    "skip": 1072,
+    "success": 7
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.9503842967886734,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 0.0,
+  "run_id": "ps-16-refinement-k32-gamma000ms-seed101-taskbf6a374c-burst6b4b3fc2",
+  "schema_version": 1,
+  "task_config_path": "/Users/rentao/Documents/Github Projects/ATC23-parameter-sensitivity-v2/DeepLearningScheduler/taskdata/parameter_sensitivity/mac_mps_v4/generated_configs/16-refinement-k32-gamma000ms/task.json",
+  "torch_device": "mps"
+}
