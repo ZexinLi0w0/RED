@@ -48,6 +48,26 @@ def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
+def test_plan_records_non_mac_runtime_and_device(tmp_path) -> None:
+    plan = generate_study_plan(
+        DEFAULT_BASE_TASK_CONFIG,
+        tmp_path / "study",
+        device="nano1",
+        platform_label="Jetson Orin Nano",
+        power_mode="15W",
+        torch_device="cuda",
+        require_proactive_drop_for_meris_burst=False,
+        require_no_proactive_drop_for_meris_control=False,
+    )
+
+    assert plan["device"] == "nano1"
+    assert plan["platform_label"] == "Jetson Orin Nano"
+    assert plan["power_mode"] == "15W"
+    assert plan["torch_device"] == "cuda"
+    assert plan["require_proactive_drop_for_meris_burst"] is False
+    assert plan["require_no_proactive_drop_for_meris_control"] is False
+
+
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
     expected_workload = {"added_dag_release_count": 5}
     manifest = {

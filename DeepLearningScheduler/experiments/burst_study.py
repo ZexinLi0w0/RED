@@ -61,6 +61,10 @@ DEFAULT_RUN_ORDER_SEED = 20260827
 DEFAULT_GPU_THRESHOLD = 100.0
 DEFAULT_QUEUE_THRESHOLD = 10
 DEFAULT_PERSISTENCE_WINDOW = 3
+DEFAULT_DEVICE = "mac"
+DEFAULT_PLATFORM_LABEL = "M3 Max"
+DEFAULT_POWER_MODE = "AC power; default macOS policy"
+DEFAULT_TORCH_DEVICE = "mps"
 METHODS = ("baseline", "llf-dag", "feedback-fine-grained")
 METHOD_LABELS = {
     "baseline": "EDF",
@@ -209,6 +213,12 @@ def generate_study_plan(
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
+    device=DEFAULT_DEVICE,
+    platform_label=DEFAULT_PLATFORM_LABEL,
+    power_mode=DEFAULT_POWER_MODE,
+    torch_device=DEFAULT_TORCH_DEVICE,
+    require_proactive_drop_for_meris_burst=True,
+    require_no_proactive_drop_for_meris_control=True,
 ):
     base_task_config = Path(base_task_config).resolve()
     output_root = Path(output_root).resolve()
@@ -269,10 +279,10 @@ def generate_study_plan(
     plan = {
         "schema_version": 1,
         "study": "transient-sustained-burst",
-        "device": "mac",
-        "platform_label": "M3 Max",
-        "power_mode": "AC power; default macOS policy",
-        "torch_device": "mps",
+        "device": device,
+        "platform_label": platform_label,
+        "power_mode": power_mode,
+        "torch_device": torch_device,
         "methods": list(METHODS),
         "method_labels": METHOD_LABELS,
         "seeds": list(seeds),
@@ -299,16 +309,25 @@ def generate_study_plan(
         "run_order": "fixed pseudo-random permutation of all cases",
         "run_order_seed": DEFAULT_RUN_ORDER_SEED,
         "zero_burst_control_reused_between_regimes": True,
-        "require_proactive_drop_for_meris_burst": True,
-        "require_no_proactive_drop_for_meris_control": True,
+        "require_proactive_drop_for_meris_burst": (
+            require_proactive_drop_for_meris_burst
+        ),
+        "require_no_proactive_drop_for_meris_control": (
+            require_no_proactive_drop_for_meris_control
+        ),
     }
     _write_json_atomic(output_root / "study_plan.json", plan)
     return plan
 
 
-def _run_id(condition, method, seed, task_hash, burst_hash):
+def _run_id(device, condition, method, seed, task_hash, burst_hash):
+    device_slug = "".join(
+        character.lower() if character.isalnum() else "-" for character in device
+    ).strip("-")
+    if not device_slug:
+        raise ValueError("device must contain at least one letter or digit")
     return (
-        f"burst-mac-{condition['slug']}-{method}-seed{seed}-"
+        f"burst-{device_slug}-{condition['slug']}-{method}-seed{seed}-"
         f"task{task_hash[:8]}-burst{burst_hash[:8]}"
     )
 
@@ -370,10 +389,15 @@ def run_study(
 ):
     output_root = Path(output_root).resolve()
     handler_config = Path(handler_config).resolve()
+    requested_torch_device = plan["torch_device"]
     runtime = (
-        {"requested": "mps", "resolved": "mps", "probe": "dry-run"}
+        {
+            "requested": requested_torch_device,
+            "resolved": requested_torch_device,
+            "probe": "dry-run",
+        }
         if dry_run
-        else torch_runtime_info("mps")
+        else torch_runtime_info(requested_torch_device)
     )
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
@@ -390,6 +414,7 @@ def run_study(
         burst_path = Path(condition["burst_config_path"])
         offered = _offered_stream(task_path, burst_path, seed)
         run_id = _run_id(
+            plan["device"],
             condition,
             method,
             seed,
@@ -849,6 +874,20 @@ def _build_parser():
     plan_parser.add_argument(
         "--persistence-window", type=int, default=DEFAULT_PERSISTENCE_WINDOW
     )
+    plan_parser.add_argument("--device", default=DEFAULT_DEVICE)
+    plan_parser.add_argument("--platform-label", default=DEFAULT_PLATFORM_LABEL)
+    plan_parser.add_argument("--power-mode", default=DEFAULT_POWER_MODE)
+    plan_parser.add_argument("--torch-device", default=DEFAULT_TORCH_DEVICE)
+    plan_parser.add_argument(
+        "--require-proactive-drop-for-meris-burst",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    plan_parser.add_argument(
+        "--require-no-proactive-drop-for-meris-control",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     run_parser.add_argument(
@@ -875,16 +914,26 @@ def main():
             else _seeds_for_repetitions(args.repetitions)
         )
         plan = generate_study_plan(
-            args.base_task_config,
-            args.output_root,
-            seeds,
-            args.deadline_factor,
-            args.arrival_scale,
-            args.burst_start_seconds,
-            args.release_horizon_seconds,
-            args.gpu_threshold,
-            args.queue_threshold,
-            args.persistence_window,
+            base_task_config=args.base_task_config,
+            output_root=args.output_root,
+            seeds=seeds,
+            deadline_factor=args.deadline_factor,
+            arrival_scale=args.arrival_scale,
+            burst_start_seconds=args.burst_start_seconds,
+            release_horizon_seconds=args.release_horizon_seconds,
+            gpu_threshold=args.gpu_threshold,
+            queue_threshold=args.queue_threshold,
+            persistence_window=args.persistence_window,
+            device=args.device,
+            platform_label=args.platform_label,
+            power_mode=args.power_mode,
+            torch_device=args.torch_device,
+            require_proactive_drop_for_meris_burst=(
+                args.require_proactive_drop_for_meris_burst
+            ),
+            require_no_proactive_drop_for_meris_control=(
+                args.require_no_proactive_drop_for_meris_control
+            ),
         )
         print(json.dumps(plan, indent=2, sort_keys=True))
         return 0
