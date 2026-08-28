@@ -1,0 +1,30 @@
+{
+  "burst_enabled": false,
+  "burst_regime": "sustained",
+  "burst_start_seconds": 1.0,
+  "drop_threshold": 0.5,
+  "gpu_threshold": 90.0,
+  "monitoring_interval": 0.05,
+  "parameter_sensitivity_study": {
+    "block": "refinement",
+    "executed_parameters": {
+      "burst_enabled": false,
+      "gpu_threshold": 90.0,
+      "moving_average_window": 8,
+      "persistence_window": 3,
+      "queue_threshold": 8,
+      "release_time_skew_threshold_ms": 200.0
+    },
+    "group": "Refinement sensitivity",
+    "parameter": "k x gamma",
+    "point_order": 13,
+    "point_slug": "refinement-k08-gamma200ms",
+    "protocol": "independent-block-full-factorial",
+    "setting": "k=8, gamma=200 ms",
+    "study": "parameter-sensitivity"
+  },
+  "persistence_window": 3,
+  "queue_threshold": 8,
+  "release_horizon_seconds": 3.4,
+  "scheduler_tick_seconds": 0.005
+}

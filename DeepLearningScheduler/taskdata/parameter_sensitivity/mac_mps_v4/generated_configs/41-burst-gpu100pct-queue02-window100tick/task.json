@@ -1,0 +1,131 @@
+{
+  "ArrivalScale": 4.0,
+  "BurstTaskRatio": 100,
+  "DagRepeatedTimes": 14,
+  "DeadlineFactor": 6.0,
+  "MovingAverageWindow": 8,
+  "NonPartitionablePercentage": 100,
+  "ParallelStagePolicy": "max",
+  "ParameterSensitivityStudy": {
+    "block": "burst-management",
+    "executed_parameters": {
+      "burst_enabled": true,
+      "gpu_threshold": 100.0,
+      "moving_average_window": 8,
+      "persistence_window": 100,
+      "queue_threshold": 2,
+      "release_time_skew_threshold_ms": 100.0
+    },
+    "group": "Burst Management sensitivity",
+    "parameter": "theta_u x Q_max x W",
+    "point_order": 41,
+    "point_slug": "burst-gpu100pct-queue02-window100tick",
+    "protocol": "independent-block-full-factorial",
+    "setting": "theta_u=100%, Q_max=2, W=100 ticks",
+    "study": "parameter-sensitivity"
+  },
+  "ParameterSensitivityWorkload": {
+    "base_dag_releases": 14,
+    "block": "burst-management",
+    "burst_task_ratio_percent": 100,
+    "design": "five non-mergeable perception requests followed by control; three critical perception types and control are protected while two redundant requests are eligible for proactive shedding",
+    "purpose": "Mac/MPS GPU-utilization, ready-queue, and persistence sensitivity under sustained overload",
+    "queue_visibility": "all offered nodes remain non-partitionable so refinement cannot hide ready-queue backlog",
+    "refinement_parameters": "fixed at k=8 and gamma=100 ms",
+    "source_config": "TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json"
+  },
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 100.0,
+  "RuntimeProfile": {
+    "bound_margin_fraction": 0.1,
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "platform": "MacBook Pro (M3 Max)",
+    "power_mode": "mps-default-ac-power",
+    "profile_file": "mac_mps_profile_v1.json",
+    "profile_sha256": "e4aa7b15b76d69d1a6c420224924d39d0525561fd16ddafa92ae699ea112b546",
+    "torch_device": "mps"
+  },
+  "TaskSeed": 0,
+  "dag_list": [
+    [
+      [
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.0,
+          "HandlerId": 5,
+          "Priority": 2,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 14.287183,
+          "TaskName": "BurstSensitivity_Critical_LaneDetection",
+          "WorstRunningTime": 17.953559
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.0,
+          "HandlerId": 5,
+          "Priority": 2,
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 13.554899,
+          "TaskName": "BurstSensitivity_Critical_Segmentation",
+          "WorstRunningTime": 17.229667
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.0,
+          "HandlerId": 5,
+          "Priority": 2,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "BurstSensitivity_Critical_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.4,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 14.287183,
+          "TaskName": "BurstSensitivity_Redundant_LaneDetection",
+          "WorstRunningTime": 17.953559
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.25,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "BurstSensitivity_Redundant_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        }
+      ],
+      {
+        "Dependencies": [
+          1,
+          3,
+          4
+        ],
+        "DropThreshold": 0.0,
+        "HandlerId": 5,
+        "Priority": 3,
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "TaskName": "BurstSensitivity_Control",
+        "WorstRunningTime": 17.231959
+      }
+    ]
+  ]
+}

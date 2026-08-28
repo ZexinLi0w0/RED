@@ -4,11 +4,11 @@ This experiment implements the revision's two independent full-factorial
 parameter blocks. It evaluates the complete MERIS method
 (`feedback-fine-grained`) at 47 settings. Each setting runs once by default:
 
-- moving-average window: `1, 4, 8, 16`;
-- release-time skew threshold: `0, 50, 100, 150, 200` milliseconds;
-- GPU threshold: `70, 80, 90` percent;
-- ready-queue threshold: `4, 8, 16`;
-- sustained-overload persistence window: `1, 3, 5` scheduler ticks.
+- moving-average window: `1, 4, 8, 32`;
+- release-time skew threshold: `0, 100, 200, 500, 1000` milliseconds;
+- GPU threshold: `50, 90, 100` percent;
+- ready-queue threshold: `2, 8, 32`;
+- sustained-overload persistence window: `1, 3, 100` scheduler ticks.
 
 The refinement block is the 4 x 5 Cartesian product of moving-average window
 and release-time skew threshold (20 settings) with burst generation and Burst
@@ -16,22 +16,35 @@ Management disabled. The Burst Management block is the 3 x 3 x 3 Cartesian
 product of GPU threshold, ready-queue threshold, and persistence window (27
 settings), with the refinement parameters fixed at `8` and `100` milliseconds.
 
-The default frozen workload is
-`TaskConfigs/simo/parameter_sensitivity/agx_high_load.json`. It uses AGX Orin
-profiles and fixed 0/50/100/150/200 millisecond predicted release skews among
-compatible MIMONet requests. The runner sets `BurstTaskRatio=0` in refinement
-configs. In Burst Management configs it retains the 100 percent burst and marks
-the offered nodes non-partitionable so merging cannot hide queue backlog from
-the `Q_max` grid.
+The two blocks use separate Mac/MPS task configs:
 
-Override `--base-task-config` if a replacement frozen AGX workload is selected.
+- `TaskConfigs/simo/parameter_sensitivity/mac_mps_refinement_sensitivity_v2.json`
+  inherits the measured Mac runtime profile and `DeadlineFactor=6.0` from the
+  validated Mac proactive-drop workload so node deadlines do not saturate.
+  180 releases populate the longest moving-average history and leave enough
+  late-release backlog for QoE to distinguish settings. Request offsets of
+  0, 100, 200, 500, and
+  900 milliseconds ensure that every release-time skew threshold crosses a
+  distinct merge boundary while the 1000-millisecond endpoint safely includes
+  the maximum skew. Endpoint pilots selected `ArrivalScale=0.0001` together
+  with 180 releases after bracketing the stable region; unmerged requests incur
+  visible queueing without the complete overload observed at 400 releases.
+  Burst Management is off.
+- `TaskConfigs/simo/parameter_sensitivity/mac_mps_burst_management_sensitivity_v2.json`
+  inherits the validated Mac proactive-drop workload. It keeps three critical
+  perception requests and control protected, allows two redundant requests to
+  be shed, retains the 100 percent sustained burst, and keeps all offered nodes
+  non-partitionable so merging cannot hide queue backlog.
 
-## One-command Jetson run
+Use `--refinement-task-config` or `--burst-management-task-config` to replace
+one block without changing the other.
 
-On the AGX Orin server, activate the `schedule` environment and run:
+## One-command Mac run
+
+On the Mac, activate the `schedule` environment and run:
 
 ```bash
-cd /experiment/zexin/ATC23/DeepLearningScheduler
+cd "/Users/rentao/Documents/Github Projects/ATC23/DeepLearningScheduler"
 conda activate schedule
 ./experiments/run_parameter_sensitivity.sh
 ```
@@ -60,8 +73,9 @@ Useful overrides:
 ```bash
 # Select a frozen workload and a different output directory.
 ./experiments/run_parameter_sensitivity.sh \
-  --base-task-config TaskConfigs/simo/parameter_sensitivity/agx_frozen.json \
-  --output-root taskdata/parameter_sensitivity/agx_frozen_v2
+  --refinement-task-config TaskConfigs/simo/parameter_sensitivity/mac_mps_refinement_sensitivity_v2.json \
+  --burst-management-task-config TaskConfigs/simo/parameter_sensitivity/mac_mps_burst_management_sensitivity_v2.json \
+  --output-root taskdata/parameter_sensitivity/mac_mps_v4
 
 # Continue all remaining points even if one run fails.
 ./experiments/run_parameter_sensitivity.sh --keep-going
@@ -78,7 +92,7 @@ SKIP_GIT_PULL=1 PYTHON_BIN=.venv/bin/python \
 ## Artifacts and table values
 
 The default output directory is
-`taskdata/parameter_sensitivity/agx_high_load_v1/`:
+`taskdata/parameter_sensitivity/mac_mps_v4/`:
 
 - `study_plan.json`: immutable grid, seeds, defaults, base-config hashes, and run count;
 - `generated_configs/`: explicit task and burst config for each table row;
@@ -105,5 +119,5 @@ To regenerate the table files without rerunning inference:
 
 ```bash
 python3 experiments/parameter_sensitivity.py summarize \
-  --output-root taskdata/parameter_sensitivity/agx_high_load_v1
+  --output-root taskdata/parameter_sensitivity/mac_mps_v4
 ```

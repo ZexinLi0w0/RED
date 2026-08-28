@@ -1,0 +1,95 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.9888888888888889,
+      "offered_node_count": 1080,
+      "outcome_counts": {
+        "skip": 1068,
+        "success": 12
+      },
+      "qoe_score": 0.9653433545977841
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.01760419209798177,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.9888888888888889,
+  "end_to_end_latency_seconds": 0.29151010513305664,
+  "execution_task_count": 360,
+  "finished_execution_task_count": 360,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 4,
+    "events": [
+      {
+        "completed_task_id": "merged_a2ba06c8d548f461",
+        "completion_time_seconds": 0.0689249038696289,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.018870115280151367,
+        "observed_execution_seconds": 0.018870115280151367,
+        "reassigned_deadlines": {
+          "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle": 1.028320776
+        },
+        "window": 1
+      },
+      {
+        "completed_task_id": "Refinement_Control_Autopilot_[0]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.08251380920410156,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.012664794921875,
+        "observed_execution_seconds": 0.012664794921875,
+        "reassigned_deadlines": {},
+        "window": 1
+      },
+      {
+        "completed_task_id": "merged_53e46f87b6a8aaf0",
+        "completion_time_seconds": 0.10159516334533691,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.01839303970336914,
+        "observed_execution_seconds": 0.01839303970336914,
+        "reassigned_deadlines": {
+          "Refinement_Control_Autopilot_[1]_D0_S1_Bsingle": 1.0284146378755
+        },
+        "window": 1
+      },
+      {
+        "completed_task_id": "Refinement_Control_Autopilot_[1]_D0_S1_Bsingle",
+        "completion_time_seconds": 0.11463189125061035,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.012269735336303711,
+        "observed_execution_seconds": 0.012269735336303711,
+        "reassigned_deadlines": {},
+        "window": 1
+      }
+    ],
+    "window": 1
+  },
+  "offered_task_count": 1080,
+  "offered_task_stream_sha256": "e88160693989e9964c1a89368de4122b6b0bec304abd548fbe2e1eacb01f357f",
+  "outcome_counts": {
+    "skip": 1068,
+    "success": 12
+  },
+  "overall_deadline_hit": 1.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 1.0,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 1000.0,
+  "run_id": "ps-05-refinement-k01-gamma1000ms-seed101-task99d63b8a-burstb71beba7",
+  "schema_version": 1,
+  "task_config_path": "/Users/rentao/Documents/Github Projects/ATC23-parameter-sensitivity-v2/DeepLearningScheduler/taskdata/parameter_sensitivity/mac_mps_v4/generated_configs/05-refinement-k01-gamma1000ms/task.json",
+  "torch_device": "mps"
+}

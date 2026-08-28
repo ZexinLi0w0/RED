@@ -1,0 +1,138 @@
+{
+  "ArrivalScale": 0.0001,
+  "BurstTaskRatio": 0,
+  "DagRepeatedTimes": 180,
+  "DeadlineFactor": 6.0,
+  "MovingAverageWindow": 1,
+  "NonPartitionablePercentage": 0,
+  "ParallelStagePolicy": "max",
+  "ParameterSensitivityStudy": {
+    "block": "refinement",
+    "executed_parameters": {
+      "burst_enabled": false,
+      "gpu_threshold": 90.0,
+      "moving_average_window": 1,
+      "persistence_window": 3,
+      "queue_threshold": 8,
+      "release_time_skew_threshold_ms": 100.0
+    },
+    "group": "Refinement sensitivity",
+    "parameter": "k x gamma",
+    "point_order": 2,
+    "point_slug": "refinement-k01-gamma100ms",
+    "protocol": "independent-block-full-factorial",
+    "setting": "k=1, gamma=100 ms",
+    "study": "parameter-sensitivity"
+  },
+  "ParameterSensitivityWorkload": {
+    "block": "refinement",
+    "burst_management": "disabled",
+    "design": "180 releases populate the longest moving-average history and leave enough late-release backlog for QoE to distinguish settings; offsets 0/100/200/500/900 ms make every release-time skew threshold cross a distinct merge boundary while gamma=1000 ms remains safely above the maximum skew",
+    "expected_overall_deadline_seconds": 1.045122051715,
+    "load_calibration": "DeadlineFactor 6.0 inherits the validated Mac proactive-drop workload so node deadlines do not saturate; endpoint pilots bracketed the stable region and selected ArrivalScale 0.0001 with 180 releases so global QoE reflects backlog without the complete overload observed at 400 releases",
+    "purpose": "Mac/MPS moving-average-window and release-time-skew sensitivity without Burst Management",
+    "source_configs": [
+      "TaskConfigs/simo/burst/mac_mps_proactive_drop_v2.json",
+      "TaskConfigs/simo/parameter_sensitivity/mac_mps_parameter_sensitivity.json"
+    ]
+  },
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 100.0,
+  "RuntimeProfile": {
+    "bound_margin_fraction": 0.1,
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "cases": [
+      "control_autopilot",
+      "lane_detection",
+      "object_detection",
+      "segmentation"
+    ],
+    "platform": "MacBook Pro (M3 Max)",
+    "power_mode": "mps-default-ac-power",
+    "profile_file": "mac_mps_profile_v1.json",
+    "profile_sha256": "e4aa7b15b76d69d1a6c420224924d39d0525561fd16ddafa92ae699ea112b546",
+    "torch_device": "mps"
+  },
+  "TaskSeed": 0,
+  "dag_list": [
+    [
+      [
+        {
+          "Dependencies": [],
+          "HandlerId": 5,
+          "Priority": 1,
+          "ReleaseTimeOffsetMs": 0,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 14.287183,
+          "TaskName": "Refinement_Request0_LaneDetection",
+          "WorstRunningTime": 17.953559
+        },
+        {
+          "Dependencies": [],
+          "HandlerId": 5,
+          "Priority": 1,
+          "ReleaseTimeOffsetMs": 100,
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 13.554899,
+          "TaskName": "Refinement_Request1_Segmentation",
+          "WorstRunningTime": 17.229667
+        },
+        {
+          "Dependencies": [],
+          "HandlerId": 5,
+          "Priority": 1,
+          "ReleaseTimeOffsetMs": 200,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "Refinement_Request2_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        },
+        {
+          "Dependencies": [],
+          "HandlerId": 5,
+          "Priority": 1,
+          "ReleaseTimeOffsetMs": 500,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 14.287183,
+          "TaskName": "Refinement_Request3_LaneDetection",
+          "WorstRunningTime": 17.953559
+        },
+        {
+          "Dependencies": [],
+          "HandlerId": 5,
+          "Priority": 1,
+          "ReleaseTimeOffsetMs": 900,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 16.460167,
+          "TaskName": "Refinement_Request4_ObjectDetection",
+          "WorstRunningTime": 21.386796
+        }
+      ],
+      {
+        "Dependencies": [
+          1,
+          3,
+          4
+        ],
+        "HandlerId": 5,
+        "Priority": 2,
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 13.4531,
+        "TaskName": "Refinement_Control_Autopilot",
+        "WorstRunningTime": 17.231959
+      }
+    ]
+  ]
+}

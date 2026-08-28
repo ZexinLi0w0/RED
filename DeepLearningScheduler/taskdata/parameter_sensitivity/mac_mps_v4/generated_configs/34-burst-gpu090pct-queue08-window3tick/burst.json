@@ -1,0 +1,30 @@
+{
+  "burst_enabled": true,
+  "burst_regime": "sustained",
+  "burst_start_seconds": 1.0,
+  "drop_threshold": 0.5,
+  "gpu_threshold": 90.0,
+  "monitoring_interval": 0.05,
+  "parameter_sensitivity_study": {
+    "block": "burst-management",
+    "executed_parameters": {
+      "burst_enabled": true,
+      "gpu_threshold": 90.0,
+      "moving_average_window": 8,
+      "persistence_window": 3,
+      "queue_threshold": 8,
+      "release_time_skew_threshold_ms": 100.0
+    },
+    "group": "Burst Management sensitivity",
+    "parameter": "theta_u x Q_max x W",
+    "point_order": 34,
+    "point_slug": "burst-gpu090pct-queue08-window3tick",
+    "protocol": "independent-block-full-factorial",
+    "setting": "theta_u=90%, Q_max=8, W=3 ticks",
+    "study": "parameter-sensitivity"
+  },
+  "persistence_window": 3,
+  "queue_threshold": 8,
+  "release_horizon_seconds": 3.4,
+  "scheduler_tick_seconds": 0.005
+}

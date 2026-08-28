@@ -3,6 +3,8 @@ import hashlib
 import json
 
 from experiments.parameter_sensitivity import (
+    DEFAULT_BURST_MANAGEMENT_TASK_CONFIG,
+    DEFAULT_REFINEMENT_TASK_CONFIG,
     DEFAULT_SEEDS,
     PAPER_DEFAULTS,
     SENSITIVITY_POINTS,
@@ -18,24 +20,37 @@ def _write_json(path, value):
 
 
 def _base_configs(tmp_path):
-    task_path = tmp_path / "base-task.json"
+    refinement_task_path = tmp_path / "refinement-task.json"
+    burst_management_task_path = tmp_path / "burst-management-task.json"
     burst_path = tmp_path / "base-burst.json"
+    task_template = {
+        "DeadlineFactor": 1.0,
+        "ArrivalScale": 1.0,
+        "DagRepeatedTimes": 1,
+        "ParallelStagePolicy": "max",
+        "dag_list": [[{
+            "TaskName": "node",
+            "HandlerId": 5,
+            "Priority": 1,
+            "Dependencies": [],
+            "RunArgs": [1],
+            "WorstRunningTime": 1,
+        }]],
+    }
     _write_json(
-        task_path,
+        refinement_task_path,
         {
-            "DeadlineFactor": 1.0,
-            "ArrivalScale": 1.0,
-            "DagRepeatedTimes": 1,
-            "ParallelStagePolicy": "max",
+            **task_template,
+            "BurstTaskRatio": 0,
+            "WorkloadRole": "refinement",
+        },
+    )
+    _write_json(
+        burst_management_task_path,
+        {
+            **task_template,
             "BurstTaskRatio": 100,
-            "dag_list": [[{
-                "TaskName": "node",
-                "HandlerId": 5,
-                "Priority": 1,
-                "Dependencies": [],
-                "RunArgs": [1],
-                "WorstRunningTime": 1,
-            }]],
+            "WorkloadRole": "burst-management",
         },
     )
     _write_json(
@@ -53,13 +68,15 @@ def _base_configs(tmp_path):
             "scheduler_tick_seconds": 0.005,
         },
     )
-    return task_path, burst_path
+    return refinement_task_path, burst_management_task_path, burst_path
 
 
 def test_plan_defaults_to_one_run_per_point(tmp_path) -> None:
-    task_path, burst_path = _base_configs(tmp_path)
+    refinement_path, burst_management_path, burst_path = _base_configs(tmp_path)
 
-    plan = generate_study_plan(task_path, burst_path, tmp_path / "study")
+    plan = generate_study_plan(
+        refinement_path, burst_management_path, burst_path, tmp_path / "study"
+    )
 
     assert len(plan["points"]) == 47
     assert plan["planned_run_count"] == 47
@@ -75,10 +92,34 @@ def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(3) == (101, 202, 303)
 
 
+def test_default_mac_task_configs_are_block_specific() -> None:
+    refinement = json.loads(DEFAULT_REFINEMENT_TASK_CONFIG.read_text())
+    burst = json.loads(DEFAULT_BURST_MANAGEMENT_TASK_CONFIG.read_text())
+
+    assert refinement["BurstTaskRatio"] == 0
+    assert refinement["NonPartitionablePercentage"] == 0
+    assert refinement["DagRepeatedTimes"] == 180
+    assert [
+        task["ReleaseTimeOffsetMs"] for task in refinement["dag_list"][0][0]
+    ] == [0, 100, 200, 500, 900]
+    assert burst["BurstTaskRatio"] == 100
+    assert burst["NonPartitionablePercentage"] == 100
+    assert burst["MovingAverageWindow"] == PAPER_DEFAULTS[
+        "moving_average_window"
+    ]
+    assert burst["ReleaseTimeSkewThresholdMs"] == PAPER_DEFAULTS[
+        "release_time_skew_threshold_ms"
+    ]
+
+
 def test_generated_points_keep_the_two_blocks_independent(tmp_path) -> None:
-    task_path, burst_path = _base_configs(tmp_path)
+    refinement_path, burst_management_path, burst_path = _base_configs(tmp_path)
     plan = generate_study_plan(
-        task_path, burst_path, tmp_path / "study", seeds=(1, 2)
+        refinement_path,
+        burst_management_path,
+        burst_path,
+        tmp_path / "study",
+        seeds=(1, 2),
     )
 
     for point in plan["points"]:
@@ -107,9 +148,11 @@ def test_generated_points_keep_the_two_blocks_independent(tmp_path) -> None:
             "burst_enabled"
         ]
         if point["block"] == "refinement":
+            assert generated_task["WorkloadRole"] == "refinement"
             assert generated_task["BurstTaskRatio"] == 0
             assert generated_task["NonPartitionablePercentage"] == 0
         else:
+            assert generated_task["WorkloadRole"] == "burst-management"
             assert generated_task["BurstTaskRatio"] == 100
             assert generated_task["NonPartitionablePercentage"] == 100
             assert generated_task["MovingAverageWindow"] == PAPER_DEFAULTS[
@@ -123,13 +166,34 @@ def test_generated_points_keep_the_two_blocks_independent(tmp_path) -> None:
     burst = [point for point in plan["points"] if point["block"] == "burst-management"]
     assert len(refinement) == 4 * 5
     assert len(burst) == 3 * 3 * 3
+    assert {
+        point["executed_parameters"]["moving_average_window"]
+        for point in refinement
+    } == {1, 4, 8, 32}
+    assert {
+        point["executed_parameters"]["release_time_skew_threshold_ms"]
+        for point in refinement
+    } == {0.0, 100.0, 200.0, 500.0, 1000.0}
+    assert {
+        point["executed_parameters"]["gpu_threshold"] for point in burst
+    } == {50.0, 90.0, 100.0}
+    assert {
+        point["executed_parameters"]["queue_threshold"] for point in burst
+    } == {2, 8, 32}
+    assert {
+        point["executed_parameters"]["persistence_window"] for point in burst
+    } == {1, 3, 100}
 
 
 def test_summarizer_extracts_table_values_from_validated_run_artifacts(tmp_path) -> None:
-    task_path, burst_path = _base_configs(tmp_path)
+    refinement_path, burst_management_path, burst_path = _base_configs(tmp_path)
     output_root = tmp_path / "study"
     plan = generate_study_plan(
-        task_path, burst_path, output_root, seeds=(1, 2)
+        refinement_path,
+        burst_management_path,
+        burst_path,
+        output_root,
+        seeds=(1, 2),
     )
     for point in plan["points"]:
         for seed in plan["seeds"]:

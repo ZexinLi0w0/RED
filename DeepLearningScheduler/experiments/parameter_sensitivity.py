@@ -33,17 +33,24 @@ from task_generator import (  # noqa: E402
 )
 
 
-DEFAULT_TASK_CONFIG = (
+DEFAULT_REFINEMENT_TASK_CONFIG = (
     REPOSITORY_ROOT
     / "TaskConfigs"
     / "simo"
     / "parameter_sensitivity"
-    / "agx_high_load.json"
+    / "mac_mps_refinement_sensitivity_v2.json"
+)
+DEFAULT_BURST_MANAGEMENT_TASK_CONFIG = (
+    REPOSITORY_ROOT
+    / "TaskConfigs"
+    / "simo"
+    / "parameter_sensitivity"
+    / "mac_mps_burst_management_sensitivity_v2.json"
 )
 DEFAULT_BURST_CONFIG = REPOSITORY_ROOT / "burst_config.json"
 DEFAULT_HANDLER_CONFIG = REPOSITORY_ROOT / "handler-config.json"
 DEFAULT_OUTPUT_ROOT = (
-    REPOSITORY_ROOT / "taskdata" / "parameter_sensitivity" / "agx_high_load_v1"
+    REPOSITORY_ROOT / "taskdata" / "parameter_sensitivity" / "mac_mps_v4"
 )
 DEFAULT_REPETITIONS = 1
 DEFAULT_SEED_STEP = 101
@@ -98,8 +105,8 @@ class SensitivityPoint:
 
 def _sensitivity_points():
     points = []
-    for window in (1, 4, 8, 16):
-        for skew_ms in (0.0, 50.0, 100.0, 150.0, 200.0):
+    for window in (1, 4, 8, 32):
+        for skew_ms in (0.0, 100.0, 200.0, 500.0, 1000.0):
             points.append(
                 SensitivityPoint(
                     block="refinement",
@@ -115,9 +122,9 @@ def _sensitivity_points():
                     burst_enabled=False,
                 )
             )
-    for gpu_threshold in (70.0, 80.0, 90.0):
-        for queue_threshold in (4, 8, 16):
-            for persistence_window in (1, 3, 5):
+    for gpu_threshold in (50.0, 90.0, 100.0):
+        for queue_threshold in (2, 8, 32):
+            for persistence_window in (1, 3, 100):
                 points.append(
                     SensitivityPoint(
                         block="burst-management",
@@ -240,29 +247,44 @@ def _validate_block_isolation(point):
 
 
 def generate_study_plan(
-    base_task_config,
+    refinement_task_config,
+    burst_management_task_config,
     base_burst_config,
     output_root,
     seeds=DEFAULT_SEEDS,
     method="feedback-fine-grained",
 ):
-    base_task_config = Path(base_task_config).resolve()
+    refinement_task_config = Path(refinement_task_config).resolve()
+    burst_management_task_config = Path(burst_management_task_config).resolve()
     base_burst_config = Path(base_burst_config).resolve()
     output_root = Path(output_root).resolve()
-    task_template = _load_json(base_task_config)
+    refinement_template = _load_json(refinement_task_config)
+    burst_management_template = _load_json(burst_management_task_config)
     burst_template = _load_json(base_burst_config)
-    if not task_template.get("dag_list"):
-        raise ValueError("base task config must contain a non-empty dag_list")
-    if float(task_template.get("BurstTaskRatio", 0)) <= 0:
+    if not refinement_template.get("dag_list"):
         raise ValueError(
-            "base task config must set BurstTaskRatio above zero so burst "
-            "parameters are exercised"
+            "refinement task config must contain a non-empty dag_list"
+        )
+    if float(refinement_template.get("BurstTaskRatio", 0)) != 0:
+        raise ValueError("refinement task config must set BurstTaskRatio to zero")
+    if not burst_management_template.get("dag_list"):
+        raise ValueError(
+            "Burst Management task config must contain a non-empty dag_list"
+        )
+    if float(burst_management_template.get("BurstTaskRatio", 0)) <= 0:
+        raise ValueError(
+            "Burst Management task config must set BurstTaskRatio above zero"
         )
 
     config_root = output_root / "generated_configs"
     plan_points = []
     for order, point in enumerate(SENSITIVITY_POINTS, start=1):
         _validate_block_isolation(point)
+        task_template = (
+            refinement_template
+            if point.block == "refinement"
+            else burst_management_template
+        )
         task_config = json.loads(json.dumps(task_template))
         burst_config = json.loads(json.dumps(burst_template))
         task_config["MovingAverageWindow"] = point.moving_average_window
@@ -316,16 +338,20 @@ def generate_study_plan(
         )
 
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "study": "parameter-sensitivity",
         "protocol": "independent-block-full-factorial",
-        "representative_scenario": base_task_config.stem,
+        "representative_scenario": "mac_mps_parameter_sensitivity_v2",
         "method": method,
         "repetitions_per_point": len(seeds),
         "seeds": list(seeds),
         "paper_defaults": PAPER_DEFAULTS,
-        "base_task_config": str(base_task_config),
-        "base_task_config_sha256": _sha256(base_task_config),
+        "refinement_task_config": str(refinement_task_config),
+        "refinement_task_config_sha256": _sha256(refinement_task_config),
+        "burst_management_task_config": str(burst_management_task_config),
+        "burst_management_task_config_sha256": _sha256(
+            burst_management_task_config
+        ),
         "base_burst_config": str(base_burst_config),
         "base_burst_config_sha256": _sha256(base_burst_config),
         "points": plan_points,
@@ -856,7 +882,25 @@ def _build_parser():
         "command", choices=("generate", "run", "summarize"),
         help="generate configs, run the complete study, or summarize existing runs",
     )
-    parser.add_argument("--base-task-config", type=Path, default=DEFAULT_TASK_CONFIG)
+    parser.add_argument(
+        "--refinement-task-config",
+        type=Path,
+        default=DEFAULT_REFINEMENT_TASK_CONFIG,
+    )
+    parser.add_argument(
+        "--burst-management-task-config",
+        type=Path,
+        default=DEFAULT_BURST_MANAGEMENT_TASK_CONFIG,
+    )
+    parser.add_argument(
+        "--base-task-config",
+        type=Path,
+        default=None,
+        help=(
+            "deprecated compatibility option: use one task config for both "
+            "blocks; prefer the two block-specific options"
+        ),
+    )
     parser.add_argument("--base-burst-config", type=Path, default=DEFAULT_BURST_CONFIG)
     parser.add_argument("--handler-config", type=Path, default=DEFAULT_HANDLER_CONFIG)
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
@@ -876,10 +920,10 @@ def _build_parser():
             "--repetitions"
         ),
     )
-    parser.add_argument("--device", default="agx")
-    parser.add_argument("--power-mode", default="MAXN")
+    parser.add_argument("--device", default="mac")
+    parser.add_argument("--power-mode", default="mps-default-ac-power")
     parser.add_argument(
-        "--torch-device", default="cuda", choices=("auto", "cpu", "mps", "cuda", "cuda:0")
+        "--torch-device", default="mps", choices=("auto", "cpu", "mps", "cuda", "cuda:0")
     )
     parser.add_argument("--python", default=sys.executable)
     parser.add_argument("--cooldown-seconds", type=float, default=3.0)
@@ -915,8 +959,14 @@ def main():
         if args.seeds is not None
         else _seeds_for_repetitions(args.repetitions)
     )
+    refinement_task_config = args.refinement_task_config
+    burst_management_task_config = args.burst_management_task_config
+    if args.base_task_config is not None:
+        refinement_task_config = args.base_task_config
+        burst_management_task_config = args.base_task_config
     plan = generate_study_plan(
-        args.base_task_config,
+        refinement_task_config,
+        burst_management_task_config,
         args.base_burst_config,
         args.output_root,
         seeds=seeds,
