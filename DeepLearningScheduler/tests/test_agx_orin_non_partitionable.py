@@ -82,6 +82,25 @@ def test_calibration_grid_changes_load_and_deadline(tmp_path):
     assert generated["NonPartitionablePercentage"] == 50
 
 
+def test_calibration_grid_accepts_refined_timing_values(tmp_path):
+    source = tmp_path / "source.json"
+    build_source(
+        _template(tmp_path / "template.json"),
+        _profile(tmp_path / "profile.json"),
+        source,
+    )
+    index = build_calibration(
+        source,
+        tmp_path / "cal",
+        deadline_factors=(2.0, 4.0),
+        arrival_scales=(4.0, 8.0),
+    )
+    assert len(index["configs"]) == 4
+    assert (
+        tmp_path / "cal" / "agx_orin_cal_d400_a800_p050.json"
+    ).is_file()
+
+
 def test_formal_configs_differ_only_by_percentage(tmp_path):
     source = tmp_path / "source.json"
     build_source(

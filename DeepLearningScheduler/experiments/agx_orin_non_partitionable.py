@@ -113,10 +113,33 @@ def _base_config(source_path):
     return config
 
 
-def build_calibration(source_path, output_dir):
+def _positive_factors(values, name):
+    values = tuple(float(value) for value in values)
+    if not values or any(not math.isfinite(value) or value <= 0 for value in values):
+        raise ValueError(f"{name} must contain positive finite values")
+    if len(values) != len(set(values)):
+        raise ValueError(f"{name} cannot contain duplicates")
+    return values
+
+
+def _csv_factors(raw_value):
+    try:
+        return _positive_factors(raw_value.split(","), "timing factors")
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
+def build_calibration(
+    source_path,
+    output_dir,
+    deadline_factors=DEFAULT_DEADLINE_FACTORS,
+    arrival_scales=DEFAULT_ARRIVAL_SCALES,
+):
+    deadline_factors = _positive_factors(deadline_factors, "deadline factors")
+    arrival_scales = _positive_factors(arrival_scales, "arrival scales")
     entries = []
-    for deadline_factor in DEFAULT_DEADLINE_FACTORS:
-        for arrival_scale in DEFAULT_ARRIVAL_SCALES:
+    for deadline_factor in deadline_factors:
+        for arrival_scale in arrival_scales:
             config = _base_config(source_path)
             config.update(
                 {
@@ -370,6 +393,16 @@ def main():
     calibration = subparsers.add_parser("build-calibration")
     calibration.add_argument("--source", type=Path, required=True)
     calibration.add_argument("--output-dir", type=Path, required=True)
+    calibration.add_argument(
+        "--deadline-factors",
+        type=_csv_factors,
+        default=DEFAULT_DEADLINE_FACTORS,
+    )
+    calibration.add_argument(
+        "--arrival-scales",
+        type=_csv_factors,
+        default=DEFAULT_ARRIVAL_SCALES,
+    )
 
     formal = subparsers.add_parser("build-formal")
     formal.add_argument("--source", type=Path, required=True)
@@ -388,7 +421,12 @@ def main():
             args.template.resolve(), args.profile.resolve(), args.output.resolve()
         )
     elif args.command == "build-calibration":
-        result = build_calibration(args.source.resolve(), args.output_dir.resolve())
+        result = build_calibration(
+            args.source.resolve(),
+            args.output_dir.resolve(),
+            args.deadline_factors,
+            args.arrival_scales,
+        )
     elif args.command == "build-formal":
         if args.deadline_factor <= 0 or args.arrival_scale <= 0:
             parser.error("timing factors must be positive")
