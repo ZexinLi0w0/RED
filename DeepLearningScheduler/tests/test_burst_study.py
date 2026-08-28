@@ -15,6 +15,11 @@ from experiments.burst_study import (
 )
 
 
+NANO1_BASE_TASK_CONFIG = (
+    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v1.json"
+)
+
+
 def _write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, sort_keys=True), encoding="utf-8")
@@ -81,6 +86,48 @@ def test_plan_records_non_mac_runtime_and_device(tmp_path) -> None:
     assert plan["conditions"][1]["transient_duration_seconds"] == 0.7
     assert plan["require_proactive_drop_for_meris_burst"] is False
     assert plan["require_no_proactive_drop_for_meris_control"] is False
+
+
+def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
+    plan = generate_study_plan(
+        NANO1_BASE_TASK_CONFIG,
+        tmp_path / "nano1-study",
+        burst_start_seconds=0.0,
+        transient_duration_seconds=30.0,
+        release_horizon_seconds=100.0,
+        gpu_threshold=100.0,
+        queue_threshold=6,
+        persistence_window=1,
+        device="nano1",
+        platform_label="Jetson Orin Nano",
+        power_mode="15W; jetson_clocks",
+        torch_device="cuda",
+    )
+
+    assert plan["deadline_factor"] == 120.0
+    assert plan["arrival_scale"] == 40.0
+    assert plan["timing_source"] == {
+        "deadline_factor": "task-config",
+        "arrival_scale": "task-config",
+    }
+    assert plan["queue_threshold"] == 6
+    assert plan["persistence_window"] == 1
+    assert [
+        condition["expected_offered_task_count"]
+        for condition in plan["conditions"]
+    ] == [16, 20, 24, 24, 32]
+    assert [
+        condition["expected_workload"]["added_dag_release_count"]
+        for condition in plan["conditions"]
+    ] == [0, 1, 2, 2, 4]
+    assert plan["require_proactive_drop_for_meris_burst"] is True
+    assert plan["require_no_proactive_drop_for_meris_control"] is True
+
+    config = json.loads(NANO1_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    drop_thresholds = [
+        task["DropThreshold"] for task in config["dag_list"][0][0]
+    ]
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 1
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
