@@ -33,14 +33,14 @@
           "DropThreshold": 0.0
         },
         {
-          "TaskName": "Nano1_Burst_Protected_Segmentation",
+          "TaskName": "Nano1_Burst_Redundant_Segmentation",
           "HandlerId": 5,
-          "Priority": 2,
+          "Priority": 1,
           "Dependencies": [],
           "RunArgs": [3],
           "RunningTime": 524,
           "WorstRunningTime": 636,
-          "DropThreshold": 0.0
+          "DropThreshold": 0.4
         },
         {
           "TaskName": "Nano1_Burst_Redundant_ObjectDetection",
@@ -78,6 +78,6 @@
       "sustained_050": 24,
       "sustained_100": 32
     },
-    "drop_policy": "retain lane detection, control, and segmentation; shed only redundant object-detection requests"
+    "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests"
   }
 }
