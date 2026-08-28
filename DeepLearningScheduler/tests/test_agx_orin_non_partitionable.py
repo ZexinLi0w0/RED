@@ -7,6 +7,7 @@ from experiments.agx_orin_non_partitionable import (
     build_formal,
     build_source,
     select_calibration,
+    validate_formal,
 )
 
 
@@ -196,3 +197,69 @@ def test_selection_requires_complete_method_set(tmp_path):
     _result(tmp_path, "d400_a100_p050", "baseline", 0.5, 0.8)
     with pytest.raises(ValueError, match="no complete paired"):
         select_calibration(tmp_path)
+
+
+def test_formal_validation_accepts_complete_discriminative_matrix(tmp_path):
+    methods = ["baseline", "llf-dag", "feedback-fine-grained"]
+    scenarios = {"nonpartition_000": 0, "nonpartition_050": 50, "nonpartition_100": 100}
+    formal_index = tmp_path / "formal_index.json"
+    formal_index.write_text(
+        json.dumps(
+            {
+                "methods": methods,
+                "seeds": [101, 202, 303, 404, 505],
+                "configs": [
+                    {
+                        "scenario": scenario,
+                        "non_partitionable_percentage": percentage,
+                    }
+                    for scenario, percentage in scenarios.items()
+                ],
+            }
+        )
+    )
+    aggregates = []
+    atomic = []
+    for scenario, percentage in scenarios.items():
+        for index, method in enumerate(methods):
+            deadline_rate = 0.2 + index * 0.2
+            qoe = 0.55 + index * 0.2
+            aggregates.append(
+                {
+                    "scenario": scenario,
+                    "method": method,
+                    "n": 5,
+                    "metrics": {
+                        "deadline_missing_rate": {"mean": deadline_rate},
+                        "qoe_score": {"mean": qoe},
+                        "end_to_end_latency_seconds": {"mean": 2.0},
+                    },
+                }
+            )
+            atomic.append(
+                {
+                    "scenario": scenario,
+                    "method": method,
+                    "atomic_offered_ratio": percentage / 100,
+                }
+            )
+    summary = tmp_path / "summary.json"
+    summary.write_text(
+        json.dumps(
+            {
+                "validation": {
+                    "complete_run_count": 45,
+                    "paired_group_count": 15,
+                    "execution_error_count": 0,
+                    "problems": [],
+                    "git_commits": ["abc"],
+                    "torch_devices": ["cuda:0"],
+                },
+                "aggregates": aggregates,
+                "atomic_subgroup_aggregates": atomic,
+            }
+        )
+    )
+    report = validate_formal(summary, formal_index)
+    assert report["accepted"] is True
+    assert all(report["checks"].values())

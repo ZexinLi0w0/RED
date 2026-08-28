@@ -408,6 +408,117 @@ def select_calibration(runs_root):
     return {"selected": ranked[0], "ranked": ranked}
 
 
+def validate_formal(summary_path, formal_index_path):
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    formal_index = json.loads(formal_index_path.read_text(encoding="utf-8"))
+    validation = summary["validation"]
+    expected_scenarios = {
+        entry["scenario"]: entry["non_partitionable_percentage"] / 100.0
+        for entry in formal_index["configs"]
+    }
+    expected_methods = set(formal_index["methods"])
+    expected_run_count = (
+        len(expected_scenarios)
+        * len(expected_methods)
+        * len(formal_index["seeds"])
+    )
+
+    aggregate_map = {
+        (row["scenario"], row["method"]): row
+        for row in summary["aggregates"]
+    }
+    expected_cells = {
+        (scenario, method)
+        for scenario in expected_scenarios
+        for method in expected_methods
+    }
+    qoe_means = [
+        aggregate_map[key]["metrics"]["qoe_score"]["mean"]
+        for key in expected_cells
+        if key in aggregate_map
+    ]
+    deadline_means = [
+        aggregate_map[key]["metrics"]["deadline_missing_rate"]["mean"]
+        for key in expected_cells
+        if key in aggregate_map
+    ]
+
+    atomic_ratios = {
+        (row["scenario"], row["method"]): row["atomic_offered_ratio"]
+        for row in summary["atomic_subgroup_aggregates"]
+    }
+    checks = {
+        "expected_complete_run_count": validation["complete_run_count"]
+        == expected_run_count,
+        "expected_paired_group_count": validation["paired_group_count"]
+        == len(expected_scenarios) * len(formal_index["seeds"]),
+        "no_execution_errors": validation["execution_error_count"] == 0,
+        "no_validation_problems": validation["problems"] == [],
+        "single_code_commit": len(validation["git_commits"]) == 1,
+        "single_cuda_device": validation["torch_devices"] == ["cuda:0"],
+        "all_aggregate_cells_present": set(aggregate_map) == expected_cells,
+        "five_runs_per_cell": all(
+            aggregate_map[key]["n"] == len(formal_index["seeds"])
+            for key in expected_cells
+            if key in aggregate_map
+        ),
+        "qoe_not_all_saturated_high": not qoe_means
+        or not all(value >= 0.995 for value in qoe_means),
+        "qoe_not_all_saturated_low": not qoe_means
+        or not all(value <= 0.005 for value in qoe_means),
+        "qoe_spread_at_least_0_10": bool(qoe_means)
+        and max(qoe_means) - min(qoe_means) >= 0.10,
+        "deadline_missing_rate_not_all_boundary": bool(deadline_means)
+        and any(0.05 <= value <= 0.95 for value in deadline_means),
+        "each_ratio_has_an_interior_deadline_missing_rate": all(
+            any(
+                0.05
+                <= aggregate_map[(scenario, method)]["metrics"][
+                    "deadline_missing_rate"
+                ]["mean"]
+                <= 0.95
+                for method in expected_methods
+            )
+            for scenario in expected_scenarios
+        ),
+        "atomic_ratios_match_formal_configs": set(atomic_ratios)
+        == expected_cells
+        and all(
+            math.isclose(atomic_ratios[key], expected_scenarios[key[0]])
+            for key in expected_cells
+        ),
+    }
+    cells = []
+    for scenario, method in sorted(expected_cells):
+        row = aggregate_map.get((scenario, method))
+        if row is None:
+            continue
+        cells.append(
+            {
+                "scenario": scenario,
+                "method": method,
+                "n": row["n"],
+                "deadline_missing_rate": row["metrics"][
+                    "deadline_missing_rate"
+                ],
+                "qoe_score": row["metrics"]["qoe_score"],
+                "end_to_end_latency_seconds": row["metrics"][
+                    "end_to_end_latency_seconds"
+                ],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "accepted": all(checks.values()),
+        "checks": checks,
+        "summary_file": summary_path.name,
+        "summary_sha256": _sha256(summary_path),
+        "formal_index_file": formal_index_path.name,
+        "formal_index_sha256": _sha256(formal_index_path),
+        "cells": cells,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -443,6 +554,11 @@ def main():
     select.add_argument("--runs-root", type=Path, required=True)
     select.add_argument("--output", type=Path)
 
+    validate = subparsers.add_parser("validate-formal")
+    validate.add_argument("--summary", type=Path, required=True)
+    validate.add_argument("--formal-index", type=Path, required=True)
+    validate.add_argument("--output", type=Path, required=True)
+
     args = parser.parse_args()
     if args.command == "build-source":
         result = build_source(
@@ -468,11 +584,18 @@ def main():
             args.dag_repeated_times,
             args.selection_report.resolve(),
         )
-    else:
+    elif args.command == "select":
         result = select_calibration(args.runs_root.resolve())
         if args.output:
             _write_json(args.output.resolve(), result)
+    else:
+        result = validate_formal(
+            args.summary.resolve(), args.formal_index.resolve()
+        )
+        _write_json(args.output.resolve(), result)
     print(json.dumps(result, indent=2, sort_keys=False))
+    if args.command == "validate-formal" and not result["accepted"]:
+        return 2
     return 0
 
 
