@@ -18,6 +18,9 @@ from experiments.burst_study import (
 NANO1_BASE_TASK_CONFIG = (
     DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v1.json"
 )
+AGX_ORIN_BASE_TASK_CONFIG = (
+    DEFAULT_BASE_TASK_CONFIG.parent / "agx_orin_cuda_calibration_v1.json"
+)
 
 
 def _write_json(path, value):
@@ -125,6 +128,44 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
     config = json.loads(NANO1_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    drop_thresholds = [
+        task["DropThreshold"] for task in config["dag_list"][0][0]
+    ]
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+
+
+def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
+    plan = generate_study_plan(
+        AGX_ORIN_BASE_TASK_CONFIG,
+        tmp_path / "agx-orin-study",
+        burst_start_seconds=0.0,
+        transient_duration_seconds=1.3,
+        release_horizon_seconds=4.0,
+        gpu_threshold=100.0,
+        queue_threshold=6,
+        persistence_window=1,
+        device="agx_orin",
+        platform_label="AGX Orin",
+        power_mode="MAXN",
+        torch_device="cuda",
+    )
+
+    assert plan["deadline_factor"] == 8.0
+    assert plan["arrival_scale"] == 8.0
+    assert plan["queue_threshold"] == 6
+    assert plan["persistence_window"] == 1
+    assert [
+        condition["expected_offered_task_count"]
+        for condition in plan["conditions"]
+    ] == [40, 48, 60, 60, 80]
+    assert [
+        condition["expected_workload"]["added_dag_release_count"]
+        for condition in plan["conditions"]
+    ] == [0, 2, 5, 5, 10]
+
+    config = json.loads(AGX_ORIN_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    assert config["RuntimeProfile"]["torch_device"] == "cuda:0"
+    assert config["NonPartitionablePercentage"] == 100
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
