@@ -1,6 +1,6 @@
 {
-  "DeadlineFactor": 80.0,
-  "ArrivalScale": 20.0,
+  "DeadlineFactor": 120.0,
+  "ArrivalScale": 40.0,
   "DagRepeatedTimes": 4,
   "ParallelStagePolicy": "max",
   "TaskSeed": 0,
@@ -33,14 +33,14 @@
           "DropThreshold": 0.0
         },
         {
-          "TaskName": "Nano1_Burst_Redundant_Segmentation",
+          "TaskName": "Nano1_Burst_Protected_Segmentation",
           "HandlerId": 5,
-          "Priority": 1,
+          "Priority": 2,
           "Dependencies": [],
           "RunArgs": [3],
           "RunningTime": 524,
           "WorstRunningTime": 636,
-          "DropThreshold": 0.4
+          "DropThreshold": 0.0
         },
         {
           "TaskName": "Nano1_Burst_Redundant_ObjectDetection",
@@ -59,11 +59,25 @@
     "platform": "Nano1 (Jetson Orin Nano)",
     "torch_device": "cuda",
     "timing_source": "Nano1 measurements from TaskConfigs/simo/new_scenarios/nano_loose_urban_navigation.json",
-    "power_mode": "recorded in the run manifest"
+    "power_mode": "15W; jetson_clocks"
   },
   "BurstStudyWorkload": {
-    "purpose": "Nano1 Burst-task load calibration",
-    "base_dag": "four independent co-released requests without failure-cascade dependencies",
-    "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests"
+    "purpose": "queue-triggered ProactiveDrop validation on Nano1/CUDA",
+    "base_dag": "four independent co-released requests without dependency-failure cascades",
+    "nominal_control_ready_queue_bound": 3,
+    "burst_ready_queue_lower_bound": 7,
+    "queue_threshold": 6,
+    "persistence_window": 1,
+    "burst_start_seconds": 0.0,
+    "transient_duration_seconds": 30.0,
+    "release_horizon_seconds": 100.0,
+    "offered_task_counts": {
+      "control_000": 16,
+      "transient_050": 20,
+      "transient_100": 24,
+      "sustained_050": 24,
+      "sustained_100": 32
+    },
+    "drop_policy": "retain lane detection, control, and segmentation; shed only redundant object-detection requests"
   }
 }
