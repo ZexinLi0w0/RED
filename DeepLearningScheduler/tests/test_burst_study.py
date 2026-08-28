@@ -56,6 +56,7 @@ def test_plan_records_non_mac_runtime_and_device(tmp_path) -> None:
         platform_label="Jetson Orin Nano",
         power_mode="15W",
         torch_device="cuda",
+        transient_duration_seconds=0.7,
         require_proactive_drop_for_meris_burst=False,
         require_no_proactive_drop_for_meris_control=False,
     )
@@ -64,6 +65,7 @@ def test_plan_records_non_mac_runtime_and_device(tmp_path) -> None:
     assert plan["platform_label"] == "Jetson Orin Nano"
     assert plan["power_mode"] == "15W"
     assert plan["torch_device"] == "cuda"
+    assert plan["conditions"][1]["transient_duration_seconds"] == 0.7
     assert plan["require_proactive_drop_for_meris_burst"] is False
     assert plan["require_no_proactive_drop_for_meris_control"] is False
 

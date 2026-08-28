@@ -14,7 +14,7 @@ import socket
 import subprocess
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 
@@ -209,6 +209,7 @@ def generate_study_plan(
     deadline_factor=DEFAULT_DEADLINE_FACTOR_OVERRIDE,
     arrival_scale=DEFAULT_ARRIVAL_SCALE_OVERRIDE,
     burst_start_seconds=DEFAULT_BURST_START_SECONDS,
+    transient_duration_seconds=DEFAULT_TRANSIENT_DURATION_SECONDS,
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
@@ -239,6 +240,11 @@ def generate_study_plan(
     generated_root = output_root / "generated_configs"
     condition_records = []
     for condition in CONDITIONS:
+        if condition.regime == "transient":
+            condition = replace(
+                condition,
+                transient_duration_seconds=transient_duration_seconds,
+            )
         task_config = json.loads(json.dumps(template))
         task_config.pop("RunningTimeFactor", None)
         task_config.update(
@@ -861,6 +867,11 @@ def _build_parser():
         default=DEFAULT_BURST_START_SECONDS,
     )
     plan_parser.add_argument(
+        "--transient-duration-seconds",
+        type=float,
+        default=DEFAULT_TRANSIENT_DURATION_SECONDS,
+    )
+    plan_parser.add_argument(
         "--release-horizon-seconds",
         type=float,
         default=DEFAULT_RELEASE_HORIZON_SECONDS,
@@ -920,6 +931,7 @@ def main():
             deadline_factor=args.deadline_factor,
             arrival_scale=args.arrival_scale,
             burst_start_seconds=args.burst_start_seconds,
+            transient_duration_seconds=args.transient_duration_seconds,
             release_horizon_seconds=args.release_horizon_seconds,
             gpu_threshold=args.gpu_threshold,
             queue_threshold=args.queue_threshold,
