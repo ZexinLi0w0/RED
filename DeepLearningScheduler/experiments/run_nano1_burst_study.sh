@@ -67,6 +67,7 @@ PLAN_ARGUMENTS=(
   --platform-label "Jetson Orin Nano"
   --power-mode "15W; jetson_clocks"
   --torch-device cuda
+  --no-require-proactive-drop-for-meris-burst
 )
 if [[ -n "${EXPLICIT_SEEDS}" ]]; then
   PLAN_ARGUMENTS+=(--seeds "${EXPLICIT_SEEDS}")
