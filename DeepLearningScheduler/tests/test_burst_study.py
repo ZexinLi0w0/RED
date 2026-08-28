@@ -102,6 +102,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         platform_label="Jetson Orin Nano",
         power_mode="15W; jetson_clocks",
         torch_device="cuda",
+        require_proactive_drop_for_meris_burst=False,
     )
 
     assert plan["deadline_factor"] == 120.0
@@ -120,7 +121,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
     ] == [0, 1, 2, 2, 4]
-    assert plan["require_proactive_drop_for_meris_burst"] is True
+    assert plan["require_proactive_drop_for_meris_burst"] is False
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
     config = json.loads(NANO1_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
