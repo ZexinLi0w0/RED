@@ -126,6 +126,41 @@ def test_formal_configs_differ_only_by_percentage(tmp_path):
     assert configs[0] == configs[1] == configs[2]
 
 
+def test_formal_config_records_accepted_three_seed_selection(tmp_path):
+    source = tmp_path / "source.json"
+    build_source(
+        _template(tmp_path / "template.json"),
+        _profile(tmp_path / "profile.json"),
+        source,
+    )
+    report = tmp_path / "selection.json"
+    report.write_text(
+        json.dumps(
+            {
+                "selected": {
+                    "scenario": "d800_a800_p050",
+                    "deadline_factor": 8.0,
+                    "arrival_scale": 8.0,
+                    "quality_gate": {"accepted": True, "checks": {}},
+                    "metrics": {
+                        method: {"sample_count": 3}
+                        for method in (
+                            "baseline",
+                            "llf-dag",
+                            "feedback-fine-grained",
+                        )
+                    },
+                }
+            }
+        )
+    )
+    index = build_formal(source, tmp_path / "formal", 8.0, 8.0, 10, report)
+    selection = index["calibration_selection"]
+    assert selection["scenario"] == "d800_a800_p050"
+    assert selection["minimum_paired_seed_count"] == 3
+    assert selection["selection_report_sha256"]
+
+
 def _result(root, scenario, method, deadline_rate, qoe):
     run_dir = root / f"{scenario}-{method}"
     run_dir.mkdir()

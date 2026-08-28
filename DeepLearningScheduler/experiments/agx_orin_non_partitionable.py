@@ -193,7 +193,32 @@ def build_formal(
     deadline_factor,
     arrival_scale,
     dag_repeated_times,
+    selection_report_path=None,
 ):
+    calibration_selection = None
+    if selection_report_path is not None:
+        report = json.loads(selection_report_path.read_text(encoding="utf-8"))
+        selected = report["selected"]
+        if not selected["quality_gate"]["accepted"]:
+            raise ValueError("selected calibration candidate did not pass quality gate")
+        if not math.isclose(selected["deadline_factor"], deadline_factor):
+            raise ValueError("deadline factor does not match selection report")
+        if not math.isclose(selected["arrival_scale"], arrival_scale):
+            raise ValueError("arrival scale does not match selection report")
+        minimum_samples = min(
+            selected["metrics"][method]["sample_count"] for method in METHODS
+        )
+        if minimum_samples < 3:
+            raise ValueError("selection report requires at least three paired seeds")
+        calibration_selection = {
+            "selection_report": selection_report_path.name,
+            "selection_report_sha256": _sha256(selection_report_path),
+            "scenario": selected["scenario"],
+            "quality_gate": selected["quality_gate"],
+            "metrics": selected["metrics"],
+            "minimum_paired_seed_count": minimum_samples,
+        }
+
     entries = []
     for percentage in (0, 50, 100):
         config = _base_config(source_path)
@@ -211,6 +236,7 @@ def build_formal(
                     "arrival_scale": arrival_scale,
                     "non_partitionable_percentage": percentage,
                     "calibration_frozen_before_formal_runs": True,
+                    "calibration_selection": calibration_selection,
                 },
             }
         )
@@ -234,6 +260,7 @@ def build_formal(
         "deadline_factor": deadline_factor,
         "arrival_scale": arrival_scale,
         "dag_repeated_times": dag_repeated_times,
+        "calibration_selection": calibration_selection,
         "configs": entries,
     }
     _write_json(output_dir / "formal_index.json", index)
@@ -410,6 +437,7 @@ def main():
     formal.add_argument("--deadline-factor", type=float, required=True)
     formal.add_argument("--arrival-scale", type=float, required=True)
     formal.add_argument("--dag-repeated-times", type=int, default=10)
+    formal.add_argument("--selection-report", type=Path, required=True)
 
     select = subparsers.add_parser("select")
     select.add_argument("--runs-root", type=Path, required=True)
@@ -438,6 +466,7 @@ def main():
             args.deadline_factor,
             args.arrival_scale,
             args.dag_repeated_times,
+            args.selection_report.resolve(),
         )
     else:
         result = select_calibration(args.runs_root.resolve())
