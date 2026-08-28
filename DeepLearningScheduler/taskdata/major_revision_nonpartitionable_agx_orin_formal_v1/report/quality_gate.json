@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "accepted": true,
+  "checks": {
+    "expected_complete_run_count": true,
+    "expected_paired_group_count": true,
+    "no_execution_errors": true,
+    "no_validation_problems": true,
+    "single_code_commit": true,
+    "single_cuda_device": true,
+    "all_aggregate_cells_present": true,
+    "five_runs_per_cell": true,
+    "qoe_not_all_saturated_high": true,
+    "qoe_not_all_saturated_low": true,
+    "qoe_spread_at_least_0_10": true,
+    "deadline_missing_rate_not_all_boundary": true,
+    "each_ratio_has_an_interior_deadline_missing_rate": true,
+    "atomic_ratios_match_formal_configs": true
+  },
+  "summary_file": "summary.json",
+  "summary_sha256": "8366725572f09630f65c8ae1a15ae68318e8311d89e09090a0e2563d6d95ef3c",
+  "formal_index_file": "formal_index.json",
+  "formal_index_sha256": "a325dae0008d4dc79ecf64f3aba7250af28189216da9ed9990fbc8610a5fe94c",
+  "cells": [
+    {
+      "scenario": "nonpartition_000",
+      "method": "baseline",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.1640444376183388,
+        "ci95_low": 0.30795556238166116,
+        "maximum": 1.0,
+        "mean": 0.736,
+        "minimum": 0.32,
+        "sample_sd": 0.3447897910321592
+      },
+      "qoe_score": {
+        "ci95_high": 1.0719747078429454,
+        "ci95_low": -0.14336925905843545,
+        "maximum": 1.0,
+        "mean": 0.46430272439225495,
+        "minimum": 0.08667257498513063,
+        "sample_sd": 0.48947977774418994
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 19.264447779089693,
+        "ci95_low": 6.996656232445951,
+        "maximum": 18.223220348358154,
+        "mean": 13.130552005767822,
+        "minimum": 8.00923466682434,
+        "sample_sd": 4.940852995693929
+      }
+    },
+    {
+      "scenario": "nonpartition_000",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 0.0,
+        "ci95_low": 0.0,
+        "maximum": 0.0,
+        "mean": 0.0,
+        "minimum": 0.0,
+        "sample_sd": 0.0
+      },
+      "qoe_score": {
+        "ci95_high": 1.0,
+        "ci95_low": 1.0,
+        "maximum": 1.0,
+        "mean": 1.0,
+        "minimum": 1.0,
+        "sample_sd": 0.0
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 2.7823573015940313,
+        "ci95_low": 1.698673544048059,
+        "maximum": 2.6261324882507324,
+        "mean": 2.240515422821045,
+        "minimum": 1.4937536716461182,
+        "sample_sd": 0.4364536289598694
+      }
+    },
+    {
+      "scenario": "nonpartition_000",
+      "method": "llf-dag",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.1321750372038024,
+        "ci95_low": 0.6118249627961976,
+        "maximum": 1.0,
+        "mean": 0.872,
+        "minimum": 0.5,
+        "sample_sd": 0.20957099035887575
+      },
+      "qoe_score": {
+        "ci95_high": 0.851692712234691,
+        "ci95_low": -0.10099718696758664,
+        "maximum": 1.0,
+        "mean": 0.3753477626335522,
+        "minimum": 0.06508883039749608,
+        "sample_sd": 0.3836958530428162
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 20.09059903901249,
+        "ci95_low": 6.29555818755001,
+        "maximum": 21.862571001052856,
+        "mean": 13.19307861328125,
+        "minimum": 8.009396314620972,
+        "sample_sd": 5.5559526470202965
+      }
+    },
+    {
+      "scenario": "nonpartition_050",
+      "method": "baseline",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.0606349973076419,
+        "ci95_low": 0.2193650026923581,
+        "maximum": 0.98,
+        "mean": 0.64,
+        "minimum": 0.24,
+        "sample_sd": 0.3388214869219483
+      },
+      "qoe_score": {
+        "ci95_high": 1.2337510712289115,
+        "ci95_low": 0.11195086157679746,
+        "maximum": 1.0,
+        "mean": 0.6728509664028545,
+        "minimum": 0.09902367432494481,
+        "sample_sd": 0.45180502989114607
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 15.110415709960005,
+        "ci95_low": 5.576652370942097,
+        "maximum": 16.85432529449463,
+        "mean": 10.34353404045105,
+        "minimum": 8.008915662765503,
+        "sample_sd": 3.839723146152633
+      }
+    },
+    {
+      "scenario": "nonpartition_050",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 0.9909961730609389,
+        "ci95_low": 0.017003826939061106,
+        "maximum": 0.94,
+        "mean": 0.504,
+        "minimum": 0.08,
+        "sample_sd": 0.3922754134533542
+      },
+      "qoe_score": {
+        "ci95_high": 1.2572613880069532,
+        "ci95_low": 0.45302984171494637,
+        "maximum": 1.0,
+        "mean": 0.8551456148609498,
+        "minimum": 0.27572807430474894,
+        "sample_sd": 0.3239042520098516
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 9.894620712082084,
+        "ci95_low": 4.020993797500436,
+        "maximum": 10.698126792907715,
+        "mean": 6.95780725479126,
+        "minimum": 5.029092788696289,
+        "sample_sd": 2.3656032160441134
+      }
+    },
+    {
+      "scenario": "nonpartition_050",
+      "method": "llf-dag",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.3283791916082026,
+        "ci95_low": 0.23962080839179756,
+        "maximum": 1.0,
+        "mean": 0.784,
+        "minimum": 0.0,
+        "sample_sd": 0.43849743442807054
+      },
+      "qoe_score": {
+        "ci95_high": 0.8277958946755146,
+        "ci95_low": -0.07340082335762294,
+        "maximum": 1.0,
+        "mean": 0.3771975356589458,
+        "minimum": 0.0467887396592078,
+        "sample_sd": 0.362956974535628
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 23.384017225073976,
+        "ci95_low": 3.6531814138420415,
+        "maximum": 27.578551054000854,
+        "mean": 13.518599319458009,
+        "minimum": 8.009862899780273,
+        "sample_sd": 7.946594043011855
+      }
+    },
+    {
+      "scenario": "nonpartition_100",
+      "method": "baseline",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.0290168212288615,
+        "ci95_low": 0.7709831787711385,
+        "maximum": 0.98,
+        "mean": 0.9,
+        "minimum": 0.72,
+        "sample_sd": 0.10392304845413264
+      },
+      "qoe_score": {
+        "ci95_high": 1.2319953938952266,
+        "ci95_low": 0.132154468332914,
+        "maximum": 1.0,
+        "mean": 0.6820749311140704,
+        "minimum": 0.08946154122134463,
+        "sample_sd": 0.4429609283129715
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 15.737763057036876,
+        "ci95_low": 5.175502075867175,
+        "maximum": 17.881075143814087,
+        "mean": 10.456632566452026,
+        "minimum": 8.00918459892273,
+        "sample_sd": 4.253950567361146
+      }
+    },
+    {
+      "scenario": "nonpartition_100",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 0.9707683304976044,
+        "ci95_low": 0.2372316695023956,
+        "maximum": 0.96,
+        "mean": 0.604,
+        "minimum": 0.14,
+        "sample_sd": 0.29543188724306657
+      },
+      "qoe_score": {
+        "ci95_high": 1.201474775371062,
+        "ci95_low": 0.5716392163281925,
+        "maximum": 1.0,
+        "mean": 0.8865569958496272,
+        "minimum": 0.4327849792481363,
+        "sample_sd": 0.2536662688520242
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 9.305483912011843,
+        "ci95_low": 5.392472840765256,
+        "maximum": 9.446170568466187,
+        "mean": 7.3489783763885494,
+        "minimum": 5.4385011196136475,
+        "sample_sd": 1.5759651930865712
+      }
+    },
+    {
+      "scenario": "nonpartition_100",
+      "method": "llf-dag",
+      "n": 5,
+      "deadline_missing_rate": {
+        "ci95_high": 1.1324043506034922,
+        "ci95_low": 0.2755956493965076,
+        "maximum": 1.0,
+        "mean": 0.704,
+        "minimum": 0.3,
+        "sample_sd": 0.34507970093878315
+      },
+      "qoe_score": {
+        "ci95_high": 1.2575706435265923,
+        "ci95_low": 0.00723855853085642,
+        "maximum": 1.0,
+        "mean": 0.6324046010287244,
+        "minimum": 0.05993837210186565,
+        "sample_sd": 0.5035712421648975
+      },
+      "end_to_end_latency_seconds": {
+        "ci95_high": 21.28575905142212,
+        "ci95_low": 4.248691002746581,
+        "maximum": 23.11836886405945,
+        "mean": 12.76722502708435,
+        "minimum": 8.009209871292114,
+        "sample_sd": 6.861679087559115
+      }
+    }
+  ]
+}
