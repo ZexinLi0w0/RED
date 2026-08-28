@@ -1,10 +1,14 @@
+import argparse
 import hashlib
 import json
+
+import pytest
 
 from experiments.burst_study import (
     DEFAULT_BASE_TASK_CONFIG,
     DEFAULT_SEEDS,
     _validate_summary,
+    _csv_values,
     _seeds_for_repetitions,
     generate_study_plan,
     summarize_study,
@@ -46,6 +50,15 @@ def test_default_plan_runs_each_cell_once(tmp_path) -> None:
 def test_repetition_count_generates_deterministic_seeds() -> None:
     assert _seeds_for_repetitions(1) == (101,)
     assert _seeds_for_repetitions(3) == (101, 202, 303)
+
+
+def test_calibration_subset_parser_rejects_duplicates() -> None:
+    assert _csv_values("control-000,sustained-100") == (
+        "control-000",
+        "sustained-100",
+    )
+    with pytest.raises(argparse.ArgumentTypeError, match="duplicates"):
+        _csv_values("control-000,control-000")
 
 
 def test_plan_records_non_mac_runtime_and_device(tmp_path) -> None:
