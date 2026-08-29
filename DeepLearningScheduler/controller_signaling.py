@@ -12,6 +12,9 @@ from AbstractHandler import HandlerStatus
 from task_scheduler import TaskSchedule
 
 
+DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS = 0.001
+
+
 class HandlerQueueRouter:
     """Route controller commands to one dedicated queue per handler."""
 
@@ -171,7 +174,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     scheduler_tick_seconds = (
         float(burst_config.get('scheduler_tick_seconds', 0.005))
         if burst_enabled
-        else 0.0
+        else DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS
     )
     if scheduler_tick_seconds < 0:
         raise ValueError("scheduler_tick_seconds cannot be negative")

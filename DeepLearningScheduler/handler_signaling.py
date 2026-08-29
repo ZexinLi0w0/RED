@@ -7,6 +7,9 @@ from control_signal import convert_args_to_dict, generate_signal, parse_signal, 
 from AbstractHandler import HandlerStatus
 
 
+DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS = 0.001
+
+
 def _valid_handler_output(output):
     """Return whether a handler produced its explicit success contract."""
     return (
@@ -161,8 +164,10 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
     STATUS = HandlerStatus.Entry
     # logger.debug(f'handler signaling processing: {handler_id}, {handler_name}, {handler_description}, {handler_priority}, {handler_dependencies}, {STATUS}')
     while True:
-        # 使用asyncio.sleep()挂起协程，让它不阻塞
-        await asyncio.sleep(0)
+        # A real sleep releases the GIL long enough for multiprocessing.Queue
+        # feeder threads to flush controller commands and handler replies.
+        # sleep(0) caused 100--600 ms signaling stalls on Jetson Nano.
+        await asyncio.sleep(DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS)
         # 使用queue.get_nowait()检查queue是否有信号，如果有就立即返回，如果没有就抛出queue.Empty异常
         try:
             signal_message = control_queue.get_nowait()
