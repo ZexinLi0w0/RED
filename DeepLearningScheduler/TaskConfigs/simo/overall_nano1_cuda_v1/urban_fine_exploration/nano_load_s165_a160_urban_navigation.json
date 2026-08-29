@@ -1,0 +1,101 @@
+{
+  "DeadlineFactor": 1.6,
+  "ArrivalScale": 1.65,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "MergeThresholdMs": 20,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      [
+        {
+          "TaskName": "S3_Stage1_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 41.844798,
+          "WorstRunningTime": 46.773338
+        },
+        {
+          "TaskName": "S3_Stage1_Object_Detection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 48.726029,
+          "WorstRunningTime": 54.295648
+        }
+      ],
+      [
+        {
+          "TaskName": "S3_Stage2_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            1,
+            4
+          ],
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 38.670593,
+          "WorstRunningTime": 43.396355
+        },
+        {
+          "TaskName": "S3_Stage2_Object_Detection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            1,
+            4
+          ],
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 48.726029,
+          "WorstRunningTime": 54.295648
+        }
+      ],
+      {
+        "TaskName": "S3_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          3,
+          4
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 34.692496,
+        "WorstRunningTime": 39.143738
+      }
+    ]
+  ],
+  "RuntimeProfile": {
+    "profile_file": "runtime_profile.json",
+    "profile_sha256": "39f3c7a03dda69f640433454d8a6a23121a5303cf86a07f010919df942ff115e",
+    "torch_device": "cuda:0",
+    "power_mode": "15W; jetson_clocks",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1,
+    "cases": [
+      "control_autopilot",
+      "lane_detection",
+      "object_detection",
+      "segmentation"
+    ]
+  },
+  "Calibration": {
+    "kind": "edf-only-arrival-deadline-exploration",
+    "arrival_scale": 1.65,
+    "deadline_factor": 1.6,
+    "source_config": "nano_loose_urban_navigation.json"
+  }
+}
