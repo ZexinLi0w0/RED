@@ -11,10 +11,15 @@ from pathlib import Path
 
 def _scaled_label(prefix, value):
     decimal_value = Decimal(str(value))
-    scaled = decimal_value * 100
-    if scaled != scaled.to_integral_value() or decimal_value <= 0:
-        raise ValueError("grid values must be positive with at most two decimals")
-    return f"{prefix}{int(scaled):03d}"
+    if decimal_value <= 0:
+        raise ValueError("grid values must be positive")
+    scaled_hundredths = decimal_value * 100
+    if scaled_hundredths == scaled_hundredths.to_integral_value():
+        return f"{prefix}{int(scaled_hundredths):03d}"
+    scaled_thousandths = decimal_value * 1000
+    if scaled_thousandths == scaled_thousandths.to_integral_value():
+        return f"{prefix}{int(scaled_thousandths):04d}"
+    raise ValueError("grid values must have at most three decimals")
 
 
 def _payload(value):

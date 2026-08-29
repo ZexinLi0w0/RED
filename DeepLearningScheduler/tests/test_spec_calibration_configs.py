@@ -31,7 +31,7 @@ def test_spec_grid_supports_scenario_specific_arrival_scales(tmp_path) -> None:
                     {
                         "scenario": "night_driving",
                         "arrival_scale": 1.0,
-                        "deadline_factors": [1.1, 1.2],
+                        "deadline_factors": [1.1, 1.252],
                     },
                 ],
             }
@@ -50,6 +50,7 @@ def test_spec_grid_supports_scenario_specific_arrival_scales(tmp_path) -> None:
     )
     assert (urban["ArrivalScale"], urban["DeadlineFactor"]) == (1.6, 2.0)
     assert (night["ArrivalScale"], night["DeadlineFactor"]) == (1.0, 1.1)
+    assert (output_dir / "nano_cal_s100_a1252_night_driving.json").is_file()
     assert urban["QoELambda"] == night["QoELambda"] == 0.05
 
     assert build_grid(spec_path, source_dir, output_dir) == index
