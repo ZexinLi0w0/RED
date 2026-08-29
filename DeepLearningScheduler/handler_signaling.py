@@ -147,13 +147,14 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
             continue
 
 
-async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logging, instance=None):
+async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logging, instance=None, reply_queue=None):
     """
     singaling response in child process
     handler the signals from controller to move itself to different status
     """
     loop = asyncio.get_event_loop()
     handler_id, handler_name, handler_description, runargs = config
+    response_queue = control_queue if reply_queue is None else reply_queue
     if(instance is None):
         logger.critical(f"Can not create a signaling handler without task instance in task [{handler_id}]{handler_name}")
         return
@@ -185,7 +186,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 # only in status entry, reply heart ping
                 if(STATUS == HandlerStatus.Entry):
                     signal_message = generate_signal(0, SignalCommand.PING, reply_time, reply_source, reply_status)
-                    control_queue.put(signal_message)
+                    response_queue.put(signal_message)
                 continue
             elif(SignalCommand[signal_command] == SignalCommand.LOADDATA):
                 # skip repeat signal while already in execution
@@ -201,7 +202,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
                 signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_start_time, reply_end_time)
-                control_queue.put(signal_message)
+                response_queue.put(signal_message)
                 continue
             elif(SignalCommand[signal_command] == SignalCommand.READY):
                 # skip repeat signal while already in execution
@@ -216,7 +217,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                 reply_source = f"--source {handler_id}" # use this handler_id as unique identity
                 reply_status = f"--status {STATUS.value}" # for enum value, must send it's value so that the receiver can match it.
                 signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, reply_start_time, reply_end_time)
-                control_queue.put(signal_message)
+                response_queue.put(signal_message)
                 continue
             elif(SignalCommand[signal_command] == SignalCommand.RUN):
                 if(STATUS == HandlerStatus.Running):
@@ -238,7 +239,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                             f"returned invalid output: {output!r}"
                         )
                     signal_message = generate_signal(0, SignalCommand.PING, reply_source, reply_status, f"--warmup {warmup_status}")
-                    control_queue.put(signal_message)
+                    response_queue.put(signal_message)
                     continue
                 
                 relative_time = float(args_dict['relative_time'])
@@ -262,7 +263,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                         reply_dagperiod = f"--dag_period {dag_period}"
                         # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} missing deadline, missing time: {start_time}")
                         signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time, reply_simo, reply_dagperiod)
-                        control_queue.put(signal_message)
+                        response_queue.put(signal_message)
                         continue
                 
                 decoder_list = [int(i) for i in simo_args.strip('[').strip(']').split(',')]
@@ -292,7 +293,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
                     # logger.info(f"Task[{taskid}] in [{handler_id}]{handler_name} finished, time: {end_time}, deadline: {deadline}")
                 
                 signal_message = generate_signal(0, SignalCommand.DELIVERY, reply_source, reply_task_id, reply_status, reply_output, reply_start_time, reply_end_time, reply_simo, reply_dagperiod)
-                control_queue.put(signal_message)
+                response_queue.put(signal_message)
                 continue
         except queue.Empty:
             continue
