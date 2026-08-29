@@ -233,8 +233,11 @@ class TaskSchedule:
         
         # Burst task management
         self.burst_enabled = burst_enabled
+        self.burst_task_ratio = burst_task_ratio or 0
         self.burst_management_enabled = (
-            burst_enabled and approach_module == 'feedback-fine-grained'
+            burst_enabled
+            and approach_module == 'feedback-fine-grained'
+            and self.burst_task_ratio > 0
         )
         if burst_enabled:
             burst_config = burst_config or {}
@@ -268,7 +271,6 @@ class TaskSchedule:
             )
         else:
             self.burst_manager = None
-        self.burst_task_ratio = burst_task_ratio or 0
         self._burst_tasks_augmented = False
         self.offered_task_stream_hash = task_stream_sha256(tasks)
     
