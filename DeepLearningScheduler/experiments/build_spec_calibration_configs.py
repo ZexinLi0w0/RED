@@ -40,7 +40,7 @@ def _replace_index(path, payload):
     os.replace(temporary_path, path)
 
 
-def build_grid(spec_path, source_dir, output_dir):
+def build_grid(spec_path, source_dir, output_dir, fixed_profile=None):
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
     device = spec["device"]
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -51,10 +51,12 @@ def build_grid(spec_path, source_dir, output_dir):
         arrival_scale = float(workload["arrival_scale"])
         source_path = source_dir / f"{device}_loose_{scenario}.json"
         source_config = json.loads(source_path.read_text(encoding="utf-8"))
+        if fixed_profile and len(workload["deadline_factors"]) != 1:
+            raise ValueError("fixed-profile requires one deadline factor per workload")
 
         for deadline_factor_value in workload["deadline_factors"]:
             deadline_factor = float(deadline_factor_value)
-            profile = (
+            profile = fixed_profile or (
                 "cal_"
                 + _scaled_label("s", arrival_scale)
                 + "_"
@@ -105,9 +107,17 @@ def main():
     parser.add_argument("--spec", type=Path, required=True)
     parser.add_argument("--source-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--fixed-profile",
+        default=None,
+        help="optional common profile name; each workload must contain one point",
+    )
     args = parser.parse_args()
     index = build_grid(
-        args.spec.resolve(), args.source_dir.resolve(), args.output_dir.resolve()
+        args.spec.resolve(),
+        args.source_dir.resolve(),
+        args.output_dir.resolve(),
+        fixed_profile=args.fixed_profile,
     )
     print(f"Generated/verified {len(index['configs'])} calibration configs")
     return 0

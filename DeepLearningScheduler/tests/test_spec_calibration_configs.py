@@ -54,3 +54,34 @@ def test_spec_grid_supports_scenario_specific_arrival_scales(tmp_path) -> None:
     assert urban["QoELambda"] == night["QoELambda"] == 0.05
 
     assert build_grid(spec_path, source_dir, output_dir) == index
+
+
+def test_spec_grid_can_use_one_common_profile(tmp_path) -> None:
+    source_dir = tmp_path / "source"
+    output_dir = tmp_path / "generated"
+    source_dir.mkdir()
+    (source_dir / "nano_loose_night_driving.json").write_text(
+        json.dumps({"DeadlineFactor": 1, "ArrivalScale": 1, "dag_list": []}),
+        encoding="utf-8",
+    )
+    spec_path = tmp_path / "spec.json"
+    spec_path.write_text(
+        json.dumps(
+            {
+                "device": "nano",
+                "workloads": [
+                    {
+                        "scenario": "night_driving",
+                        "arrival_scale": 1.0,
+                        "deadline_factors": [1.5],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    index = build_grid(spec_path, source_dir, output_dir, fixed_profile="tight")
+
+    assert index["configs"][0]["profile"] == "tight"
+    assert (output_dir / "nano_tight_night_driving.json").is_file()
