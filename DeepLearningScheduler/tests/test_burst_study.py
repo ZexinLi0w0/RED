@@ -189,6 +189,7 @@ def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
         "offered_task_count": 114,
         "offered_task_stream_sha256": "same-stream",
         "expected_workload": expected_workload,
+        "ratio_percent": 100,
         "require_proactive_drop": True,
     }
     summary = {
@@ -232,6 +233,7 @@ def test_meris_control_validation_rejects_proactive_drop() -> None:
         "offered_task_count": 84,
         "offered_task_stream_sha256": "control-stream",
         "expected_workload": expected_workload,
+        "ratio_percent": 0,
         "require_no_proactive_drop": True,
     }
     summary = {
@@ -244,7 +246,7 @@ def test_meris_control_validation_rejects_proactive_drop() -> None:
         "qoe_score": 0.98,
         "outcome_counts": {},
         "burst_statistics": {
-            "management_enabled": True,
+            "management_enabled": False,
             "workload": expected_workload,
             "overload_activation_count": 1,
             "dropped_tasks_count": 1,
@@ -282,7 +284,10 @@ def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:
                     "qoe_score": 1 - seed / 20,
                     "outcome_counts": {"success": condition["expected_offered_task_count"]},
                     "burst_statistics": {
-                        "management_enabled": method == "feedback-fine-grained",
+                        "management_enabled": (
+                            method == "feedback-fine-grained"
+                            and condition["ratio_percent"] > 0
+                        ),
                         "workload": condition["expected_workload"],
                         "drop_records": [],
                     },
@@ -295,8 +300,9 @@ def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:
                     {
                         "run_id": run_id,
                         "status": "complete",
-                        "condition_slug": condition["slug"],
-                        "method": method,
+                            "condition_slug": condition["slug"],
+                            "ratio_percent": condition["ratio_percent"],
+                            "method": method,
                         "seed": seed,
                         "offered_task_count": condition[
                             "expected_offered_task_count"

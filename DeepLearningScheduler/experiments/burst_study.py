@@ -377,7 +377,10 @@ def _validate_summary(manifest, summary):
     if summary.get("outcome_counts", {}).get("execution_error", 0):
         problems.append("execution_error outcomes present")
     burst = summary.get("burst_statistics") or {}
-    expected_management = manifest["method"] == "feedback-fine-grained"
+    expected_management = (
+        manifest["method"] == "feedback-fine-grained"
+        and manifest.get("ratio_percent", 0) > 0
+    )
     if burst.get("management_enabled") is not expected_management:
         problems.append("burst management enablement mismatch")
     workload = burst.get("workload") or {}
