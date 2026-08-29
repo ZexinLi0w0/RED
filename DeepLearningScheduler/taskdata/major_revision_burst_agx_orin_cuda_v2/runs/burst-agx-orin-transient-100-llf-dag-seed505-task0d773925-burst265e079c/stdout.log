@@ -1,0 +1,53 @@
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+PyTorch execution device: cuda:0
+Task seed: 505
+Task stream SHA-256: 9516c26ba9cae653d3d5f97ce143db69fdaf63734c38c3e19421deba1092301b
+Release-time skew threshold: 100.0 ms
+Moving-average window: 8
+/experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/generated_configs/transient-100/task.json task.json task
+Loaded burst configuration: {'burst_enabled': True, 'burst_regime': 'transient', 'burst_start_seconds': 0.0, 'drop_threshold': 0.5, 'gpu_threshold': 100.0, 'monitoring_interval': 0.05, 'persistence_window': 1, 'queue_threshold': 6, 'release_horizon_seconds': 1.5, 'scheduler_tick_seconds': 0.0, 'transient_duration_seconds': 0.65}
+[32mINFO    [0m [37m[CTRL] All subprocesses started.[0m
+[32mINFO    [0m [37m[BURST] transient workload enabled for llf-dag; proactive management=False; GPU threshold=100.0%, queue threshold=6, persistence=1 ticks[0m
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+[32mINFO    [0m [37m[BURST] Generated 12 nodes from 3 additional DAG releases (transient, ratio=100.0%, window=[0.000, 0.650)).[0m
+[32mINFO    [0m [37m[BURST] Augmenting task list with 12 burst tasks (ratio=100.0%).[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, start time: 1787966034.2001266, finished time: 1787966034.203688[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, offline scheduler: llf_dag, start time: 1787966034.2001266, finished time: 1787966034.2038608[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[0]_D0_S0_B1 finished, status: success, start time: 0.0046312808990478516, taskover time: 0.029059648513793945[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[0]_D0_S0_B1_burst_transient_1 finished, status: success, start time: 0.030406475067138672, taskover time: 0.05475187301635742[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[0]_D0_S0_B2 finished, status: success, start time: 0.06640386581420898, taskover time: 0.09235167503356934[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[0]_D0_S0_B2_burst_transient_1 finished, status: success, start time: 0.19825124740600586, taskover time: 0.22399473190307617[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[0]_D0_S0_B0 finished, status: failure, start time: 0.4347677230834961, taskover time: 0.4637918472290039[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[0]_D0_S0_B0_burst_transient_1 finished, status: failure, start time: 0.5504279136657715, taskover time: 0.5794558525085449[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[0]_D0_S0_B3 finished, status: failure, start time: 0.5806219577789307, taskover time: 0.6146340370178223[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[0]_D0_S0_B3_burst_transient_1 finished, status: failure, start time: 0.7788856029510498, taskover time: 0.8125817775726318[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[1]_D0_S0_B1 finished, status: failure, start time: 0.8138267993927002, taskover time: 0.8382089138031006[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[1]_D0_S0_B1_burst_transient_2 finished, status: failure, start time: 0.8396410942077637, taskover time: 0.8638298511505127[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2 finished, status: failure, start time: 0.8952927589416504, taskover time: 0.9211483001708984[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2_burst_transient_2 finished, status: failure, start time: 0.922144889831543, taskover time: 0.9480783939361572[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[1]_D0_S0_B0 finished, status: failure, start time: 1.5741510391235352, taskover time: 1.6032991409301758[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[1]_D0_S0_B0_burst_transient_2 finished, status: failure, start time: 1.6044862270355225, taskover time: 1.6336452960968018[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3 finished, status: failure, start time: 1.634648084640503, taskover time: 1.6687960624694824[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3_burst_transient_2 finished, status: failure, start time: 1.670971393585205, taskover time: 1.7048447132110596[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[2]_D0_S0_B1 finished, status: failure, start time: 1.7059438228607178, taskover time: 1.7302684783935547[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[2]_D0_S0_B1_burst_transient_3 finished, status: failure, start time: 1.7623584270477295, taskover time: 1.7865111827850342[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[2]_D0_S0_B2 finished, status: failure, start time: 1.8101541996002197, taskover time: 1.8359503746032715[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[2]_D0_S0_B2_burst_transient_3 finished, status: failure, start time: 1.9541406631469727, taskover time: 1.980189561843872[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[2]_D0_S0_B0 finished, status: failure, start time: 1.9812676906585693, taskover time: 2.0104525089263916[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[2]_D0_S0_B0_burst_transient_3 finished, status: failure, start time: 2.0112993717193604, taskover time: 2.040465831756592[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[2]_D0_S0_B3 finished, status: failure, start time: 2.0413546562194824, taskover time: 2.0754709243774414[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[2]_D0_S0_B3_burst_transient_3 finished, status: failure, start time: 2.0762875080108643, taskover time: 2.1107723712921143[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[3]_D0_S0_B1 finished, status: failure, start time: 2.1117637157440186, taskover time: 2.136284589767456[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2 finished, status: failure, start time: 2.1370856761932373, taskover time: 2.1632325649261475[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[3]_D0_S0_B0 finished, status: failure, start time: 2.164146661758423, taskover time: 2.1934621334075928[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3 finished, status: failure, start time: 2.1942033767700195, taskover time: 2.2285873889923096[0m
+[32mINFO    [0m [37m[CTRL] All tasks finished[0m
+[32mINFO    [0m [37m[CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-100-llf-dag-seed505-task0d773925-burst265e079c/end2end_time.txt[0m
+[32mINFO    [0m [37m[CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-100-llf-dag-seed505-task0d773925-burst265e079c/task_statistics.pkl[0m
+[32mINFO    [0m [37m[CTRL] Task End to End Finished time: 2.2291059494018555[0m
+[32mINFO    [0m [37m[CTRL] SubTask Missing deadline rate: 0.8571428571428571[0m
+[32mINFO    [0m [37m[CTRL] SubTask Average finished time: 0.028376996517181396[0m
+[32mINFO    [0m [37m[CTRL] Task Metrics: (1, 0.0, 0.4823819331243762)[0m
+[32mINFO    [0m [37m[CTRL] Saved run summary to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-100-llf-dag-seed505-task0d773925-burst265e079c/summary.json[0m
+metrics finished time 2.2291059494018555 1.208392896
+[DEBUG] QoE score calculation, finished_times:  [2.2291059494018555] deadlines:  [1.208392896] lambda_param:  0.05 QoE Score:  0.4823819331243762

@@ -1,0 +1,77 @@
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+PyTorch execution device: cuda:0
+Task seed: 303
+Task stream SHA-256: 9516c26ba9cae653d3d5f97ce143db69fdaf63734c38c3e19421deba1092301b
+Release-time skew threshold: 100.0 ms
+Moving-average window: 8
+/experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/generated_configs/transient-050/task.json task.json task
+Loaded burst configuration: {'burst_enabled': True, 'burst_regime': 'transient', 'burst_start_seconds': 0.0, 'drop_threshold': 0.5, 'gpu_threshold': 100.0, 'monitoring_interval': 0.05, 'persistence_window': 1, 'queue_threshold': 6, 'release_horizon_seconds': 1.5, 'scheduler_tick_seconds': 0.0, 'transient_duration_seconds': 0.65}
+[32mINFO    [0m [37m[CTRL] All subprocesses started.[0m
+[32mINFO    [0m [37m[BURST] System health monitoring started[0m
+[32mINFO    [0m [37m[BURST] transient workload enabled for feedback-fine-grained; proactive management=True; GPU threshold=100.0%, queue threshold=6, persistence=1 ticks[0m
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+[32mINFO    [0m [37m[BURST] Generated 4 nodes from 1 additional DAG releases (transient, ratio=50.0%, window=[0.000, 0.650)).[0m
+[32mINFO    [0m [37m[BURST] Augmenting task list with 4 burst tasks (ratio=50.0%).[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained adjust, tasknum: 20[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merge result: 20[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, start time: 1787966945.9627314, finished time: 1787966945.9656198[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, offline scheduler: edf, start time: 1787966945.9627314, finished time: 1787966945.9657724[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[0]_D0_S0_B1 finished, status: success, start time: 0.004166364669799805, taskover time: 0.028780221939086914[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[0]_D0_S0_B2 finished, status: success, start time: 0.02999091148376465, taskover time: 0.05596423149108887[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[0]_D0_S0_B0 finished, status: success, start time: 0.057349205017089844, taskover time: 0.08637523651123047[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[0]_D0_S0_B3 finished, status: success, start time: 0.19884037971496582, taskover time: 0.2328634262084961[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 1 ticks: GPU=0.0%, Queue=7[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2 with criticality 0.000 (threshold: 0.400)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2_burst_transient_1 with criticality 0.000 (threshold: 0.400)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3 with criticality 0.000 (threshold: 0.250)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3_burst_transient_1 with criticality 0.000 (threshold: 0.250)[0m
+[32mINFO    [0m [37m[BURST] Dropped 4 tasks, remaining 3 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2_burst_transient_1 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3_burst_transient_1 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=16.5%, Queue=3[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[1]_D0_S0_B1 finished, status: success, start time: 0.24252843856811523, taskover time: 0.26678466796875[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[1]_D0_S0_B1_burst_transient_1 finished, status: success, start time: 0.3708381652832031, taskover time: 0.39516592025756836[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 1 ticks: GPU=0.0%, Queue=9[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2 with criticality 0.000 (threshold: 0.400)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3 with criticality 0.000 (threshold: 0.250)[0m
+[32mINFO    [0m [37m[BURST] Dropped 2 tasks, remaining 7 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3 dropped due to burst_drop[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 1, dep: 1[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[1]_D0_S0_B0 finished, status: skip, start time: 0.906552791595459, taskover time: 0.906552791595459[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=0.0%, Queue=6[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 4, dep: 1[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[1]_D0_S0_B0_burst_transient_1 finished, status: skip, start time: 0.9715280532836914, taskover time: 0.9715280532836914[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 2, dep: 2[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[2]_D0_S0_B1 finished, status: skip, start time: 1.122774362564087, taskover time: 1.122774362564087[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 2, dep: 3[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[2]_D0_S0_B2 finished, status: skip, start time: 1.2547600269317627, taskover time: 1.2547600269317627[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 2, dep: 1[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[2]_D0_S0_B0 finished, status: skip, start time: 1.3509273529052734, taskover time: 1.3509273529052734[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 2, dep: 4[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[2]_D0_S0_B3 finished, status: skip, start time: 1.6155376434326172, taskover time: 1.6155376434326172[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 3, dep: 2[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_Control_[3]_D0_S0_B1 finished, status: skip, start time: 1.6677255630493164, taskover time: 1.6677255630493164[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks with 3, dep: 1[0m
+[34mDEBUG   [0m [37m[DEBUG]drop following tasks: [][0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Critical_LaneDetection_[3]_D0_S0_B0 finished, status: skip, start time: 1.7667889595031738, taskover time: 1.7667889595031738[0m
+[32mINFO    [0m [37m[CTRL] All tasks finished[0m
+[32mINFO    [0m [37m[BURST] System health monitoring stopped[0m
+[32mINFO    [0m [37m[CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-050-feedback-fine-grained-seed303-task8fc4b95c-burst265e079c/end2end_time.txt[0m
+[32mINFO    [0m [37m[CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-050-feedback-fine-grained-seed303-task8fc4b95c-burst265e079c/task_statistics.pkl[0m
+[32mINFO    [0m [37m[CTRL] Task End to End Finished time: 1.8193790912628174[0m
+[32mINFO    [0m [37m[CTRL] SubTask Missing deadline rate: 0.7[0m
+[32mINFO    [0m [37m[CTRL] SubTask Average finished time: 0.02703670660654704[0m
+[32mINFO    [0m [37m[CTRL] Task Metrics: (1, 0.0, 0.6088976530939431)[0m
+[32mINFO    [0m [37m[CTRL] Saved run summary to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v2/runs/burst-agx-orin-transient-050-feedback-fine-grained-seed303-task8fc4b95c-burst265e079c/summary.json[0m
+metrics finished time 1.8193790912628174 1.208392896
+[DEBUG] QoE score calculation, finished_times:  [1.8193790912628174] deadlines:  [1.208392896] lambda_param:  0.05 QoE Score:  0.6088976530939431

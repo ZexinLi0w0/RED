@@ -1,0 +1,110 @@
+{
+  "ArrivalScale": 8.0,
+  "BurstStudyWorkload": {
+    "base_dag": "four independent co-released requests without dependency-failure cascades",
+    "burst_ready_queue_lower_bound": 8,
+    "burst_start_seconds": 0.0,
+    "calibration_selection": {
+      "accepted": true,
+      "candidate": "d800_a800",
+      "criterion": "the complete five-condition matrix contains interior Deadline Missing Rate values and non-saturated QoE values",
+      "deadline_missing_rate_range": [
+        0.0,
+        1.0
+      ],
+      "pilot_seed": 101,
+      "qoe_score_range": [
+        0.137,
+        1.0
+      ]
+    },
+    "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests",
+    "nominal_control_ready_queue_bound": 4,
+    "offered_task_counts": {
+      "control_000": 16,
+      "sustained_050": 24,
+      "sustained_100": 32,
+      "transient_050": 20,
+      "transient_100": 28
+    },
+    "persistence_window": 1,
+    "phase": "formal",
+    "purpose": "queue-triggered ProactiveDrop study on AGX Orin/CUDA",
+    "queue_threshold": 6,
+    "release_horizon_seconds": 1.5,
+    "scheduler_tick_seconds": 0.0,
+    "transient_duration_seconds": 0.65
+  },
+  "BurstTaskRatio": 100,
+  "DagRepeatedTimes": 4,
+  "DeadlineFactor": 8.0,
+  "MovingAverageWindow": 8,
+  "NonPartitionablePercentage": 100,
+  "ParallelStagePolicy": "max",
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 100.0,
+  "RuntimeProfile": {
+    "bound_margin_fraction": 0.1,
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "platform": "AGX Orin",
+    "power_mode": "agx-orin-maxn",
+    "profile_file": "agx_orin_maxn_20260828_v1.json",
+    "profile_sha256": "cc7bc798f1802a8c726e9a444f6c8c8ff5d1f12639b076215bf4e38155e762f5",
+    "torch_device": "cuda:0"
+  },
+  "TaskSeed": 0,
+  "dag_list": [
+    [
+      [
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.0,
+          "HandlerId": 5,
+          "Priority": 3,
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 28.642414,
+          "TaskName": "AGX_Burst_Critical_LaneDetection",
+          "WorstRunningTime": 32.112678
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.0,
+          "HandlerId": 5,
+          "Priority": 3,
+          "RunArgs": [
+            2
+          ],
+          "RunningTime": 23.756031,
+          "TaskName": "AGX_Burst_Critical_Control",
+          "WorstRunningTime": 26.968867
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.4,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 25.380104,
+          "TaskName": "AGX_Burst_Redundant_Segmentation",
+          "WorstRunningTime": 29.04433
+        },
+        {
+          "Dependencies": [],
+          "DropThreshold": 0.25,
+          "HandlerId": 5,
+          "Priority": 1,
+          "RunArgs": [
+            4
+          ],
+          "RunningTime": 33.317769,
+          "TaskName": "AGX_Burst_Redundant_ObjectDetection",
+          "WorstRunningTime": 37.762278
+        }
+      ]
+    ]
+  ]
+}
