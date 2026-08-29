@@ -51,6 +51,7 @@ def test_default_plan_runs_each_cell_once(tmp_path) -> None:
     assert plan["gpu_threshold"] == 100.0
     assert plan["queue_threshold"] == 10
     assert plan["persistence_window"] == 3
+    assert plan["scheduler_tick_seconds"] == 0.005
     assert plan["require_proactive_drop_for_meris_burst"] is True
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
@@ -116,6 +117,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     }
     assert plan["queue_threshold"] == 6
     assert plan["persistence_window"] == 1
+    assert plan["scheduler_tick_seconds"] == 0.005
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
@@ -154,6 +156,7 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     assert plan["arrival_scale"] == 8.0
     assert plan["queue_threshold"] == 6
     assert plan["persistence_window"] == 1
+    assert plan["scheduler_tick_seconds"] == 0.0
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
@@ -170,6 +173,12 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
     assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+    burst_config = json.loads(
+        (tmp_path / "agx-orin-study/generated_configs/control-000/burst.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert burst_config["scheduler_tick_seconds"] == 0.0
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
