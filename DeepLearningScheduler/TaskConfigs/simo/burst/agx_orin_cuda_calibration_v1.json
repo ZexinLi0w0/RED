@@ -1,7 +1,7 @@
 {
   "DeadlineFactor": 8.0,
   "ArrivalScale": 8.0,
-  "DagRepeatedTimes": 10,
+  "DagRepeatedTimes": 4,
   "ParallelStagePolicy": "max",
   "TaskSeed": 0,
   "ReleaseTimeSkewThresholdMs": 20,
@@ -73,14 +73,14 @@
     "queue_threshold": 6,
     "persistence_window": 1,
     "burst_start_seconds": 0.0,
-    "transient_duration_seconds": 1.3,
-    "release_horizon_seconds": 4.0,
+    "transient_duration_seconds": 0.65,
+    "release_horizon_seconds": 1.5,
     "offered_task_counts": {
-      "control_000": 40,
-      "transient_050": 48,
-      "transient_100": 60,
-      "sustained_050": 60,
-      "sustained_100": 80
+      "control_000": 16,
+      "transient_050": 20,
+      "transient_100": 28,
+      "sustained_050": 24,
+      "sustained_100": 32
     },
     "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests"
   }

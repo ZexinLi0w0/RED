@@ -139,8 +139,8 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
         AGX_ORIN_BASE_TASK_CONFIG,
         tmp_path / "agx-orin-study",
         burst_start_seconds=0.0,
-        transient_duration_seconds=1.3,
-        release_horizon_seconds=4.0,
+        transient_duration_seconds=0.65,
+        release_horizon_seconds=1.5,
         gpu_threshold=100.0,
         queue_threshold=6,
         persistence_window=1,
@@ -157,11 +157,11 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
-    ] == [40, 48, 60, 60, 80]
+    ] == [16, 20, 28, 24, 32]
     assert [
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
-    ] == [0, 2, 5, 5, 10]
+    ] == [0, 1, 3, 2, 4]
 
     config = json.loads(AGX_ORIN_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
     assert config["RuntimeProfile"]["torch_device"] == "cuda:0"
