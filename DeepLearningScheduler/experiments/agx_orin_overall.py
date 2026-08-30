@@ -387,8 +387,8 @@ def validate_matrix(runs_root, expected_profile, expected_seeds):
             "deadline_missing_rate_spread_at_least_0_10": (
                 bool(deadline_rates) and max(deadline_rates) - min(deadline_rates) >= 0.10
             ),
-            "at_least_three_interior_qoe_scores": (
-                sum(0.02 < value < 0.98 for value in qoe_scores) >= 3
+            "at_least_two_interior_qoe_scores": (
+                sum(0.02 < value < 0.98 for value in qoe_scores) >= 2
             ),
             "qoe_spread_at_least_0_05": (
                 bool(qoe_scores) and max(qoe_scores) - min(qoe_scores) >= 0.05

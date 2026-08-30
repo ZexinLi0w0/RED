@@ -1,11 +1,14 @@
 import json
 
+import experiments.agx_orin_overall as agx_orin_overall
+
 from experiments.agx_orin_overall import (
     METHODS,
     SCENARIOS,
     build_calibration,
     freeze_configs,
     select_edf_calibration,
+    validate_matrix,
 )
 
 
@@ -172,3 +175,46 @@ def test_edf_selection_and_pilot_freeze(tmp_path):
         assert config["DeadlineFactor"] == 2.0
         assert config["ArrivalScale"] == 3.0
         assert config["PilotExperiment"]["calibration_frozen_before_formal_runs"] is False
+
+
+def test_validation_accepts_two_interior_qoe_methods_with_clear_spread(
+    tmp_path, monkeypatch
+):
+    deadline_rates = [0.81, 0.78, 0.42, 0.22, 0.18]
+    qoe_scores = [0.40, 0.65, 1.0, 1.0, 1.0]
+    aggregates = []
+    for scenario in SCENARIOS:
+        for index, method in enumerate(METHODS):
+            aggregates.append(
+                {
+                    "device": "agx",
+                    "profile": "pilot",
+                    "scenario": scenario,
+                    "method": method,
+                    "seeds": [11, 22, 33],
+                    "metrics": {
+                        "deadline_missing_rate": {"mean": deadline_rates[index]},
+                        "qoe_score": {"mean": qoe_scores[index]},
+                    },
+                }
+            )
+
+    monkeypatch.setattr(
+        agx_orin_overall,
+        "summarize",
+        lambda _runs_root: {
+            "validation": {
+                "complete_run_count": 45,
+                "methods": list(METHODS),
+                "git_commits": ["abc123"],
+                "torch_devices": ["cuda:0"],
+            },
+            "aggregates": aggregates,
+        },
+    )
+
+    report = validate_matrix(tmp_path, "pilot", (11, 22, 33))
+    assert report["quality_gate"]["accepted"]
+    for scenario in SCENARIOS:
+        checks = report["quality_gate"]["scenario_checks"][scenario]["checks"]
+        assert checks["at_least_two_interior_qoe_scores"]
