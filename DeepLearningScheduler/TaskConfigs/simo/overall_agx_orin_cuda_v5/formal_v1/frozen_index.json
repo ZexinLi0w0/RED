@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "device": "agx",
+  "phase": "tight",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "fine-grained",
+    "feedback",
+    "feedback-fine-grained"
+  ],
+  "seeds": [
+    101,
+    202,
+    303,
+    404,
+    505
+  ],
+  "configs": [
+    {
+      "scenario": "urban_navigation",
+      "profile": "tight",
+      "config_path": "agx_tight_urban_navigation.json",
+      "config_sha256": "a61d455068ede02b035dd80a87b30d71238a11b013b4669e29b7f9d138c77c6a",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0
+    },
+    {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "tight",
+      "config_path": "agx_tight_emergency_obstacle_avoidance.json",
+      "config_sha256": "d5f5ba03a8a66f8e073c2ada36ce6120a87636dbc47b434cdc4385897570c1ef",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0
+    },
+    {
+      "scenario": "night_driving",
+      "profile": "tight",
+      "config_path": "agx_tight_night_driving.json",
+      "config_sha256": "1ce84465ded405c724f5058da182b18574d61deee0930740c4651677d4618d86",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75
+    }
+  ]
+}
