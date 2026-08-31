@@ -5,7 +5,7 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPOSITORY_ROOT}"
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
-OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_agx_orin_cuda_v3}"
+OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_agx_orin_cuda_v4}"
 SEEDS="${BURST_SEEDS:-101,202,303,404,505}"
 
 if [[ "$(basename "${CONDA_PREFIX:-missing}")" != "schedule" ]]; then

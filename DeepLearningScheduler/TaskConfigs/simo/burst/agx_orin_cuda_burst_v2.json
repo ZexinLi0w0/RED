@@ -90,7 +90,7 @@
     "bound_margin_fraction": 0.1
   },
   "BurstStudyWorkload": {
-    "phase": "pilot-candidate-v4",
+    "phase": "formal",
     "purpose": "workload-backed ProactiveDrop study on AGX Orin/CUDA",
     "base_dag": "two partitionable critical requests and three independent droppable redundant requests",
     "partition_policy": "critical requests are mergeable; redundant requests remain atomic drop candidates",
@@ -118,6 +118,24 @@
       "sustained_100": 100
     },
     "drop_policy": "shed the minimum number of redundant requests required to cross the queue recovery threshold; prefer Burst replicas",
-    "acceptance": "freeze only after a median-run pilot shows interior Deadline Missing Rate and non-saturated QoE values while transient runs return to NORMAL"
+    "acceptance": "all 15 pilot cells complete on one code revision; metric matrix is non-degenerate; MERIS control has no drop; every MERIS Burst condition activates and drops redundant work; transient runs return to NORMAL",
+    "calibration_selection": {
+      "candidate": "v4",
+      "pilot_output_root": "taskdata/burst_calibration/agx_orin_candidate_v4_seed101_20260830",
+      "pilot_seed": 101,
+      "pilot_git_commit": "5617524",
+      "pilot_run_count": 15,
+      "deadline_missing_rate_range": [0.0, 0.96],
+      "qoe_score_range": [0.246, 1.0],
+      "meris_drop_counts": {
+        "control_000": 0,
+        "transient_050": 12,
+        "transient_100": 20,
+        "sustained_050": 13,
+        "sustained_100": 35
+      },
+      "transient_recovery_completed": true,
+      "accepted": true
+    }
   }
 }
