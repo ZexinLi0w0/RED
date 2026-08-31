@@ -1,0 +1,85 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.8888888888888888,
+      "offered_node_count": 45,
+      "outcome_counts": {
+        "failure": 40,
+        "success": 5
+      },
+      "qoe_score": 0.7238654410783769
+    },
+    "atomic_offered_ratio": 0.6,
+    "partitionable": {
+      "deadline_missing_rate": 0.8333333333333334,
+      "offered_node_count": 30,
+      "outcome_counts": {
+        "failure": 25,
+        "success": 5
+      },
+      "qoe_score": 0.7365599034682622
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.027800369262695312,
+  "burst_statistics": {
+    "burst_mode_active": false,
+    "consecutive_overload_ticks": 0,
+    "current_gpu_utilization": 0.0,
+    "current_queue_length": 0,
+    "drop_records": [],
+    "drop_threshold": 0.5,
+    "dropped_tasks_count": 0,
+    "gpu_threshold": 100.0,
+    "management_enabled": false,
+    "maximum_consecutive_overload_ticks": 0,
+    "overload_activation_count": 0,
+    "overload_sample_interval_seconds": 0.005,
+    "persistence_window": 3,
+    "phase_transitions": [],
+    "queue_recovery_threshold": 6,
+    "queue_threshold": 8,
+    "transient_recovery_completed": true,
+    "transient_recovery_completion_seconds": 2.3802366256713867,
+    "workload": {
+      "added_dag_release_count": 5,
+      "added_node_count": 25,
+      "base_dag_release_count": 10,
+      "burst_end_seconds": 0.65,
+      "burst_ratio_percent": 100.0,
+      "burst_start_seconds": 0.0,
+      "eligible_dag_release_count": 5,
+      "regime": "transient",
+      "release_horizon_seconds": 1.5,
+      "transient_duration_seconds": 0.65
+    },
+    "workload_phase": "normal"
+  },
+  "deadline_missing_rate": 0.8666666666666667,
+  "end_to_end_latency_seconds": 2.3802366256713867,
+  "execution_task_count": 75,
+  "finished_execution_task_count": 75,
+  "method": "baseline",
+  "moving_average_reassignment": {
+    "enabled": false,
+    "event_count": 0,
+    "events": [],
+    "window": 8
+  },
+  "offered_task_count": 75,
+  "offered_task_stream_sha256": "f520362db4e5119a895eb39570a67e9e6aeb4880d27e81f32c98b3ad90784194",
+  "outcome_counts": {
+    "failure": 65,
+    "success": 10
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.5696237606182584,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "burst-agx-orin-transient-100-baseline-seed101-task105d3385-burst1d4791f9",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v4/generated_configs/transient-100/task.json",
+  "torch_device": "cuda:0"
+}

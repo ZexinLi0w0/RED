@@ -1,0 +1,130 @@
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+PyTorch execution device: cuda:0
+Task seed: 202
+Task stream SHA-256: 7eb8e19f3dff02fb297b9b359f60bc2557ff6733bf927a2093c97a416f2ac7bc
+Release-time skew threshold: 20.0 ms
+Moving-average window: 8
+/experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v4/generated_configs/sustained-050/task.json task.json task
+Loaded burst configuration: {'burst_enabled': True, 'burst_regime': 'sustained', 'burst_start_seconds': 0.0, 'drop_threshold': 0.5, 'gpu_threshold': 100.0, 'monitoring_interval': 0.05, 'persistence_window': 3, 'queue_recovery_threshold': 6, 'queue_threshold': 8, 'release_horizon_seconds': 1.5, 'scheduler_tick_seconds': 0.005}
+[32mINFO    [0m [37m[CTRL] All subprocesses started.[0m
+[32mINFO    [0m [37m[BURST] System health monitoring started[0m
+[32mINFO    [0m [37m[BURST] sustained workload enabled for feedback-fine-grained; proactive management=True; GPU threshold=100.0%, queue threshold=8, persistence=3 ticks[0m
+Error in cpuinfo: prctl(PR_SVE_GET_VL) failed
+[32mINFO    [0m [37m[BURST] Generated 25 nodes from 5 additional DAG releases (sustained, ratio=50.0%, window=[0.000, 1.500)).[0m
+[32mINFO    [0m [37m[BURST] Augmenting task list with 25 burst tasks (ratio=50.0%).[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained adjust, tasknum: 75[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_08b065abbc5e1e53[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_eb19b11901589df0[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_11904bde92602ff1[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_3cd7a66ccfa3b8f4[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_59f322f7a994105c[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_41b317894682f487[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_3e57029d453df770[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_0107b61e99ba9aec[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_70e0bb80b0dbbf4a[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_c3a3425f5de1b005[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_ec2fa148952779a1[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_602058e76594f130[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_f8a7f3c03a8587c9[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_b55f0c380f9bf0e9[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merged execution: merged_0618a0bfbcc9d407[0m
+[34mDEBUG   [0m [37m[CTRL] fine-grained merge result: 60[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, start time: 1788145739.0024312, finished time: 1788145739.013553[0m
+[32mINFO    [0m [37m[CTRL] Tasks generated, offline scheduler: edf, start time: 1788145739.0024312, finished time: 1788145739.0137026[0m
+[32mINFO    [0m [37m[CTRL] Task merged_08b065abbc5e1e53 finished, status: success, start time: 0.012900590896606445, taskover time: 0.04328107833862305[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[0]_D0_S0_B2 finished, status: success, start time: 0.04709649085998535, taskover time: 0.07347965240478516[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[0]_D0_S0_B4 finished, status: success, start time: 0.07644772529602051, taskover time: 0.1026773452758789[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[0]_D0_S0_B3 finished, status: success, start time: 0.10577058792114258, taskover time: 0.14023160934448242[0m
+[32mINFO    [0m [37m[CTRL] Task merged_eb19b11901589df0 finished, status: success, start time: 0.14644527435302734, taskover time: 0.17693758010864258[0m
+[32mINFO    [0m [37m[CTRL] Task merged_11904bde92602ff1 finished, status: success, start time: 0.18044090270996094, taskover time: 0.21074295043945312[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 3 ticks: GPU=0.0%, Queue=9[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[2]_D0_S0_B3 with criticality 0.047 (threshold: 0.250, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[2]_D0_S0_B2 with criticality 0.062 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_AuxSegmentation_[2]_D0_S0_B4 with criticality 0.062 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped 3 tasks, remaining 6 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[2]_D0_S0_B3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[2]_D0_S0_B2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_AuxSegmentation_[2]_D0_S0_B4 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2 finished, status: success, start time: 0.2935476303100586, taskover time: 0.31981801986694336[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=0.0%, Queue=5[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[1]_D0_S0_B4 finished, status: success, start time: 0.3243067264556885, taskover time: 0.3505241870880127[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[1]_D0_S0_B2_burst_sustained_1 finished, status: success, start time: 0.35390496253967285, taskover time: 0.3802509307861328[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[1]_D0_S0_B4_burst_sustained_1 finished, status: success, start time: 0.38300371170043945, taskover time: 0.4094078540802002[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3 finished, status: success, start time: 0.41188478469848633, taskover time: 0.4462096691131592[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 3 ticks: GPU=20.6%, Queue=9[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3_burst_sustained_2 with criticality 0.050 (threshold: 0.250, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2_burst_sustained_2 with criticality 0.065 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_AuxSegmentation_[3]_D0_S0_B4_burst_sustained_2 with criticality 0.065 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped 3 tasks, remaining 6 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3_burst_sustained_2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2_burst_sustained_2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_AuxSegmentation_[3]_D0_S0_B4_burst_sustained_2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=20.6%, Queue=6[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[1]_D0_S0_B3_burst_sustained_1 finished, status: failure, start time: 0.45139408111572266, taskover time: 0.4854114055633545[0m
+[32mINFO    [0m [37m[CTRL] Task merged_3cd7a66ccfa3b8f4 finished, status: failure, start time: 0.48787903785705566, taskover time: 0.5179989337921143[0m
+[32mINFO    [0m [37m[CTRL] Task merged_59f322f7a994105c finished, status: success, start time: 0.5208213329315186, taskover time: 0.5509159564971924[0m
+[32mINFO    [0m [37m[CTRL] Task merged_41b317894682f487 finished, status: success, start time: 0.5550026893615723, taskover time: 0.5851666927337646[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[3]_D0_S0_B2 finished, status: success, start time: 0.5890183448791504, taskover time: 0.6150295734405518[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[3]_D0_S0_B4 finished, status: success, start time: 0.6174931526184082, taskover time: 0.6435401439666748[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[3]_D0_S0_B3 finished, status: success, start time: 0.6459989547729492, taskover time: 0.6802725791931152[0m
+[32mINFO    [0m [37m[CTRL] Task merged_3e57029d453df770 finished, status: success, start time: 0.6855361461639404, taskover time: 0.715653657913208[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[4]_D0_S0_B2 finished, status: success, start time: 0.7195675373077393, taskover time: 0.7455158233642578[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 3 ticks: GPU=16.3%, Queue=9[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[5]_D0_S0_B3_burst_sustained_3 with criticality 0.050 (threshold: 0.250, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[5]_D0_S0_B2_burst_sustained_3 with criticality 0.065 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_AuxSegmentation_[5]_D0_S0_B4_burst_sustained_3 with criticality 0.065 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped 3 tasks, remaining 6 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[5]_D0_S0_B3_burst_sustained_3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[5]_D0_S0_B2_burst_sustained_3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_AuxSegmentation_[5]_D0_S0_B4_burst_sustained_3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[4]_D0_S0_B4 finished, status: success, start time: 0.7480087280273438, taskover time: 0.7739627361297607[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=16.3%, Queue=5[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[4]_D0_S0_B3 finished, status: success, start time: 0.7777636051177979, taskover time: 0.8118336200714111[0m
+[32mINFO    [0m [37m[CTRL] Task merged_0107b61e99ba9aec finished, status: success, start time: 0.8173794746398926, taskover time: 0.8474218845367432[0m
+[32mINFO    [0m [37m[CTRL] Task merged_70e0bb80b0dbbf4a finished, status: success, start time: 0.8513526916503906, taskover time: 0.8813436031341553[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[5]_D0_S0_B2 finished, status: success, start time: 0.8852255344390869, taskover time: 0.9113149642944336[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[5]_D0_S0_B4 finished, status: success, start time: 0.9137735366821289, taskover time: 0.9398460388183594[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[5]_D0_S0_B3 finished, status: success, start time: 0.9423058032989502, taskover time: 0.9764928817749023[0m
+[32mINFO    [0m [37m[CTRL] Task merged_c3a3425f5de1b005 finished, status: success, start time: 0.981452226638794, taskover time: 1.0114727020263672[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[6]_D0_S0_B2 finished, status: success, start time: 1.0153443813323975, taskover time: 1.0414135456085205[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[6]_D0_S0_B4 finished, status: success, start time: 1.0438754558563232, taskover time: 1.0698766708374023[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[6]_D0_S0_B3 finished, status: success, start time: 1.0723376274108887, taskover time: 1.1064813137054443[0m
+[32mINFO    [0m [37m[CTRL] Task merged_ec2fa148952779a1 finished, status: success, start time: 1.1114740371704102, taskover time: 1.1415398120880127[0m
+[32mINFO    [0m [37m[CTRL] Task merged_602058e76594f130 finished, status: success, start time: 1.1453664302825928, taskover time: 1.175440788269043[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[7]_D0_S0_B2 finished, status: success, start time: 1.1792144775390625, taskover time: 1.2052605152130127[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[7]_D0_S0_B4 finished, status: success, start time: 1.2077240943908691, taskover time: 1.2336945533752441[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[7]_D0_S0_B2_burst_sustained_4 finished, status: success, start time: 1.2361524105072021, taskover time: 1.2622780799865723[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[7]_D0_S0_B4_burst_sustained_4 finished, status: success, start time: 1.2647404670715332, taskover time: 1.2909369468688965[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[7]_D0_S0_B3 finished, status: success, start time: 1.293410301208496, taskover time: 1.3276970386505127[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[7]_D0_S0_B3_burst_sustained_4 finished, status: failure, start time: 1.332470178604126, taskover time: 1.3665943145751953[0m
+[33mWARNING [0m [37m[BURST] Sustained overload detected after 3 ticks: GPU=9.5%, Queue=11[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[9]_D0_S0_B3_burst_sustained_5 with criticality 0.040 (threshold: 0.250, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[9]_D0_S0_B2_burst_sustained_5 with criticality 0.052 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_AuxSegmentation_[9]_D0_S0_B4_burst_sustained_5 with criticality 0.052 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_ObjectDetection_[9]_D0_S0_B3 with criticality 0.040 (threshold: 0.250, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped task AGX_Burst_Redundant_Segmentation_[9]_D0_S0_B2 with criticality 0.052 (threshold: 0.400, phase: burst_active)[0m
+[32mINFO    [0m [37m[BURST] Dropped 5 tasks, remaining 6 tasks[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[9]_D0_S0_B3_burst_sustained_5 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[9]_D0_S0_B2_burst_sustained_5 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_AuxSegmentation_[9]_D0_S0_B4_burst_sustained_5 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_ObjectDetection_[9]_D0_S0_B3 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Task AGX_Burst_Redundant_Segmentation_[9]_D0_S0_B2 dropped due to burst_drop[0m
+[32mINFO    [0m [37m[BURST] Overload resolved: GPU=9.5%, Queue=6[0m
+[32mINFO    [0m [37m[CTRL] Task merged_f8a7f3c03a8587c9 finished, status: success, start time: 1.3717951774597168, taskover time: 1.4019544124603271[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_Segmentation_[8]_D0_S0_B2 finished, status: success, start time: 1.407733678817749, taskover time: 1.4336731433868408[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[8]_D0_S0_B4 finished, status: success, start time: 1.4361813068389893, taskover time: 1.462221384048462[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_ObjectDetection_[8]_D0_S0_B3 finished, status: success, start time: 1.4647047519683838, taskover time: 1.4988462924957275[0m
+[32mINFO    [0m [37m[CTRL] Task merged_b55f0c380f9bf0e9 finished, status: success, start time: 1.5035772323608398, taskover time: 1.5336863994598389[0m
+[32mINFO    [0m [37m[CTRL] Task merged_0618a0bfbcc9d407 finished, status: success, start time: 1.5372200012207031, taskover time: 1.5671961307525635[0m
+[32mINFO    [0m [37m[CTRL] Task AGX_Burst_Redundant_AuxSegmentation_[9]_D0_S0_B4 finished, status: success, start time: 1.570875883102417, taskover time: 1.5969083309173584[0m
+[32mINFO    [0m [37m[CTRL] All tasks finished[0m
+[32mINFO    [0m [37m[BURST] System health monitoring stopped[0m
+[32mINFO    [0m [37m[CTRL] Saved end2end time to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v4/runs/burst-agx-orin-sustained-050-feedback-fine-grained-seed202-task1636ec67-burst27a69d36/end2end_time.txt[0m
+[32mINFO    [0m [37m[CTRL] Saved statistics to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v4/runs/burst-agx-orin-sustained-050-feedback-fine-grained-seed202-task1636ec67-burst27a69d36/task_statistics.pkl[0m
+[32mINFO    [0m [37m[CTRL] Task End to End Finished time: 1.5988476276397705[0m
+[32mINFO    [0m [37m[CTRL] SubTask Missing deadline rate: 0.22666666666666666[0m
+[32mINFO    [0m [37m[CTRL] SubTask Average finished time: 0.02942037582397461[0m
+[32mINFO    [0m [37m[CTRL] Task Metrics: (1, 1.0, 1.0)[0m
+[32mINFO    [0m [37m[CTRL] Saved run summary to: /experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_burst_agx_orin_cuda_v4/runs/burst-agx-orin-sustained-050-feedback-fine-grained-seed202-task1636ec67-burst27a69d36/summary.json[0m
+metrics finished time 1.5988476276397705 1.6615402320000001
+[DEBUG] QoE score calculation, finished_times:  [1.5988476276397705] deadlines:  [1.6615402320000001] lambda_param:  0.05 QoE Score:  1.0
