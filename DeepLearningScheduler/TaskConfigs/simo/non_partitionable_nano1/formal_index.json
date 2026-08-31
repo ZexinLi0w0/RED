@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "device": "nano1",
+  "phase": "formal",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "feedback-fine-grained"
+  ],
+  "seeds": [
+    101,
+    202,
+    303
+  ],
+  "deadline_factor": 0.25,
+  "arrival_scale": 0.25,
+  "dag_repeated_times": 10,
+  "configs": [
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_000",
+      "non_partitionable_percentage": 0,
+      "config_path": "nano1_balanced_nonpartition_000.json"
+    },
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_050",
+      "non_partitionable_percentage": 50,
+      "config_path": "nano1_balanced_nonpartition_050.json"
+    },
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_100",
+      "non_partitionable_percentage": 100,
+      "config_path": "nano1_balanced_nonpartition_100.json"
+    }
+  ]
+}
