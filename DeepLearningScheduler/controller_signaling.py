@@ -150,8 +150,14 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         if burst_enabled
         else 0.0
     )
-    if scheduler_tick_seconds < 0:
-        raise ValueError("scheduler_tick_seconds cannot be negative")
+    if burst_enabled and scheduler_tick_seconds <= 0:
+        raise ValueError(
+            "scheduler_tick_seconds must be positive when Burst Management is enabled"
+        )
+    signal_poll_seconds = (
+        min(0.001, scheduler_tick_seconds) if scheduler_tick_seconds > 0 else 0.0
+    )
+    next_scheduler_tick = time.monotonic()
     scheduler_name = 'llf_dag' if approach_module == 'llf-dag' else 'edf'
     task_scheduler = TaskSchedule(
         tasks_list, 
@@ -172,8 +178,10 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     )
     # controller signal response loop
     while True: 
-        # avoid to busy loop
-        await asyncio.sleep(scheduler_tick_seconds)
+        # Keep feedback routing responsive without treating every queue poll as
+        # a scheduler tick.  The scheduling/overload cadence is gated below by
+        # the monotonic clock.
+        await asyncio.sleep(signal_poll_seconds)
         # Process controller-directed feedback before scanning the scheduling
         # queue. In particular, a DELIVERY must release the handler before the
         # next overload sample and dispatch decision.
@@ -252,13 +260,19 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
         except queue.Empty:
             pass
 
+        scheduler_tick_due = (
+            scheduler_tick_seconds == 0
+            or time.monotonic() >= next_scheduler_tick
+        )
         # when all handlers are ready and tasks are not generated, generate tasks
         if(not tasksGeneratedReady and all(allReady.values())):
             task_scheduler.generate_task_list()
             tasksGeneratedReady = True
+            next_scheduler_tick = time.monotonic()
             logger.info(f"[CTRL] Tasks generated, offline scheduler: {task_scheduler.scheduler_name}, start time: {task_scheduler.TaskStartTime}, finished time: {time.time()}")
         # Distribute the tasks in TaskQueue
-        elif(tasksGeneratedReady):
+        elif(tasksGeneratedReady and scheduler_tick_due):
             continue_distribution = task_scheduler.distribute_tasks()
+            next_scheduler_tick = time.monotonic() + scheduler_tick_seconds
             if(not continue_distribution):
                 break

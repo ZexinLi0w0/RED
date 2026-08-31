@@ -144,8 +144,8 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
         transient_duration_seconds=0.65,
         release_horizon_seconds=1.5,
         gpu_threshold=100.0,
-        queue_threshold=4,
-        queue_recovery_threshold=3,
+        queue_threshold=8,
+        queue_recovery_threshold=6,
         persistence_window=3,
         device="agx_orin",
         platform_label="AGX Orin",
@@ -154,19 +154,19 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     )
 
     assert plan["deadline_factor"] == 8.0
-    assert plan["arrival_scale"] == 5.0
-    assert plan["queue_threshold"] == 4
-    assert plan["queue_recovery_threshold"] == 3
+    assert plan["arrival_scale"] == 4.0
+    assert plan["queue_threshold"] == 8
+    assert plan["queue_recovery_threshold"] == 6
     assert plan["persistence_window"] == 3
     assert plan["scheduler_tick_seconds"] == 0.005
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
-    ] == [28, 36, 44, 40, 56]
+    ] == [40, 48, 60, 60, 80]
     assert [
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
-    ] == [0, 2, 4, 3, 7]
+    ] == [0, 2, 5, 5, 10]
 
     config = json.loads(AGX_ORIN_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
     assert config["RuntimeProfile"]["torch_device"] == "cuda:0"
@@ -185,7 +185,7 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
         )
     )
     assert burst_config["scheduler_tick_seconds"] == 0.005
-    assert burst_config["queue_recovery_threshold"] == 3
+    assert burst_config["queue_recovery_threshold"] == 6
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:

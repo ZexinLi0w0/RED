@@ -27,8 +27,8 @@ git pull --ff-only
   --transient-duration-seconds 0.65 \
   --release-horizon-seconds 1.5 \
   --gpu-threshold 100 \
-  --queue-threshold 4 \
-  --queue-recovery-threshold 3 \
+  --queue-threshold 8 \
+  --queue-recovery-threshold 6 \
   --persistence-window 3 \
   --scheduler-tick-seconds 0.005 \
   --device agx_orin \

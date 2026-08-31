@@ -7,6 +7,19 @@ from control_signal import convert_args_to_dict, generate_signal, parse_signal, 
 from AbstractHandler import HandlerStatus
 
 
+# A single multiprocessing queue carries both controller-directed replies and
+# handler-directed commands.  Without a non-zero backoff, a handler can remove
+# a reply addressed to the controller, put it back, and immediately win the
+# same queue race again.  A short backoff gives the addressed consumer a
+# deterministic opportunity to receive the signal.
+FOREIGN_SIGNAL_REQUEUE_BACKOFF_SECONDS = 0.002
+
+
+async def _requeue_foreign_signal(control_queue, signal_message):
+    control_queue.put(signal_message)
+    await asyncio.sleep(FOREIGN_SIGNAL_REQUEUE_BACKOFF_SECONDS)
+
+
 def _valid_handler_output(output):
     """Return whether a handler produced its explicit success contract."""
     return (
@@ -38,7 +51,7 @@ async def handle_signaling(control_queue, base_time, config=(), logger=logging, 
             signal_handlerid, signal_command, *signal_args = parse_signal(signal_message)
             if(signal_handlerid != handler_id):
                 # put it back until the correct receiver handle it
-                control_queue.put(signal_message)
+                await _requeue_foreign_signal(control_queue, signal_message)
                 continue
             # logger.info(f"[{handler_id}][{handler_name}] Received signal: [{signal_command}]")
             # depends on different signal to execute handlers
@@ -170,7 +183,7 @@ async def handle_signaling_SIMO(control_queue, base_time, config=(), logger=logg
             signal_handlerid, signal_command, *signal_args = parse_signal(signal_message)
             if(signal_handlerid != handler_id):
                 # put it back until the correct receiver handle it
-                control_queue.put(signal_message)
+                await _requeue_foreign_signal(control_queue, signal_message)
                 continue
             # logger.info(f"[{handler_id}][{handler_name}] Received signal: [{signal_command}]")
             # depends on different signal to execute handlers
