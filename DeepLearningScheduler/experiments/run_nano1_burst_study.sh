@@ -61,7 +61,7 @@ PLAN_ARGUMENTS=(
   --transient-duration-seconds 3
   --release-horizon-seconds 10
   --gpu-threshold 100
-  --queue-threshold 11
+  --queue-threshold 15
   --persistence-window 1
   --device nano1
   --platform-label "Jetson Orin Nano"
