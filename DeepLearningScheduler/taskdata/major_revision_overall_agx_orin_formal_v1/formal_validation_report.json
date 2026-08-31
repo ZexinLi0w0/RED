@@ -1,0 +1,2575 @@
+{
+  "schema_version": 1,
+  "input_root": "/experiment/zexin/ATC23/DeepLearningScheduler/taskdata/major_revision_overall_agx_orin_formal_v1",
+  "validation": {
+    "complete_run_count": 75,
+    "paired_group_count": 15,
+    "methods": [
+      "baseline",
+      "feedback",
+      "feedback-fine-grained",
+      "fine-grained",
+      "llf-dag"
+    ],
+    "git_commits": [
+      "088dd037056303fba642fedbf3a17f4ca97f6d6c"
+    ],
+    "torch_devices": [
+      "cuda:0"
+    ],
+    "execution_error_count": 0,
+    "problems": []
+  },
+  "aggregates": [
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "baseline",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 4.4536762714385985,
+          "sample_sd": 1.0713461698124782,
+          "ci95_low": 3.123637561826194,
+          "ci95_high": 5.783714981051003,
+          "minimum": 3.5121586322784424,
+          "maximum": 5.9137420654296875
+        },
+        "deadline_missing_rate": {
+          "mean": 0.875,
+          "sample_sd": 0.09354143466934851,
+          "ci95_low": 0.7588715883170704,
+          "ci95_high": 0.9911284116829296,
+          "minimum": 0.75,
+          "maximum": 0.95
+        },
+        "qoe_score": {
+          "mean": 0.44770981718719843,
+          "sample_sd": 0.17015010228131808,
+          "ci95_low": 0.2364744304790216,
+          "ci95_high": 0.6589452038953753,
+          "minimum": 0.24354783548010173,
+          "maximum": 0.6324093411331195
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-emergency_obstacle_avoidance-tight-baseline-seed303-cfgd5f5ba03a8a6",
+        "seed": 303,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 3.7878236770629883,
+          "deadline_missing_rate": 0.925,
+          "qoe_score": 0.5344584011524335
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "3.787",
+          "deadline_missing_rate": "0.925",
+          "qoe_score": "0.534"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "feedback",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 6.403437185287475,
+          "sample_sd": 5.089448482112803,
+          "ci95_low": 0.08506532516969934,
+          "ci95_high": 12.721809045405251,
+          "minimum": 3.7005906105041504,
+          "maximum": 15.482772827148438
+        },
+        "deadline_missing_rate": {
+          "mean": 0.9299999999999999,
+          "sample_sd": 0.062249497989943656,
+          "ci95_low": 0.8527194306439192,
+          "ci95_high": 1.0072805693560807,
+          "minimum": 0.85,
+          "maximum": 0.975
+        },
+        "qoe_score": {
+          "mean": 0.3836437604977883,
+          "sample_sd": 0.1930514209789453,
+          "ci95_low": 0.14397718952136887,
+          "ci95_high": 0.6233103314742078,
+          "minimum": 0.07059347569844036,
+          "maximum": 0.5620037972580466
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-emergency_obstacle_avoidance-tight-feedback-seed303-cfgd5f5ba03a8a6",
+        "seed": 303,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 4.389094114303589,
+          "deadline_missing_rate": 0.975,
+          "qoe_score": 0.3994964361150105
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "4.389",
+          "deadline_missing_rate": "0.975",
+          "qoe_score": "0.399"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.864635467529297,
+          "sample_sd": 0.8105230841495767,
+          "ci95_low": 1.8583994745989627,
+          "ci95_high": 3.870871460459631,
+          "minimum": 2.06709361076355,
+          "maximum": 4.067837238311768
+        },
+        "deadline_missing_rate": {
+          "mean": 0.65,
+          "sample_sd": 0.2904737509655563,
+          "ci95_low": 0.2893870218641598,
+          "ci95_high": 1.0106129781358402,
+          "minimum": 0.325,
+          "maximum": 0.925
+        },
+        "qoe_score": {
+          "mean": 0.8511847892607538,
+          "sample_sd": 0.23521906205330043,
+          "ci95_low": 0.5591685702413016,
+          "ci95_high": 1.143201008280206,
+          "minimum": 0.4618034998384681,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-emergency_obstacle_avoidance-tight-feedback-fine-grained-seed101-cfgd5f5ba03a8a6",
+        "seed": 101,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.7638325691223145,
+          "deadline_missing_rate": 0.775,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.763",
+          "deadline_missing_rate": "0.775",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 3.0517147064208983,
+          "sample_sd": 0.36705404527271873,
+          "ci95_low": 2.596029977722992,
+          "ci95_high": 3.5073994351188045,
+          "minimum": 2.8494749069213867,
+          "maximum": 3.696061134338379
+        },
+        "deadline_missing_rate": {
+          "mean": 0.515,
+          "sample_sd": 0.31354824190226294,
+          "ci95_low": 0.1257408503323269,
+          "ci95_high": 0.9042591496676731,
+          "minimum": 0.2,
+          "maximum": 0.975
+        },
+        "qoe_score": {
+          "mean": 0.9020234617773301,
+          "sample_sd": 0.19064096008211384,
+          "ci95_low": 0.6653493934962382,
+          "ci95_high": 1.138697530058422,
+          "minimum": 0.5635118098747142,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-emergency_obstacle_avoidance-tight-fine-grained-seed505-cfgd5f5ba03a8a6",
+        "seed": 505,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.8503317832946777,
+          "deadline_missing_rate": 0.525,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.850",
+          "deadline_missing_rate": "0.525",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "llf-dag",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 11.32859010696411,
+          "sample_sd": 4.629229550907982,
+          "ci95_low": 5.581563915171261,
+          "ci95_high": 17.075616298756962,
+          "minimum": 5.172341585159302,
+          "maximum": 15.414291620254517
+        },
+        "deadline_missing_rate": {
+          "mean": 0.965,
+          "sample_sd": 0.0518411033833193,
+          "ci95_low": 0.9006410876412598,
+          "ci95_high": 1.02935891235874,
+          "minimum": 0.875,
+          "maximum": 1.0
+        },
+        "qoe_score": {
+          "mean": 0.13954069590030405,
+          "sample_sd": 0.09900709179928216,
+          "ci95_low": 0.016626862510445442,
+          "ci95_high": 0.26245452929016266,
+          "minimum": 0.07095407763410362,
+          "maximum": 0.30061114225712704
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-emergency_obstacle_avoidance-tight-llf-dag-seed404-cfgd5f5ba03a8a6",
+        "seed": 404,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 13.842308044433594,
+          "deadline_missing_rate": 1.0,
+          "qoe_score": 0.08037912057119917
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "13.842",
+          "deadline_missing_rate": "1.000",
+          "qoe_score": "0.080"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "baseline",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 3.545298957824707,
+          "sample_sd": 1.489457333612433,
+          "ci95_low": 1.6961898968688431,
+          "ci95_high": 5.39440801878057,
+          "minimum": 2.175786256790161,
+          "maximum": 5.982671499252319
+        },
+        "deadline_missing_rate": {
+          "mean": 0.76,
+          "sample_sd": 0.42778499272414877,
+          "ci95_low": 0.22891992920087845,
+          "ci95_high": 1.2910800707991217,
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "qoe_score": {
+          "mean": 0.56775951084733,
+          "sample_sd": 0.30908942145351326,
+          "ci95_low": 0.1840358304454745,
+          "ci95_high": 0.9514831912491855,
+          "minimum": 0.20404881257435503,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-night_driving-tight-baseline-seed505-cfg1ce84465ded4",
+        "seed": 505,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 3.168403148651123,
+          "deadline_missing_rate": 0.9666666666666667,
+          "qoe_score": 0.5148723020729273
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "3.168",
+          "deadline_missing_rate": "0.966",
+          "qoe_score": "0.514"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "feedback",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.9629627227783204,
+          "sample_sd": 0.9852705242011005,
+          "ci95_low": 1.7397839094756682,
+          "ci95_high": 4.186141536080973,
+          "minimum": 1.8892788887023926,
+          "maximum": 4.327903747558594
+        },
+        "deadline_missing_rate": {
+          "mean": 0.7,
+          "sample_sd": 0.3374742788552764,
+          "ci95_low": 0.2810375142755089,
+          "ci95_high": 1.118962485724491,
+          "minimum": 0.2,
+          "maximum": 0.9666666666666667
+        },
+        "qoe_score": {
+          "mean": 0.664179475887236,
+          "sample_sd": 0.3172252354342753,
+          "ci95_low": 0.27035546766088914,
+          "ci95_high": 1.0580034841135828,
+          "minimum": 0.31633770741660616,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-night_driving-tight-feedback-seed202-cfg1ce84465ded4",
+        "seed": 202,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 3.0679783821105957,
+          "deadline_missing_rate": 0.9333333333333333,
+          "qoe_score": 0.54446791772081
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "3.067",
+          "deadline_missing_rate": "0.933",
+          "qoe_score": "0.544"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.4617176055908203,
+          "sample_sd": 0.884769877146354,
+          "ci95_low": 1.363306822165293,
+          "ci95_high": 3.5601283890163478,
+          "minimum": 1.5959722995758057,
+          "maximum": 3.610278844833374
+        },
+        "deadline_missing_rate": {
+          "mean": 0.76,
+          "sample_sd": 0.2832352771499734,
+          "ci95_low": 0.40837333333333337,
+          "ci95_high": 1.1116266666666665,
+          "minimum": 0.43333333333333335,
+          "maximum": 0.9666666666666667
+        },
+        "qoe_score": {
+          "mean": 0.7691773511692345,
+          "sample_sd": 0.2725579478185145,
+          "ci95_low": 0.4308062145322369,
+          "ci95_high": 1.107548487806232,
+          "minimum": 0.4154962984260185,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-night_driving-tight-feedback-fine-grained-seed202-cfg1ce84465ded4",
+        "seed": 202,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.392186164855957,
+          "deadline_missing_rate": 0.9666666666666667,
+          "qoe_score": 0.8879301746383952
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.392",
+          "deadline_missing_rate": "0.966",
+          "qoe_score": "0.887"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.212950277328491,
+          "sample_sd": 0.07337667906930503,
+          "ci95_low": 2.1218557027690244,
+          "ci95_high": 2.3040448518879577,
+          "minimum": 2.1761040687561035,
+          "maximum": 2.343831777572632
+        },
+        "deadline_missing_rate": {
+          "mean": 0.52,
+          "sample_sd": 0.21421692017412838,
+          "ci95_low": 0.25405720381171365,
+          "ci95_high": 0.7859427961882863,
+          "minimum": 0.3,
+          "maximum": 0.7666666666666667
+        },
+        "qoe_score": {
+          "mean": 0.985980577086162,
+          "sample_sd": 0.031348382640659894,
+          "ci95_low": 0.9470626590773479,
+          "ci95_high": 1.0248984950949762,
+          "minimum": 0.9299028854308101,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-night_driving-tight-fine-grained-seed505-cfg1ce84465ded4",
+        "seed": 505,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.179042339324951,
+          "deadline_missing_rate": 0.7333333333333333,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.179",
+          "deadline_missing_rate": "0.733",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "llf-dag",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.7193854808807374,
+          "sample_sd": 0.35503985115704506,
+          "ci95_low": 2.2786159529731047,
+          "ci95_high": 3.16015500878837,
+          "minimum": 2.295950412750244,
+          "maximum": 3.283301830291748
+        },
+        "deadline_missing_rate": {
+          "mean": 0.9266666666666666,
+          "sample_sd": 0.0547722557505166,
+          "ci95_low": 0.8586688314070057,
+          "ci95_high": 0.9946645019263276,
+          "minimum": 0.8666666666666667,
+          "maximum": 0.9666666666666667
+        },
+        "qoe_score": {
+          "mean": 0.7143337660609959,
+          "sample_sd": 0.17420290183686782,
+          "ci95_low": 0.4980669707912664,
+          "ci95_high": 0.9306005613307253,
+          "minimum": 0.48472655105042367,
+          "maximum": 0.9755670993576266
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-night_driving-tight-llf-dag-seed404-cfg1ce84465ded4",
+        "seed": 404,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.671482563018799,
+          "deadline_missing_rate": 0.8666666666666667,
+          "qoe_score": 0.7043092177157849
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.671",
+          "deadline_missing_rate": "0.866",
+          "qoe_score": "0.704"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "baseline",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 8.80792851448059,
+          "sample_sd": 4.016861903752687,
+          "ci95_low": 3.821135287699761,
+          "ci95_high": 13.79472174126142,
+          "minimum": 7.011409282684326,
+          "maximum": 15.993509531021118
+        },
+        "deadline_missing_rate": {
+          "mean": 0.54,
+          "sample_sd": 0.3319638534539566,
+          "ci95_low": 0.12787851422183782,
+          "ci95_high": 0.9521214857781622,
+          "minimum": 0.02,
+          "maximum": 0.94
+        },
+        "qoe_score": {
+          "mean": 0.8196346513534443,
+          "sample_sd": 0.4033091803591484,
+          "ci95_low": 0.31894044351060546,
+          "ci95_high": 1.320328859196283,
+          "minimum": 0.09817325676722108,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-urban_navigation-tight-baseline-seed303-cfga61d455068ed",
+        "seed": 303,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 7.011582612991333,
+          "deadline_missing_rate": 0.02,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "7.011",
+          "deadline_missing_rate": "0.020",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "feedback",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 11.904317712783813,
+          "sample_sd": 7.242420871353023,
+          "ci95_low": 2.913106112251029,
+          "ci95_high": 20.895529313316597,
+          "minimum": 4.556489706039429,
+          "maximum": 21.58704710006714
+        },
+        "deadline_missing_rate": {
+          "mean": 0.784,
+          "sample_sd": 0.31413372948475304,
+          "ci95_low": 0.3940139880252114,
+          "ci95_high": 1.1739860119747887,
+          "minimum": 0.26,
+          "maximum": 1.0
+        },
+        "qoe_score": {
+          "mean": 0.4902988602514774,
+          "sample_sd": 0.47457899284003985,
+          "ci95_low": -0.09887432114572114,
+          "ci95_high": 1.079472041648676,
+          "minimum": 0.06224170556001185,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-urban_navigation-tight-feedback-seed101-cfga61d455068ed",
+        "seed": 101,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 9.449754476547241,
+          "deadline_missing_rate": 0.96,
+          "qoe_score": 0.30240598531382157
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "9.449",
+          "deadline_missing_rate": "0.960",
+          "qoe_score": "0.302"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 2.9824740886688232,
+          "sample_sd": 1.4755473899401221,
+          "ci95_low": 1.150633735114919,
+          "ci95_high": 4.814314442222727,
+          "minimum": 1.8523614406585693,
+          "maximum": 5.502649784088135
+        },
+        "deadline_missing_rate": {
+          "mean": 0.024,
+          "sample_sd": 0.0433589667773576,
+          "ci95_low": -0.029828637136750914,
+          "ci95_high": 0.07782863713675092,
+          "minimum": 0.0,
+          "maximum": 0.1
+        },
+        "qoe_score": {
+          "mean": 1.0,
+          "sample_sd": 0.0,
+          "ci95_low": 1.0,
+          "ci95_high": 1.0,
+          "minimum": 1.0,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-urban_navigation-tight-feedback-fine-grained-seed303-cfga61d455068ed",
+        "seed": 303,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 2.7280147075653076,
+          "deadline_missing_rate": 0.0,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "2.728",
+          "deadline_missing_rate": "0.000",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "fine-grained",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 7.061247825622559,
+          "sample_sd": 0.06811860319630346,
+          "ci95_low": 6.976680967917108,
+          "ci95_high": 7.145814683328009,
+          "minimum": 7.010782480239868,
+          "maximum": 7.141046762466431
+        },
+        "deadline_missing_rate": {
+          "mean": 0.276,
+          "sample_sd": 0.3950696141188284,
+          "ci95_low": -0.21446507522554537,
+          "ci95_high": 0.7664650752255454,
+          "minimum": 0.0,
+          "maximum": 0.9
+        },
+        "qoe_score": {
+          "mean": 1.0,
+          "sample_sd": 0.0,
+          "ci95_low": 1.0,
+          "ci95_high": 1.0,
+          "minimum": 1.0,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-urban_navigation-tight-fine-grained-seed404-cfga61d455068ed",
+        "seed": 404,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 7.012686729431152,
+          "deadline_missing_rate": 0.0,
+          "qoe_score": 1.0
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "7.012",
+          "deadline_missing_rate": "0.000",
+          "qoe_score": "1.000"
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "llf-dag",
+      "n": 5,
+      "seeds": [
+        101,
+        202,
+        303,
+        404,
+        505
+      ],
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 10.300826692581177,
+          "sample_sd": 3.8341551363951063,
+          "ci95_low": 5.540857511977939,
+          "ci95_high": 15.060795873184414,
+          "minimum": 7.207129955291748,
+          "maximum": 16.43886375427246
+        },
+        "deadline_missing_rate": {
+          "mean": 0.936,
+          "sample_sd": 0.03286335345030994,
+          "ci95_low": 0.8952012988442035,
+          "ci95_high": 0.9767987011557966,
+          "minimum": 0.9,
+          "maximum": 0.98
+        },
+        "qoe_score": {
+          "mean": 0.4692045813313087,
+          "sample_sd": 0.3627450672833534,
+          "ci95_low": 0.018869297739205315,
+          "ci95_high": 0.9195398649234121,
+          "minimum": 0.09385915735649171,
+          "maximum": 1.0
+        }
+      },
+      "paper_presentation": {
+        "selection_rule": "median run by end-to-end latency; for an even repetition count, one of the two central runs is selected by a reproducible random choice",
+        "run_id": "agx-urban_navigation-tight-llf-dag-seed404-cfga61d455068ed",
+        "seed": 404,
+        "raw_metrics": {
+          "end_to_end_latency_seconds": 8.339844703674316,
+          "deadline_missing_rate": 0.92,
+          "qoe_score": 0.46729042005908206
+        },
+        "display_metrics": {
+          "end_to_end_latency_seconds": "8.339",
+          "deadline_missing_rate": "0.920",
+          "qoe_score": "0.467"
+        }
+      }
+    }
+  ],
+  "paired_comparisons": [
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "reference_method": "baseline",
+      "candidate_method": "feedback",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": -1.949760913848877,
+          "sample_sd": 4.376215957772737,
+          "ci95_low": -7.382679600140586,
+          "ci95_high": 3.4831577724428318,
+          "minimum": -9.56903076171875,
+          "maximum": 1.5746262073516846,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -1.0965287685394287,
+            "202": -0.05660080909729004,
+            "303": -0.6012704372406006,
+            "404": -9.56903076171875,
+            "505": 1.5746262073516846
+          },
+          "wins": 1,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": -0.05499999999999998,
+          "sample_sd": 0.11645814698852114,
+          "ci95_low": -0.1995787065926376,
+          "ci95_high": 0.08957870659263763,
+          "minimum": -0.22499999999999998,
+          "maximum": 0.09999999999999998,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.22499999999999998,
+            "202": -0.07499999999999996,
+            "303": -0.04999999999999993,
+            "404": -0.025000000000000022,
+            "505": 0.09999999999999998
+          },
+          "wins": 1,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": -0.0640660566894101,
+          "sample_sd": 0.20757284149646782,
+          "ci95_low": -0.32176046213341847,
+          "ci95_high": 0.1936283487545983,
+          "minimum": -0.2666453371276727,
+          "maximum": 0.2708580993333371,
+          "definition": "feedback_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.2666453371276727,
+            "202": -0.016626720833630593,
+            "303": -0.13496196503742297,
+            "404": -0.17295435978166135,
+            "505": 0.2708580993333371
+          },
+          "wins": 1,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "reference_method": "baseline",
+      "candidate_method": "feedback-fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 1.5890408039093018,
+          "sample_sd": 1.2567569371999416,
+          "ci95_low": 0.028821126881452885,
+          "ci95_high": 3.1492604809371505,
+          "minimum": 0.5819604396820068,
+          "maximum": 3.6951913833618164,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.7483260631561279,
+            "202": 1.7123465538024902,
+            "303": 0.5819604396820068,
+            "404": 3.6951913833618164,
+            "505": 1.2073795795440674
+          },
+          "wins": 5,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.22499999999999998,
+          "sample_sd": 0.2899353376185801,
+          "ci95_low": -0.13494455684174478,
+          "ci95_high": 0.5849445568417447,
+          "minimum": -0.025000000000000022,
+          "maximum": 0.6,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.025000000000000022,
+            "202": 0.47500000000000003,
+            "303": 0.050000000000000044,
+            "404": 0.6,
+            "505": 0.02499999999999991
+          },
+          "wins": 4,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.40347497207355537,
+          "sample_sd": 0.2260040128158575,
+          "ci95_low": 0.12289891361297162,
+          "ci95_high": 0.6840510305341392,
+          "minimum": 0.17065780191375857,
+          "maximum": 0.7564521645198983,
+          "definition": "feedback-fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.36759065886688047,
+            "202": 0.4630121897543722,
+            "303": 0.2596620453128673,
+            "404": 0.7564521645198983,
+            "505": 0.17065780191375857
+          },
+          "wins": 5,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "reference_method": "baseline",
+      "candidate_method": "fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 1.4019615650177002,
+          "sample_sd": 0.8609114447252227,
+          "ci95_low": 0.33317018899279915,
+          "ci95_high": 2.4707529410426012,
+          "minimum": 0.4992508888244629,
+          "maximum": 2.4248850345611572,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.4992508888244629,
+            "202": 0.9299652576446533,
+            "303": 0.938025712966919,
+            "404": 2.2176809310913086,
+            "505": 2.4248850345611572
+          },
+          "wins": 5,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.36,
+          "sample_sd": 0.3018691769624717,
+          "ci95_low": -0.01476000000000005,
+          "ci95_high": 0.7347600000000001,
+          "minimum": -0.025000000000000022,
+          "maximum": 0.675,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.125,
+            "202": 0.6000000000000001,
+            "303": 0.675,
+            "404": -0.025000000000000022,
+            "505": 0.42499999999999993
+          },
+          "wins": 4,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.4543136445901316,
+          "sample_sd": 0.16021502888438607,
+          "ci95_low": 0.2554123031915795,
+          "ci95_high": 0.6532149859886838,
+          "minimum": 0.3141961578788165,
+          "maximum": 0.7088543020752904,
+          "definition": "fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.3141961578788165,
+            "202": 0.4630121897543722,
+            "303": 0.4655415988475665,
+            "404": 0.31996397439461244,
+            "505": 0.7088543020752904
+          },
+          "wins": 5,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "reference_method": "baseline",
+      "candidate_method": "llf-dag",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": -6.874913835525513,
+          "sample_sd": 4.81889554128703,
+          "ci95_low": -12.857403704894455,
+          "ci95_high": -0.8924239661565698,
+          "minimum": -11.902132987976074,
+          "maximum": -1.3929014205932617,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -11.902132987976074,
+            "202": -1.3929014205932617,
+            "303": -10.834130048751831,
+            "404": -7.928565979003906,
+            "505": -2.3168387413024902
+          },
+          "wins": 0,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": -0.09,
+          "sample_sd": 0.09117291264405235,
+          "ci95_low": -0.20318797462628263,
+          "ci95_high": 0.023187974626282623,
+          "minimum": -0.25,
+          "maximum": -0.025000000000000022,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.25,
+            "202": -0.07499999999999996,
+            "303": -0.04999999999999993,
+            "404": -0.050000000000000044,
+            "505": -0.025000000000000022
+          },
+          "wins": 0,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": -0.30816912128689433,
+          "sample_sd": 0.1924873281378979,
+          "ci95_low": -0.5471353907776235,
+          "ci95_high": -0.06920285179616514,
+          "minimum": -0.5614552634990159,
+          "maximum": -0.12079758223270573,
+          "definition": "llf-dag_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.5614552634990159,
+            "202": -0.23637666798850077,
+            "303": -0.4590473778053469,
+            "404": -0.16316871490890256,
+            "505": -0.12079758223270573
+          },
+          "wins": 0,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "reference_method": "baseline",
+      "candidate_method": "feedback",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 0.5823362350463868,
+          "sample_sd": 1.8296128131562124,
+          "ci95_low": -1.689063928288819,
+          "ci95_high": 2.853736398381592,
+          "minimum": -1.709815502166748,
+          "maximum": 2.5942962169647217,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -1.709815502166748,
+            "202": -0.8921921253204346,
+            "303": 1.8922667503356934,
+            "404": 2.5942962169647217,
+            "505": 1.0271258354187012
+          },
+          "wins": 3,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.06000000000000001,
+          "sample_sd": 0.6166216199763208,
+          "ci95_low": -0.7055141231297506,
+          "ci95_high": 0.8255141231297507,
+          "minimum": -0.9333333333333333,
+          "maximum": 0.6666666666666667,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.06666666666666665,
+            "202": -0.9333333333333333,
+            "303": 0.6666666666666667,
+            "404": 0.033333333333333326,
+            "505": 0.4666666666666667
+          },
+          "wins": 4,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.09641996503990602,
+          "sample_sd": 0.5030103345532394,
+          "ci95_low": -0.5280497303228879,
+          "ci95_high": 0.7208896604027,
+          "minimum": -0.45553208227918995,
+          "maximum": 0.6134232050917483,
+          "definition": "feedback_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.4169619372645098,
+            "202": -0.45553208227918995,
+            "303": 0.6134232050917483,
+            "404": 0.2560429417244089,
+            "505": 0.48512769792707267
+          },
+          "wins": 3,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "reference_method": "baseline",
+      "candidate_method": "feedback-fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 1.0835813522338866,
+          "sample_sd": 1.9416189468310832,
+          "ci95_low": -1.3268704992477138,
+          "ci95_high": 3.494033203715487,
+          "minimum": -0.441875696182251,
+          "maximum": 4.386699199676514,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.9823818206787109,
+            "202": -0.2163999080657959,
+            "303": 0.7071013450622559,
+            "404": 4.386699199676514,
+            "505": -0.441875696182251
+          },
+          "wins": 3,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.0,
+          "sample_sd": 0.6155395104206463,
+          "ci95_low": -0.7641707220539429,
+          "ci95_high": 0.7641707220539429,
+          "minimum": -0.9666666666666667,
+          "maximum": 0.5666666666666667,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.5,
+            "202": -0.9666666666666667,
+            "303": -0.09999999999999998,
+            "404": 0.5666666666666667,
+            "505": 0.0
+          },
+          "wins": 2,
+          "ties": 1
+        },
+        "qoe_score": {
+          "mean": 0.2014178403219045,
+          "sample_sd": 0.37032301371263476,
+          "ci95_low": -0.25832519808774546,
+          "ci95_high": 0.6611608787315544,
+          "minimum": -0.11206982536160481,
+          "maximum": 0.795951187425645,
+          "definition": "feedback-fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.26670035531888403,
+            "202": -0.11206982536160481,
+            "303": 0.15588348787350714,
+            "404": 0.795951187425645,
+            "505": -0.09937600364690885
+          },
+          "wins": 3,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "reference_method": "baseline",
+      "candidate_method": "fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 1.332348680496216,
+          "sample_sd": 1.4207128395252357,
+          "ci95_low": -0.43141650115619434,
+          "ci95_high": 3.096113862148626,
+          "minimum": -0.0003349781036376953,
+          "maximum": 3.6388397216796875,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.4419841766357422,
+            "202": -0.0003349781036376953,
+            "303": 1.5918936729431152,
+            "404": 3.6388397216796875,
+            "505": 0.9893608093261719
+          },
+          "wins": 4,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.24000000000000002,
+          "sample_sd": 0.4009710435652153,
+          "ci95_low": -0.2577914929856564,
+          "ci95_high": 0.7377914929856565,
+          "minimum": -0.4,
+          "maximum": 0.6666666666666667,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.6666666666666667,
+            "202": -0.4,
+            "303": 0.4666666666666667,
+            "404": 0.23333333333333328,
+            "505": 0.2333333333333334
+          },
+          "wins": 4,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.41822106623883204,
+          "sample_sd": 0.2894329910449263,
+          "ci95_low": 0.05890015505656415,
+          "ci95_high": 0.7775419774210999,
+          "minimum": 0.0,
+          "maximum": 0.7258540728564551,
+          "definition": "fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.26670035531888403,
+            "202": 0.0,
+            "303": 0.6134232050917483,
+            "404": 0.7258540728564551,
+            "505": 0.48512769792707267
+          },
+          "wins": 4,
+          "ties": 1
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "reference_method": "baseline",
+      "candidate_method": "llf-dag",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 0.8259134769439698,
+          "sample_sd": 1.483405679529475,
+          "ci95_low": -1.0156826676321893,
+          "ci95_high": 2.6675096215201286,
+          "minimum": -0.48438310623168945,
+          "maximum": 3.3111889362335205,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.06793498992919922,
+            "202": -0.48438310623168945,
+            "303": 0.4982438087463379,
+            "404": 3.3111889362335205,
+            "505": 0.8724527359008789
+          },
+          "wins": 3,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": -0.16666666666666669,
+          "sample_sd": 0.45643546458763845,
+          "ci95_low": -0.7333152938305085,
+          "ci95_high": 0.3999819604971752,
+          "minimum": -0.9666666666666667,
+          "maximum": 0.1333333333333333,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.0,
+            "202": -0.9666666666666667,
+            "303": -0.09999999999999998,
+            "404": 0.1333333333333333,
+            "505": 0.09999999999999998
+          },
+          "wins": 2,
+          "ties": 1
+        },
+        "qoe_score": {
+          "mean": 0.14657425521366588,
+          "sample_sd": 0.335408404280028,
+          "ci95_low": -0.26982351965292817,
+          "ci95_high": 0.5629720300802599,
+          "minimum": -0.28974128690905143,
+          "maximum": 0.5002604051414299,
+          "definition": "llf-dag_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.036492395590920323,
+            "202": -0.28974128690905143,
+            "303": 0.09814975614217197,
+            "404": 0.5002604051414299,
+            "505": 0.4606947972846993
+          },
+          "wins": 3,
+          "ties": 0
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "reference_method": "baseline",
+      "candidate_method": "feedback",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": -3.0963891983032226,
+          "sample_sd": 10.079047415154747,
+          "ci95_low": -15.609173203981873,
+          "ci95_high": 9.416394807375427,
+          "minimum": -14.575464487075806,
+          "maximum": 11.43701982498169,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -2.438264846801758,
+            "202": -10.245790243148804,
+            "303": -14.575464487075806,
+            "404": 11.43701982498169,
+            "505": 0.34055376052856445
+          },
+          "wins": 2,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": -0.24399999999999997,
+          "sample_sd": 0.6093274981485736,
+          "ci95_low": -1.0004587266044325,
+          "ci95_high": 0.5124587266044326,
+          "minimum": -0.98,
+          "maximum": 0.6799999999999999,
+          "definition": "baseline_minus_feedback",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.3999999999999999,
+            "202": -0.43999999999999995,
+            "303": -0.98,
+            "404": 0.6799999999999999,
+            "505": -0.07999999999999996
+          },
+          "wins": 1,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": -0.3293357911019668,
+          "sample_sd": 0.7859482011225406,
+          "ci95_low": -1.3050629283224084,
+          "ci95_high": 0.6463913461184747,
+          "minimum": -0.9377582944399881,
+          "maximum": 0.9018267432327789,
+          "definition": "feedback_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.6975940146861784,
+            "202": -0.9131533896164464,
+            "303": -0.9377582944399881,
+            "404": 0.9018267432327789,
+            "505": 0.0
+          },
+          "wins": 1,
+          "ties": 1
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "reference_method": "baseline",
+      "candidate_method": "feedback-fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 5.825454425811768,
+          "sample_sd": 4.836088255804237,
+          "ci95_low": -0.17837959587276409,
+          "ci95_high": 11.8292884474963,
+          "minimum": 1.5088398456573486,
+          "maximum": 14.141148090362549,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 1.5088398456573486,
+            "202": 5.027418375015259,
+            "303": 4.283567905426025,
+            "404": 14.141148090362549,
+            "505": 4.166297912597656
+          },
+          "wins": 5,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.516,
+          "sample_sd": 0.3269250678672408,
+          "ci95_low": 0.11013398987350526,
+          "ci95_high": 0.9218660101264948,
+          "minimum": 0.02,
+          "maximum": 0.94,
+          "definition": "baseline_minus_feedback-fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.54,
+            "202": 0.54,
+            "303": 0.02,
+            "404": 0.94,
+            "505": 0.54
+          },
+          "wins": 5,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.1803653486465558,
+          "sample_sd": 0.4033091803591484,
+          "ci95_low": -0.320328859196283,
+          "ci95_high": 0.6810595564893946,
+          "minimum": 0.0,
+          "maximum": 0.9018267432327789,
+          "definition": "feedback-fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.0,
+            "202": 0.0,
+            "303": 0.0,
+            "404": 0.9018267432327789,
+            "505": 0.0
+          },
+          "wins": 1,
+          "ties": 4
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "reference_method": "baseline",
+      "candidate_method": "fine-grained",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": 1.7466806888580322,
+          "sample_sd": 4.044489629112385,
+          "ci95_low": -3.2744113903594183,
+          "ci95_high": 6.767772768075483,
+          "minimum": -0.1293952465057373,
+          "maximum": 8.980822801589966,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.00022220611572265625,
+            "202": 0.0006268024444580078,
+            "303": -0.11887311935424805,
+            "404": 8.980822801589966,
+            "505": -0.1293952465057373
+          },
+          "wins": 3,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": 0.264,
+          "sample_sd": 0.579378977871997,
+          "ci95_low": -0.45527868864300425,
+          "ci95_high": 0.9832786886430043,
+          "minimum": -0.42,
+          "maximum": 0.94,
+          "definition": "baseline_minus_fine-grained",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.56,
+            "202": 0.5,
+            "303": -0.42,
+            "404": 0.94,
+            "505": -0.26
+          },
+          "wins": 3,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": 0.1803653486465558,
+          "sample_sd": 0.4033091803591484,
+          "ci95_low": -0.320328859196283,
+          "ci95_high": 0.6810595564893946,
+          "minimum": 0.0,
+          "maximum": 0.9018267432327789,
+          "definition": "fine-grained_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.0,
+            "202": 0.0,
+            "303": 0.0,
+            "404": 0.9018267432327789,
+            "505": 0.0
+          },
+          "wins": 1,
+          "ties": 4
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "reference_method": "baseline",
+      "candidate_method": "llf-dag",
+      "n": 5,
+      "metrics": {
+        "end_to_end_latency_seconds": {
+          "mean": -1.492898178100586,
+          "sample_sd": 6.29626598723701,
+          "ci95_low": -9.309491661145348,
+          "ci95_high": 6.323695304944176,
+          "minimum": -9.427454471588135,
+          "maximum": 7.653664827346802,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.19564032554626465,
+            "202": -9.427454471588135,
+            "303": -0.8602068424224854,
+            "404": 7.653664827346802,
+            "505": -4.634854078292847
+          },
+          "wins": 1,
+          "ties": 0
+        },
+        "deadline_missing_rate": {
+          "mean": -0.396,
+          "sample_sd": 0.3210607419165414,
+          "ci95_low": -0.7945856550554723,
+          "ci95_high": 0.002585655055472258,
+          "minimum": -0.88,
+          "maximum": 0.019999999999999907,
+          "definition": "baseline_minus_llf-dag",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": -0.36,
+            "202": -0.41999999999999993,
+            "303": -0.88,
+            "404": 0.019999999999999907,
+            "505": -0.33999999999999997
+          },
+          "wins": 1,
+          "ties": 0
+        },
+        "qoe_score": {
+          "mean": -0.35043007002213555,
+          "sample_sd": 0.5416448632520163,
+          "ci95_low": -1.0228631782806874,
+          "ci95_high": 0.3220030382364163,
+          "minimum": -0.9061408426435082,
+          "maximum": 0.36911716329186095,
+          "definition": "llf-dag_minus_baseline",
+          "positive_means_candidate_improves": true,
+          "per_seed": {
+            "101": 0.0,
+            "202": -0.9061408426435082,
+            "303": -0.3931832039662988,
+            "404": 0.36911716329186095,
+            "505": -0.8219434667927316
+          },
+          "wins": 1,
+          "ties": 1
+        }
+      }
+    }
+  ],
+  "atomic_subgroup_aggregates": [
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "baseline",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 40,
+              "sample_sd": 0.0,
+              "ci95_low": 40.0,
+              "ci95_high": 40.0,
+              "minimum": 40,
+              "maximum": 40
+            },
+            "deadline_missing_rate": {
+              "mean": 0.875,
+              "sample_sd": 0.09354143466934851,
+              "ci95_low": 0.7588715883170704,
+              "ci95_high": 0.9911284116829296,
+              "minimum": 0.75,
+              "maximum": 0.95
+            },
+            "qoe_score": {
+              "mean": 0.568897566538791,
+              "sample_sd": 0.18771964788106169,
+              "ci95_low": 0.3358502049373362,
+              "ci95_high": 0.8019449281402458,
+              "minimum": 0.36024725518228234,
+              "maximum": 0.7659374060589178
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "feedback",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 40,
+              "sample_sd": 0.0,
+              "ci95_low": 40.0,
+              "ci95_high": 40.0,
+              "minimum": 40,
+              "maximum": 40
+            },
+            "deadline_missing_rate": {
+              "mean": 0.9299999999999999,
+              "sample_sd": 0.062249497989943656,
+              "ci95_low": 0.8527194306439192,
+              "ci95_high": 1.0072805693560807,
+              "minimum": 0.85,
+              "maximum": 0.975
+            },
+            "qoe_score": {
+              "mean": 0.47529648801336266,
+              "sample_sd": 0.20961751221118274,
+              "ci95_low": 0.2150636955609257,
+              "ci95_high": 0.7355292804657996,
+              "minimum": 0.16365639307558474,
+              "maximum": 0.7036289643449261
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 40,
+              "sample_sd": 0.0,
+              "ci95_low": 40.0,
+              "ci95_high": 40.0,
+              "minimum": 40,
+              "maximum": 40
+            },
+            "deadline_missing_rate": {
+              "mean": 0.65,
+              "sample_sd": 0.2904737509655563,
+              "ci95_low": 0.2893870218641598,
+              "ci95_high": 1.0106129781358402,
+              "minimum": 0.325,
+              "maximum": 0.925
+            },
+            "qoe_score": {
+              "mean": 0.8491416254752092,
+              "sample_sd": 0.1470396353418448,
+              "ci95_low": 0.6665970732450213,
+              "ci95_high": 1.0316861777053972,
+              "minimum": 0.6356132567392038,
+              "maximum": 0.9894671014368651
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 40,
+              "sample_sd": 0.0,
+              "ci95_low": 40.0,
+              "ci95_high": 40.0,
+              "minimum": 40,
+              "maximum": 40
+            },
+            "deadline_missing_rate": {
+              "mean": 0.515,
+              "sample_sd": 0.31354824190226294,
+              "ci95_low": 0.1257408503323269,
+              "ci95_high": 0.9042591496676731,
+              "minimum": 0.2,
+              "maximum": 0.975
+            },
+            "qoe_score": {
+              "mean": 0.8384610390190576,
+              "sample_sd": 0.1856298606782836,
+              "ci95_low": 0.6080080749642276,
+              "ci95_high": 1.0689140030738875,
+              "minimum": 0.5358803845675515,
+              "maximum": 0.976442986626093
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "emergency_obstacle_avoidance",
+      "method": "llf-dag",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 40,
+              "sample_sd": 0.0,
+              "ci95_low": 40.0,
+              "ci95_high": 40.0,
+              "minimum": 40,
+              "maximum": 40
+            },
+            "deadline_missing_rate": {
+              "mean": 0.965,
+              "sample_sd": 0.0518411033833193,
+              "ci95_low": 0.9006410876412598,
+              "ci95_high": 1.02935891235874,
+              "minimum": 0.875,
+              "maximum": 1.0
+            },
+            "qoe_score": {
+              "mean": 0.23725531374852107,
+              "sample_sd": 0.1119700222240995,
+              "ci95_low": 0.09824845670223101,
+              "ci95_high": 0.37626217079481117,
+              "minimum": 0.13926094599916167,
+              "maximum": 0.41533736360147566
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "baseline",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 30,
+              "sample_sd": 0.0,
+              "ci95_low": 30.0,
+              "ci95_high": 30.0,
+              "minimum": 30,
+              "maximum": 30
+            },
+            "deadline_missing_rate": {
+              "mean": 0.76,
+              "sample_sd": 0.42778499272414877,
+              "ci95_low": 0.22891992920087845,
+              "ci95_high": 1.2910800707991217,
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "qoe_score": {
+              "mean": 0.595779765129675,
+              "sample_sd": 0.25486124225959633,
+              "ci95_low": 0.27937846801718336,
+              "ci95_high": 0.9121810622421667,
+              "minimum": 0.3063299975918312,
+              "maximum": 1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "feedback",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 30,
+              "sample_sd": 0.0,
+              "ci95_low": 30.0,
+              "ci95_high": 30.0,
+              "minimum": 30,
+              "maximum": 30
+            },
+            "deadline_missing_rate": {
+              "mean": 0.7,
+              "sample_sd": 0.3374742788552764,
+              "ci95_low": 0.2810375142755089,
+              "ci95_high": 1.118962485724491,
+              "minimum": 0.2,
+              "maximum": 0.9666666666666667
+            },
+            "qoe_score": {
+              "mean": 0.6848132591095143,
+              "sample_sd": 0.24650167529552358,
+              "ci95_low": 0.3787900713057626,
+              "ci95_high": 0.990836446913266,
+              "minimum": 0.4707260087409763,
+              "maximum": 0.9829734372982695
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 30,
+              "sample_sd": 0.0,
+              "ci95_low": 30.0,
+              "ci95_high": 30.0,
+              "minimum": 30,
+              "maximum": 30
+            },
+            "deadline_missing_rate": {
+              "mean": 0.76,
+              "sample_sd": 0.2832352771499734,
+              "ci95_low": 0.40837333333333337,
+              "ci95_high": 1.1116266666666665,
+              "minimum": 0.43333333333333335,
+              "maximum": 0.9666666666666667
+            },
+            "qoe_score": {
+              "mean": 0.7414847887782027,
+              "sample_sd": 0.223799936033535,
+              "ci95_low": 0.4636450143703821,
+              "ci95_high": 1.0193245631860233,
+              "minimum": 0.4902472934570667,
+              "maximum": 0.9873327219504567
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 30,
+              "sample_sd": 0.0,
+              "ci95_low": 30.0,
+              "ci95_high": 30.0,
+              "minimum": 30,
+              "maximum": 30
+            },
+            "deadline_missing_rate": {
+              "mean": 0.52,
+              "sample_sd": 0.21421692017412838,
+              "ci95_low": 0.25405720381171365,
+              "ci95_high": 0.7859427961882863,
+              "minimum": 0.3,
+              "maximum": 0.7666666666666667
+            },
+            "qoe_score": {
+              "mean": 0.9073654721162498,
+              "sample_sd": 0.06601402793549345,
+              "ci95_low": 0.8254113708130183,
+              "ci95_high": 0.9893195734194814,
+              "minimum": 0.8150251743337488,
+              "maximum": 0.9864153712095959
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "night_driving",
+      "method": "llf-dag",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 30,
+              "sample_sd": 0.0,
+              "ci95_low": 30.0,
+              "ci95_high": 30.0,
+              "minimum": 30,
+              "maximum": 30
+            },
+            "deadline_missing_rate": {
+              "mean": 0.9266666666666666,
+              "sample_sd": 0.0547722557505166,
+              "ci95_low": 0.8586688314070057,
+              "ci95_high": 0.9946645019263276,
+              "minimum": 0.8666666666666667,
+              "maximum": 0.9666666666666667
+            },
+            "qoe_score": {
+              "mean": 0.6748604552618067,
+              "sample_sd": 0.10244169167281413,
+              "ci95_low": 0.5476826865422246,
+              "ci95_high": 0.8020382239813888,
+              "minimum": 0.5294403249164211,
+              "maximum": 0.8171153479871424
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "baseline",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 50,
+              "sample_sd": 0.0,
+              "ci95_low": 50.0,
+              "ci95_high": 50.0,
+              "minimum": 50,
+              "maximum": 50
+            },
+            "deadline_missing_rate": {
+              "mean": 0.54,
+              "sample_sd": 0.3319638534539566,
+              "ci95_low": 0.12787851422183782,
+              "ci95_high": 0.9521214857781622,
+              "minimum": 0.02,
+              "maximum": 0.94
+            },
+            "qoe_score": {
+              "mean": 0.76571283757965,
+              "sample_sd": 0.29601473189438987,
+              "ci95_low": 0.3982209258813155,
+              "ci95_high": 1.1332047492779846,
+              "minimum": 0.2501772987350725,
+              "maximum": 0.999934271715438
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "feedback",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 50,
+              "sample_sd": 0.0,
+              "ci95_low": 50.0,
+              "ci95_high": 50.0,
+              "minimum": 50,
+              "maximum": 50
+            },
+            "deadline_missing_rate": {
+              "mean": 0.784,
+              "sample_sd": 0.31413372948475304,
+              "ci95_low": 0.3940139880252114,
+              "ci95_high": 1.1739860119747887,
+              "minimum": 0.26,
+              "maximum": 1.0
+            },
+            "qoe_score": {
+              "mean": 0.4731844925011987,
+              "sample_sd": 0.3831378539726977,
+              "ci95_low": -0.002467720817217134,
+              "ci95_high": 0.9488367058196145,
+              "minimum": 0.1223516456276466,
+              "maximum": 0.9661085097785275
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "feedback-fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 50,
+              "sample_sd": 0.0,
+              "ci95_low": 50.0,
+              "ci95_high": 50.0,
+              "minimum": 50,
+              "maximum": 50
+            },
+            "deadline_missing_rate": {
+              "mean": 0.024,
+              "sample_sd": 0.0433589667773576,
+              "ci95_low": -0.029828637136750914,
+              "ci95_high": 0.07782863713675092,
+              "minimum": 0.0,
+              "maximum": 0.1
+            },
+            "qoe_score": {
+              "mean": 0.9995243086699029,
+              "sample_sd": 0.0007349608716540075,
+              "ci95_low": 0.9986118805146584,
+              "ci95_high": 1.0004367368251474,
+              "minimum": 0.998329339893516,
+              "maximum": 1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "fine-grained",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 50,
+              "sample_sd": 0.0,
+              "ci95_low": 50.0,
+              "ci95_high": 50.0,
+              "minimum": 50,
+              "maximum": 50
+            },
+            "deadline_missing_rate": {
+              "mean": 0.276,
+              "sample_sd": 0.3950696141188284,
+              "ci95_low": -0.21446507522554537,
+              "ci95_high": 0.7664650752255454,
+              "minimum": 0.0,
+              "maximum": 0.9
+            },
+            "qoe_score": {
+              "mean": 0.9037668336786822,
+              "sample_sd": 0.17188095787591004,
+              "ci95_low": 0.690382650431699,
+              "ci95_high": 1.1171510169256653,
+              "minimum": 0.602469303194756,
+              "maximum": 1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "device": "agx",
+      "profile": "tight",
+      "scenario": "urban_navigation",
+      "method": "llf-dag",
+      "n": 5,
+      "atomic_offered_ratio": 0.0,
+      "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible",
+      "subgroups": {
+        "atomic": {
+          "n_defined": 0,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 0,
+              "sample_sd": 0.0,
+              "ci95_low": 0.0,
+              "ci95_high": 0.0,
+              "minimum": 0,
+              "maximum": 0
+            },
+            "deadline_missing_rate": null,
+            "qoe_score": null
+          }
+        },
+        "partitionable": {
+          "n_defined": 5,
+          "metrics": {
+            "offered_node_count": {
+              "mean": 50,
+              "sample_sd": 0.0,
+              "ci95_low": 50.0,
+              "ci95_high": 50.0,
+              "minimum": 50,
+              "maximum": 50
+            },
+            "deadline_missing_rate": {
+              "mean": 0.936,
+              "sample_sd": 0.03286335345030994,
+              "ci95_low": 0.8952012988442035,
+              "ci95_high": 0.9767987011557966,
+              "minimum": 0.9,
+              "maximum": 0.98
+            },
+            "qoe_score": {
+              "mean": 0.38165239814657825,
+              "sample_sd": 0.16360745609039384,
+              "ci95_low": 0.1785394773065069,
+              "ci95_high": 0.5847653189866496,
+              "minimum": 0.19542766430456887,
+              "maximum": 0.5581578989584662
+            }
+          }
+        }
+      }
+    }
+  ],
+  "quality_gate": {
+    "accepted": true,
+    "checks": {
+      "all_expected_runs_complete": true,
+      "all_methods_present": true,
+      "single_git_commit": true,
+      "cuda_only": true,
+      "expected_profile_only": true,
+      "expected_seeds_only": true,
+      "all_scenarios_discriminative": true
+    },
+    "scenario_checks": {
+      "urban_navigation": {
+        "accepted": true,
+        "checks": {
+          "all_methods_present": true,
+          "at_least_three_interior_deadline_missing_rates": true,
+          "deadline_missing_rate_spread_at_least_0_10": true,
+          "at_least_two_interior_qoe_scores": true,
+          "qoe_spread_at_least_0_05": true,
+          "qoe_not_all_saturated_high": true,
+          "qoe_not_all_saturated_low": true
+        },
+        "deadline_missing_rate_means": [
+          0.54,
+          0.936,
+          0.276,
+          0.784,
+          0.024
+        ],
+        "qoe_score_means": [
+          0.8196346513534443,
+          0.4692045813313087,
+          1.0,
+          0.4902988602514774,
+          1.0
+        ]
+      },
+      "emergency_obstacle_avoidance": {
+        "accepted": true,
+        "checks": {
+          "all_methods_present": true,
+          "at_least_three_interior_deadline_missing_rates": true,
+          "deadline_missing_rate_spread_at_least_0_10": true,
+          "at_least_two_interior_qoe_scores": true,
+          "qoe_spread_at_least_0_05": true,
+          "qoe_not_all_saturated_high": true,
+          "qoe_not_all_saturated_low": true
+        },
+        "deadline_missing_rate_means": [
+          0.875,
+          0.965,
+          0.515,
+          0.9299999999999999,
+          0.65
+        ],
+        "qoe_score_means": [
+          0.44770981718719843,
+          0.13954069590030405,
+          0.9020234617773301,
+          0.3836437604977883,
+          0.8511847892607538
+        ]
+      },
+      "night_driving": {
+        "accepted": true,
+        "checks": {
+          "all_methods_present": true,
+          "at_least_three_interior_deadline_missing_rates": true,
+          "deadline_missing_rate_spread_at_least_0_10": true,
+          "at_least_two_interior_qoe_scores": true,
+          "qoe_spread_at_least_0_05": true,
+          "qoe_not_all_saturated_high": true,
+          "qoe_not_all_saturated_low": true
+        },
+        "deadline_missing_rate_means": [
+          0.76,
+          0.9266666666666666,
+          0.52,
+          0.7,
+          0.76
+        ],
+        "qoe_score_means": [
+          0.56775951084733,
+          0.7143337660609959,
+          0.985980577086162,
+          0.664179475887236,
+          0.7691773511692345
+        ]
+      }
+    }
+  }
+}
