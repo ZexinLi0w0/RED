@@ -16,7 +16,7 @@ from experiments.burst_study import (
 
 
 NANO1_BASE_TASK_CONFIG = (
-    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v2.json"
+    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v3.json"
 )
 
 
@@ -105,7 +105,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         require_proactive_drop_for_meris_burst=False,
     )
 
-    assert plan["deadline_factor"] == 120.0
+    assert plan["deadline_factor"] == 5000.0
     assert plan["arrival_scale"] == 40.0
     assert plan["timing_source"] == {
         "deadline_factor": "task-config",
@@ -144,7 +144,13 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
-    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 1
+    assert config["BurstStudyWorkload"][
+        "expected_meris_sustained_100_drop_count"
+    ] == 8
+    assert config["BurstStudyWorkload"][
+        "target_sustained_100_deadline_missing_rate"
+    ] == [0.2, 0.3]
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:

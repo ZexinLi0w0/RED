@@ -5,7 +5,7 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "${REPOSITORY_ROOT}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
-OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_nano1_cuda_v3}"
+OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_nano1_cuda_v4}"
 REPETITIONS=1
 EXPLICIT_SEEDS=""
 
@@ -54,7 +54,7 @@ git pull --ff-only
   'import torch; assert torch.cuda.is_available(), "CUDA is unavailable"'
 
 PLAN_ARGUMENTS=(
-  --base-task-config TaskConfigs/simo/burst/nano1_cuda_proactive_drop_v2.json
+  --base-task-config TaskConfigs/simo/burst/nano1_cuda_proactive_drop_v3.json
   --output-root "${OUTPUT_ROOT}"
   --repetitions "${REPETITIONS}"
   --burst-start-seconds 0
