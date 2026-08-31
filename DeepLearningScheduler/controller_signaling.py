@@ -12,6 +12,26 @@ from AbstractHandler import HandlerStatus
 from task_scheduler import TaskSchedule
 
 
+DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS = 0.001
+
+
+class HandlerQueueRouter:
+    """Route controller commands to one dedicated queue per handler."""
+
+    def __init__(self, handler_queues):
+        self.handler_queues = dict(handler_queues)
+
+    def put(self, signal_message):
+        signal_handlerid, _, *_ = parse_signal(signal_message)
+        try:
+            handler_queue = self.handler_queues[int(signal_handlerid)]
+        except KeyError as exc:
+            raise ValueError(
+                f"no command queue registered for handler {signal_handlerid}"
+            ) from exc
+        handler_queue.put(signal_message)
+
+
 async def send_heart_ping(control_queue, handlers, logger=logging, base_time = 0):
     """
     A heart beat ping task, excuted by controller process.
@@ -125,7 +145,7 @@ async def controller_signaling(control_queue, handlers, tasks_list, logger=loggi
         except queue.Empty:
             continue
 
-async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, release_time_skew_threshold_seconds=0.1, moving_average_window=8):
+async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module='baseline', logger=logging, base_time=0, task_filename='task-config', burst_config=None, burst_task_ratio=0, task_config_path=None, output_dir=None, run_id=None, release_time_skew_threshold_seconds=0.1, moving_average_window=8, handler_queues=None):
     """
     SIMO Baseline handler
     """
@@ -135,10 +155,16 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     # controller maintain a handler status dict
     handler_status = defaultdict(None)
 
+    outbound_queue = (
+        control_queue
+        if handler_queues is None
+        else HandlerQueueRouter(handler_queues)
+    )
+
     # send signal to handlers to start
     for handler in handlers:
         signal_message = generate_signal(handler["id"], SignalCommand.LOADDATA)
-        control_queue.put(signal_message)
+        outbound_queue.put(signal_message)
         handler_status[handler["id"]] = HandlerStatus.Load
         allReady[handler["id"]] = False
         warmup[handler["id"]] = 0
@@ -148,7 +174,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     scheduler_tick_seconds = (
         float(burst_config.get('scheduler_tick_seconds', 0.005))
         if burst_enabled
-        else 0.0
+        else DEFAULT_SIGNAL_POLL_INTERVAL_SECONDS
     )
     if scheduler_tick_seconds < 0:
         raise ValueError("scheduler_tick_seconds cannot be negative")
@@ -156,7 +182,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     task_scheduler = TaskSchedule(
         tasks_list, 
         handler_status=handler_status, 
-        control_queue=control_queue, 
+        control_queue=outbound_queue,
         scheduler=scheduler_name,
         logger=logger, 
         approach_module=approach_module, 
@@ -191,8 +217,10 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
             # only handle the signal with their handlerid
             signal_handlerid, signal_command, *signal_args = parse_signal(signal_message)
             if(signal_handlerid != 0):
-                # put it back until the correct receiver handle it
-                control_queue.put(signal_message)
+                # Compatibility for callers still using a shared queue. In the
+                # split-queue runtime this repairs an accidentally misrouted
+                # controller command without reintroducing a queue bounce.
+                outbound_queue.put(signal_message)
                 continue
             args_dict = convert_args_to_dict(signal_args)
             handler_id = int(args_dict["source"])
@@ -202,7 +230,7 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                     # send a signal to subprocess to ready(ready to run)
                     task_scheduler.handler_status[handler_id] = HandlerStatus.Ready
                     signal_message = generate_signal(handler_id, SignalCommand.READY)
-                    control_queue.put(signal_message)
+                    outbound_queue.put(signal_message)
                 elif(HandlerStatus[args_dict["status"]] == HandlerStatus.Ready):
                     # before all handlers are ready, we need to warmup the handlers
                     if(not all(allReady.values())):
@@ -218,12 +246,12 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                                 # send a signal to warmup
                                 taskid = f"--taskid warmup"
                                 signal_message = generate_signal(handler_id, SignalCommand.RUN, taskid, "--warmup true")
-                                control_queue.put(signal_message)
+                                outbound_queue.put(signal_message)
                         else:
                             # send a signal to warmup
                             taskid = f"--taskid warmup"
                             signal_message = generate_signal(handler_id, SignalCommand.RUN, taskid, "--warmup true")
-                            control_queue.put(signal_message)
+                            outbound_queue.put(signal_message)
                     # logger.debug(f"[CTRL] Handler {handler_id} is ready, is allready: {all(allReady.values())}, {allReady.values()}")
             # when handlers finished one task and deliver the result
             elif(SignalCommand[signal_command] == SignalCommand.DELIVERY):

@@ -61,3 +61,30 @@ def test_calibration_grid_can_be_limited_to_one_device(tmp_path) -> None:
     assert {entry["device"] for entry in index["configs"]} == {"mac"}
     assert (output_dir / "mac_cal_a080_example.json").is_file()
     assert not (output_dir / "agx_cal_a080_example.json").exists()
+
+
+def test_calibration_grid_can_be_limited_to_one_scenario(tmp_path) -> None:
+    source_dir = tmp_path / "source"
+    output_dir = tmp_path / "generated"
+    source_dir.mkdir()
+    config = {
+        "DeadlineFactor": 1.0,
+        "ArrivalScale": 1.0,
+        "dag_list": [],
+    }
+    for scenario in ("urban_navigation", "night_driving"):
+        (source_dir / f"nano_loose_{scenario}.json").write_text(
+            json.dumps(config), encoding="utf-8"
+        )
+
+    index = build_grid(
+        source_dir,
+        output_dir,
+        [Decimal("1.08")],
+        devices=["nano"],
+        scenarios=["night_driving"],
+    )
+
+    assert {entry["scenario"] for entry in index["configs"]} == {"night_driving"}
+    assert (output_dir / "nano_cal_a108_night_driving.json").is_file()
+    assert not (output_dir / "nano_cal_a108_urban_navigation.json").exists()
