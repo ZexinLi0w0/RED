@@ -16,7 +16,7 @@ from experiments.burst_study import (
 
 
 NANO1_BASE_TASK_CONFIG = (
-    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v1.json"
+    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v2.json"
 )
 
 
@@ -93,8 +93,8 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         NANO1_BASE_TASK_CONFIG,
         tmp_path / "nano1-study",
         burst_start_seconds=0.0,
-        transient_duration_seconds=30.0,
-        release_horizon_seconds=100.0,
+        transient_duration_seconds=3.0,
+        release_horizon_seconds=10.0,
         gpu_threshold=100.0,
         queue_threshold=6,
         persistence_window=1,
@@ -125,6 +125,22 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
     config = json.loads(NANO1_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    running_times = {
+        task["TaskName"]: task["RunningTime"]
+        for task in config["dag_list"][0][0]
+    }
+    assert running_times == {
+        "Nano1_Burst_Critical_LaneDetection": 44.382938,
+        "Nano1_Burst_Critical_Control": 37.229989,
+        "Nano1_Burst_Redundant_Segmentation": 40.925567,
+        "Nano1_Burst_Redundant_ObjectDetection": 51.641363,
+    }
+    assert config["RuntimeProfile"]["sample_counts"] == {
+        "lane_detection": 69,
+        "control": 73,
+        "segmentation": 48,
+        "object_detection": 52,
+    }
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]

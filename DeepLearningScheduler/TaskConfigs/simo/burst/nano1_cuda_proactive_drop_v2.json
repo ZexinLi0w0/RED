@@ -1,0 +1,94 @@
+{
+  "DeadlineFactor": 120.0,
+  "ArrivalScale": 40.0,
+  "DagRepeatedTimes": 4,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "ReleaseTimeSkewThresholdMs": 100,
+  "MovingAverageWindow": 8,
+  "NonPartitionablePercentage": 100,
+  "BurstTaskRatio": 100,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      [
+        {
+          "TaskName": "Nano1_Burst_Critical_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 3,
+          "Dependencies": [],
+          "RunArgs": [1],
+          "RunningTime": 44.382938,
+          "WorstRunningTime": 50.206089,
+          "DropThreshold": 0.0
+        },
+        {
+          "TaskName": "Nano1_Burst_Critical_Control",
+          "HandlerId": 5,
+          "Priority": 3,
+          "Dependencies": [],
+          "RunArgs": [2],
+          "RunningTime": 37.229989,
+          "WorstRunningTime": 42.818475,
+          "DropThreshold": 0.0
+        },
+        {
+          "TaskName": "Nano1_Burst_Redundant_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [3],
+          "RunningTime": 40.925567,
+          "WorstRunningTime": 46.940422,
+          "DropThreshold": 0.4
+        },
+        {
+          "TaskName": "Nano1_Burst_Redundant_ObjectDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [4],
+          "RunningTime": 51.641363,
+          "WorstRunningTime": 62.165428,
+          "DropThreshold": 0.25
+        }
+      ]
+    ]
+  ],
+  "RuntimeProfile": {
+    "platform": "Nano1 (Jetson Orin Nano)",
+    "torch_device": "cuda",
+    "profile_file": "taskdata/major_revision_burst_nano1_cuda_v2/nano1_burst_formal_v2_artifacts.tar.gz",
+    "profile_sha256": "c55033c0e0f34f4b572903e8280712463b86f8835d5e90a78a6ec784ff9e425c",
+    "timing_source": "successful task_statistics.pkl records from all 15 Nano1 Burst formal runs",
+    "running_time_policy": "arithmetic mean of observed end_time minus start_time",
+    "bound_policy": "observed maximum time plus 10 percent fixed margin",
+    "sample_counts": {
+      "lane_detection": 69,
+      "control": 73,
+      "segmentation": 48,
+      "object_detection": 52
+    },
+    "power_mode": "15W; jetson_clocks"
+  },
+  "BurstStudyWorkload": {
+    "purpose": "queue-triggered ProactiveDrop validation on Nano1/CUDA",
+    "base_dag": "four independent co-released requests without dependency-failure cascades",
+    "nominal_control_ready_queue_bound": 3,
+    "burst_ready_queue_lower_bound": 7,
+    "queue_threshold": 6,
+    "persistence_window": 1,
+    "burst_start_seconds": 0.0,
+    "transient_duration_seconds": 3.0,
+    "release_horizon_seconds": 10.0,
+    "estimated_release_interval_seconds": 2.48661712,
+    "offered_task_counts": {
+      "control_000": 16,
+      "transient_050": 20,
+      "transient_100": 24,
+      "sustained_050": 24,
+      "sustained_100": 32
+    },
+    "drop_policy": "retain lane detection and control; shed redundant segmentation and object-detection requests"
+  }
+}

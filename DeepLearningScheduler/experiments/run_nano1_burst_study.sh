@@ -5,7 +5,7 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "${REPOSITORY_ROOT}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
-OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_nano1_cuda_v2}"
+OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_nano1_cuda_v3}"
 REPETITIONS=1
 EXPLICIT_SEEDS=""
 
@@ -13,7 +13,7 @@ usage() {
   printf '%s\n' \
     "Usage: $0 [--repetitions N] [--seeds S1,S2,...]" \
     "" \
-    "Runs the frozen Nano1 Burst matrix once per cell by default." \
+    "Runs the profile-corrected Nano1 Burst matrix once per cell by default." \
     "--seeds overrides --repetitions for advanced reproducibility."
 }
 
@@ -54,12 +54,12 @@ git pull --ff-only
   'import torch; assert torch.cuda.is_available(), "CUDA is unavailable"'
 
 PLAN_ARGUMENTS=(
-  --base-task-config TaskConfigs/simo/burst/nano1_cuda_proactive_drop_v1.json
+  --base-task-config TaskConfigs/simo/burst/nano1_cuda_proactive_drop_v2.json
   --output-root "${OUTPUT_ROOT}"
   --repetitions "${REPETITIONS}"
   --burst-start-seconds 0
-  --transient-duration-seconds 30
-  --release-horizon-seconds 100
+  --transient-duration-seconds 3
+  --release-horizon-seconds 10
   --gpu-threshold 100
   --queue-threshold 6
   --persistence-window 1
