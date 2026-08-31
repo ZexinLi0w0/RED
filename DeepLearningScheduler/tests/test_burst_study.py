@@ -162,7 +162,7 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
-    ] == [40, 48, 60, 60, 80]
+    ] == [50, 60, 75, 75, 100]
     assert [
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
@@ -174,11 +174,11 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     partition_flags = [
         task["IsNonPartitionable"] for task in config["dag_list"][0][0]
     ]
-    assert partition_flags == [False, False, True, True]
+    assert partition_flags == [False, False, True, True, True]
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
-    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 3
     burst_config = json.loads(
         (tmp_path / "agx-orin-study/generated_configs/control-000/burst.json").read_text(
             encoding="utf-8"
