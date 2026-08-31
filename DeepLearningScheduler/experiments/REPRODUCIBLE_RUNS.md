@@ -75,6 +75,49 @@ remaining-cost calculation is confined to the currently admitted DAG instance;
 it does not inspect completion times or arrivals from later DAG instances and
 does not use MIMONet merging.
 
+## AGX Orin Table 11 calibration
+
+The AGX Orin replacement matrix is generated from the synchronized CUDA/MAXN
+runtime profile rather than the historical embedded timing estimates. Build the
+predeclared EDF-only coarse grid with:
+
+```bash
+python3 -m experiments.agx_orin_overall build-calibration \
+  --template-dir TaskConfigs/simo/new_scenarios \
+  --runtime-profile taskdata/runtime_profiles/agx_orin_maxn_20260828_v1.json \
+  --output-dir TaskConfigs/simo/overall_agx_orin_cuda_v1
+```
+
+Run the eight calibration profiles with EDF and a calibration-only seed, then
+select one timing pair per scenario without inspecting the proposed methods:
+
+```bash
+python3 experiments/run_matrix.py \
+  --device agx --power-mode agx-orin-maxn \
+  --handler-config handler-config.json \
+  --task-dir TaskConfigs/simo/overall_agx_orin_cuda_v1/calibration \
+  --output-root taskdata/major_revision_overall_agx_orin_calibration_v1 \
+  --profiles cal_d0200_a0200,cal_d0400_a0200,cal_d0400_a0400,cal_d0600_a0400,cal_d0800_a0400,cal_d0800_a0800,cal_d1200_a0800,cal_d1200_a1200 \
+  --scenarios urban_navigation,emergency_obstacle_avoidance,night_driving \
+  --methods baseline --seeds 11 --torch-device cuda:0 \
+  --cooldown-seconds 2 --keep-going
+
+python3 -m experiments.agx_orin_overall select-edf \
+  --index TaskConfigs/simo/overall_agx_orin_cuda_v1/calibration_index.json \
+  --runs-root taskdata/major_revision_overall_agx_orin_calibration_v1 \
+  --output TaskConfigs/simo/overall_agx_orin_cuda_v1/selection_report.json
+```
+
+Freeze the selected configs as `pilot`, run all five methods with paired seeds
+11/22/33, and validate the discrimination gate before any formal run. The gate
+requires, independently for every scenario, at least three interior Deadline
+Missing Rate means, a Deadline Missing Rate spread of at least 0.10, at least
+three interior QoE means, and a QoE spread of at least 0.05. Once the pilot is
+accepted, freeze the identical timing pairs as `tight` and run formal seeds
+101/202/303/404/505. The resulting 75-run matrix is summarized with
+`experiments/summarize_runs.py`; every displayed Table 11 metric tuple comes
+from the same median-latency run.
+
 ## Timing utility reported as QoE
 
 Revision runs use an XRBench-derived timing utility over the original offered

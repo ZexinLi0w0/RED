@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import platform
+import random
 import socket
 import subprocess
 import sys
@@ -69,6 +70,19 @@ def _resolve_seeds(repetitions, explicit_seeds):
     if explicit_seeds is not None:
         return explicit_seeds
     return _seeds_for_repetitions(repetitions)
+
+
+def _execution_cells(profiles, scenarios, seeds, methods, order_seed=None):
+    cells = [
+        (profile, scenario, seed, method)
+        for profile in profiles
+        for scenario in scenarios
+        for seed in seeds
+        for method in methods
+    ]
+    if order_seed is not None:
+        random.Random(order_seed).shuffle(cells)
+    return cells
 
 
 def _sha256_file(path):
@@ -166,6 +180,12 @@ def _build_parser():
         choices=("auto", "cpu", "mps", "cuda", "cuda:0"),
     )
     parser.add_argument("--cooldown-seconds", type=float, default=3.0)
+    parser.add_argument(
+        "--order-seed",
+        type=int,
+        default=None,
+        help="optional seed for a fixed randomized order of all matrix cells",
+    )
     parser.add_argument("--burst-config", type=Path)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -183,6 +203,8 @@ def main():
         raise ValueError("profiles, scenarios, and methods cannot be empty")
     if args.cooldown_seconds < 0:
         raise ValueError("cooldown-seconds cannot be negative")
+    if args.order_seed is not None and args.order_seed < 0:
+        raise ValueError("order-seed must be non-negative")
 
     handler_config = args.handler_config.resolve()
     task_dir = args.task_dir.resolve()
@@ -195,134 +217,129 @@ def main():
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
     failures = 0
-    planned = 0
+    cells = _execution_cells(
+        profiles, scenarios, seeds, methods, order_seed=args.order_seed
+    )
 
-    for profile in profiles:
-        for scenario in scenarios:
-            config_path = task_dir / f"{args.device}_{profile}_{scenario}.json"
-            if not config_path.is_file():
-                raise FileNotFoundError(config_path)
-            config_sha256 = _sha256_file(config_path)
+    for execution_order_index, (profile, scenario, seed, method) in enumerate(cells):
+        config_path = task_dir / f"{args.device}_{profile}_{scenario}.json"
+        if not config_path.is_file():
+            raise FileNotFoundError(config_path)
+        config_sha256 = _sha256_file(config_path)
+        offered_task_count, offered_hash = _offered_stream(config_path, seed)
+        run_id = _run_id(
+            args.device,
+            scenario,
+            profile,
+            method,
+            seed,
+            config_sha256,
+        )
+        run_dir = output_root / run_id
+        manifest_path = run_dir / "manifest.json"
+        command = [
+            args.python,
+            str(REPOSITORY_ROOT / "main.py"),
+            "--config",
+            str(handler_config),
+            "--task",
+            str(config_path),
+            "--approach",
+            method,
+            "--seed",
+            str(seed),
+            "--output-dir",
+            str(run_dir),
+            "--run-id",
+            run_id,
+            "--torch-device",
+            runtime_info["resolved"],
+        ]
+        if args.burst_config:
+            command.extend(["--burst-config", str(args.burst_config.resolve())])
 
-            for seed in seeds:
-                offered_task_count, offered_hash = _offered_stream(config_path, seed)
-                for method in methods:
-                    planned += 1
-                    run_id = _run_id(
-                        args.device,
-                        scenario,
-                        profile,
-                        method,
-                        seed,
-                        config_sha256,
-                    )
-                    run_dir = output_root / run_id
-                    manifest_path = run_dir / "manifest.json"
-                    command = [
-                        args.python,
-                        str(REPOSITORY_ROOT / "main.py"),
-                        "--config",
-                        str(handler_config),
-                        "--task",
-                        str(config_path),
-                        "--approach",
-                        method,
-                        "--seed",
-                        str(seed),
-                        "--output-dir",
-                        str(run_dir),
-                        "--run-id",
-                        run_id,
-                        "--torch-device",
-                        runtime_info["resolved"],
-                    ]
-                    if args.burst_config:
-                        command.extend(
-                            ["--burst-config", str(args.burst_config.resolve())]
-                        )
+        manifest = {
+            "schema_version": 1,
+            "run_id": run_id,
+            "status": "planned" if args.dry_run else "running",
+            "device": args.device,
+            "power_mode": args.power_mode,
+            "scenario": scenario,
+            "profile": profile,
+            "method": method,
+            "seed": seed,
+            "execution_order_seed": args.order_seed,
+            "execution_order_index": execution_order_index,
+            "config_path": str(config_path),
+            "config_sha256": config_sha256,
+            "offered_task_count": offered_task_count,
+            "offered_task_stream_sha256": offered_hash,
+            "git_commit": git_commit,
+            "git_status_porcelain": git_status,
+            "python": args.python,
+            "torch_runtime": runtime_info,
+            "command": command,
+            "host": socket.gethostname(),
+            "platform": platform.platform(),
+        }
 
-                    manifest = {
-                        "schema_version": 1,
-                        "run_id": run_id,
-                        "status": "planned" if args.dry_run else "running",
-                        "device": args.device,
-                        "power_mode": args.power_mode,
-                        "scenario": scenario,
-                        "profile": profile,
-                        "method": method,
-                        "seed": seed,
-                        "config_path": str(config_path),
-                        "config_sha256": config_sha256,
-                        "offered_task_count": offered_task_count,
-                        "offered_task_stream_sha256": offered_hash,
-                        "git_commit": git_commit,
-                        "git_status_porcelain": git_status,
-                        "python": args.python,
-                        "torch_runtime": runtime_info,
-                        "command": command,
-                        "host": socket.gethostname(),
-                        "platform": platform.platform(),
-                    }
+        if args.dry_run:
+            print(json.dumps(manifest, sort_keys=True))
+            continue
 
-                    if args.dry_run:
-                        print(json.dumps(manifest, sort_keys=True))
-                        continue
+        if run_dir.exists():
+            if args.resume and manifest_path.is_file():
+                existing = json.loads(manifest_path.read_text())
+                if existing.get("status") == "complete":
+                    print(f"SKIP complete {run_id}")
+                    continue
+            raise FileExistsError(
+                f"refusing to overwrite existing run directory: {run_dir}"
+            )
 
-                    if run_dir.exists():
-                        if args.resume and manifest_path.is_file():
-                            existing = json.loads(manifest_path.read_text())
-                            if existing.get("status") == "complete":
-                                print(f"SKIP complete {run_id}")
-                                continue
-                        raise FileExistsError(
-                            f"refusing to overwrite existing run directory: {run_dir}"
-                        )
+        run_dir.mkdir(parents=True)
+        manifest["started_at"] = _utc_now()
+        _write_json_atomic(manifest_path, manifest)
+        started = time.monotonic()
+        with open(run_dir / "stdout.log", "w", encoding="utf-8") as log:
+            completed = subprocess.run(
+                command,
+                cwd=REPOSITORY_ROOT,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+            )
+        manifest["return_code"] = completed.returncode
+        manifest["finished_at"] = _utc_now()
+        manifest["duration_seconds"] = time.monotonic() - started
 
-                    run_dir.mkdir(parents=True)
-                    manifest["started_at"] = _utc_now()
-                    _write_json_atomic(manifest_path, manifest)
-                    started = time.monotonic()
-                    with open(run_dir / "stdout.log", "w", encoding="utf-8") as log:
-                        completed = subprocess.run(
-                            command,
-                            cwd=REPOSITORY_ROOT,
-                            stdout=log,
-                            stderr=subprocess.STDOUT,
-                        )
-                    manifest["return_code"] = completed.returncode
-                    manifest["finished_at"] = _utc_now()
-                    manifest["duration_seconds"] = time.monotonic() - started
+        summary_path = run_dir / "summary.json"
+        if completed.returncode == 0 and summary_path.is_file():
+            summary = json.loads(summary_path.read_text())
+            summary_matches = (
+                summary.get("run_id") == run_id
+                and summary.get("offered_task_count") == offered_task_count
+                and summary.get("offered_task_stream_sha256") == offered_hash
+            )
+            manifest["status"] = (
+                "complete" if summary_matches else "failed-validation"
+            )
+            manifest["summary_sha256"] = _sha256_file(summary_path)
+        else:
+            manifest["status"] = "failed"
+        _write_json_atomic(manifest_path, manifest)
 
-                    summary_path = run_dir / "summary.json"
-                    if completed.returncode == 0 and summary_path.is_file():
-                        summary = json.loads(summary_path.read_text())
-                        summary_matches = (
-                            summary.get("run_id") == run_id
-                            and summary.get("offered_task_count")
-                            == offered_task_count
-                            and summary.get("offered_task_stream_sha256")
-                            == offered_hash
-                        )
-                        manifest["status"] = (
-                            "complete" if summary_matches else "failed-validation"
-                        )
-                        manifest["summary_sha256"] = _sha256_file(summary_path)
-                    else:
-                        manifest["status"] = "failed"
-                    _write_json_atomic(manifest_path, manifest)
-
-                    if manifest["status"] != "complete":
-                        failures += 1
-                        print(f"FAIL {run_id}: {manifest['status']}", file=sys.stderr)
-                        if not args.keep_going:
-                            return 1
-                    else:
-                        print(f"DONE {run_id}")
-                    if args.cooldown_seconds:
-                        time.sleep(args.cooldown_seconds)
+        if manifest["status"] != "complete":
+            failures += 1
+            print(f"FAIL {run_id}: {manifest['status']}", file=sys.stderr)
+            if not args.keep_going:
+                return 1
+        else:
+            print(f"DONE {run_id}")
+        if args.cooldown_seconds:
+            time.sleep(args.cooldown_seconds)
 
     if args.dry_run:
-        print(f"Planned runs: {planned}", file=sys.stderr)
+        print(f"Planned runs: {len(cells)}", file=sys.stderr)
     return 1 if failures else 0
 
 

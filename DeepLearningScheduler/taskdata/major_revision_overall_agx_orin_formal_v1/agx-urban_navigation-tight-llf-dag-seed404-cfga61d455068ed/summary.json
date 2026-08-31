@@ -1,0 +1,50 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.92,
+      "offered_node_count": 50,
+      "outcome_counts": {
+        "failure": 46,
+        "success": 4
+      },
+      "qoe_score": 0.3983706078854693
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.02966151237487793,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.92,
+  "end_to_end_latency_seconds": 8.339844703674316,
+  "execution_task_count": 50,
+  "finished_execution_task_count": 50,
+  "method": "llf-dag",
+  "moving_average_reassignment": {
+    "enabled": false,
+    "event_count": 0,
+    "events": [],
+    "window": 8
+  },
+  "offered_task_count": 50,
+  "offered_task_stream_sha256": "26a973a3ea3d728fc528751b47df4ad8ed96f5610ab43e32bd289b4d43ce7d74",
+  "outcome_counts": {
+    "failure": 46,
+    "success": 4
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.46729042005908206,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx-urban_navigation-tight-llf-dag-seed404-cfga61d455068ed",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/overall_agx_orin_cuda_v5/formal_v1/agx_tight_urban_navigation.json",
+  "torch_device": "cuda:0"
+}

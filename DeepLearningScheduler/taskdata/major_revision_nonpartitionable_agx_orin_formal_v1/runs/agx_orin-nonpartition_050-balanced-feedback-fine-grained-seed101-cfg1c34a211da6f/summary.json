@@ -1,0 +1,83 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.96,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "skip": 24,
+        "success": 1
+      },
+      "qoe_score": 0.39833332802226207
+    },
+    "atomic_offered_ratio": 0.5,
+    "partitionable": {
+      "deadline_missing_rate": 0.92,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "skip": 23,
+        "success": 2
+      },
+      "qoe_score": 0.48663183184217473
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.03638227780659994,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.94,
+  "end_to_end_latency_seconds": 10.698126792907715,
+  "execution_task_count": 44,
+  "finished_execution_task_count": 44,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 2,
+    "events": [
+      {
+        "completed_task_id": "S3_Stage1_LaneDetection_[0]_D0_S0_B0",
+        "completion_time_seconds": 0.06266927719116211,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.029247522354125977,
+        "observed_execution_seconds": 0.029247522354125977,
+        "reassigned_deadlines": {
+          "S3_Stage1_Object_Detection_[0]_D0_S0_B1": 0.28007109332701347,
+          "S3_Stage2_Object_Detection_[0]_D0_S1_B1": 0.6646844873885659,
+          "S3_Stage2_Segmentation_[0]_D0_S1_B0": 0.6646844873885659,
+          "S3_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.819947384
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_df089d2d02f304dd",
+        "completion_time_seconds": 1.693371057510376,
+        "dag_index": 0,
+        "dag_period": 2,
+        "moving_average_seconds": 0.039949655532836914,
+        "observed_execution_seconds": 0.039949655532836914,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[2]_D0_S1_B1": 2.239412908568974,
+          "S3_Stage2_Segmentation_[2]_D0_S1_B0": 2.239412908568974,
+          "S3_Stage3_Control_Autopilot_[2]_D0_S2_Bsingle": 2.4598421520000002
+        },
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 50,
+  "offered_task_stream_sha256": "6a336d289ec18370c17d2ab7e54dcc9c8b34d5027f6b6406c515fba81bc7ee36",
+  "outcome_counts": {
+    "skip": 47,
+    "success": 3
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.27572807430474894,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx_orin-nonpartition_050-balanced-feedback-fine-grained-seed101-cfg1c34a211da6f",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/non_partitionable_agx_orin/formal_v1/agx_orin_balanced_nonpartition_050.json",
+  "torch_device": "cuda:0"
+}

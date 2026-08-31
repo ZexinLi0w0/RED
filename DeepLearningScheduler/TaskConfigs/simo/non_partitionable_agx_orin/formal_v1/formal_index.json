@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "device": "agx_orin",
+  "phase": "formal",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "feedback-fine-grained"
+  ],
+  "seeds": [
+    101,
+    202,
+    303,
+    404,
+    505
+  ],
+  "deadline_factor": 8.0,
+  "arrival_scale": 8.0,
+  "dag_repeated_times": 10,
+  "calibration_selection": {
+    "selection_report": "selection_report_stable.json",
+    "selection_report_sha256": "e98351da0a6861a6bc16afedf4f44b9cd862972f646ad15921fa255a938fd520",
+    "scenario": "d800_a800_p050",
+    "quality_gate": {
+      "accepted": true,
+      "checks": {
+        "all_deadline_missing_rates_are_interior": true,
+        "deadline_missing_rate_spread_at_least_0_10": true,
+        "qoe_not_all_saturated_high": true,
+        "qoe_not_all_saturated_low": true,
+        "qoe_spread_at_least_0_02": true
+      }
+    },
+    "metrics": {
+      "baseline": {
+        "sample_count": 3,
+        "deadline_missing_rate": 0.6533333333333333,
+        "deadline_missing_rate_range": [
+          0.18,
+          0.98
+        ],
+        "qoe_score": 0.7832039590682887,
+        "qoe_score_range": [
+          0.34961187720486586,
+          1.0
+        ],
+        "end_to_end_latency_seconds": 8.667831977208456
+      },
+      "llf-dag": {
+        "sample_count": 3,
+        "deadline_missing_rate": 0.88,
+        "deadline_missing_rate_range": [
+          0.84,
+          0.94
+        ],
+        "qoe_score": 0.6193489421526482,
+        "qoe_score_range": [
+          0.5131860776654885,
+          0.8267380021786287
+        ],
+        "end_to_end_latency_seconds": 8.861601988474527
+      },
+      "feedback-fine-grained": {
+        "sample_count": 3,
+        "deadline_missing_rate": 0.4066666666666666,
+        "deadline_missing_rate_range": [
+          0.1,
+          0.7
+        ],
+        "qoe_score": 1.0,
+        "qoe_score_range": [
+          1.0,
+          1.0
+        ],
+        "end_to_end_latency_seconds": 6.182250738143921
+      }
+    },
+    "minimum_paired_seed_count": 3
+  },
+  "configs": [
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_000",
+      "non_partitionable_percentage": 0,
+      "config_path": "agx_orin_balanced_nonpartition_000.json"
+    },
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_050",
+      "non_partitionable_percentage": 50,
+      "config_path": "agx_orin_balanced_nonpartition_050.json"
+    },
+    {
+      "profile": "balanced",
+      "scenario": "nonpartition_100",
+      "non_partitionable_percentage": 100,
+      "config_path": "agx_orin_balanced_nonpartition_100.json"
+    }
+  ]
+}

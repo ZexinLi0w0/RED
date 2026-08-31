@@ -1,0 +1,99 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.875,
+      "offered_node_count": 40,
+      "outcome_counts": {
+        "skip": 35,
+        "success": 5
+      },
+      "qoe_score": 0.7606571962704155
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.030966949462890626,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.875,
+  "end_to_end_latency_seconds": 3.2058632373809814,
+  "execution_task_count": 30,
+  "finished_execution_task_count": 30,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 4,
+    "events": [
+      {
+        "completed_task_id": "S4_Stage1_Object_Detection_[0]_D0_S0_Bsingle",
+        "completion_time_seconds": 0.04038715362548828,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.03379249572753906,
+        "observed_execution_seconds": 0.03379249572753906,
+        "reassigned_deadlines": {
+          "S4_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.344469203,
+          "merged_c71ab3e9524647f7": 0.20566531175665761
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "merged_c71ab3e9524647f7",
+        "completion_time_seconds": 0.07792496681213379,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.03146529197692871,
+        "observed_execution_seconds": 0.03146529197692871,
+        "reassigned_deadlines": {
+          "S4_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.344469203
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S4_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle",
+        "completion_time_seconds": 0.10421442985534668,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.024232149124145508,
+        "observed_execution_seconds": 0.024232149124145508,
+        "reassigned_deadlines": {},
+        "window": 8
+      },
+      {
+        "completed_task_id": "S4_Stage1_Object_Detection_[1]_D0_S0_Bsingle",
+        "completion_time_seconds": 0.13962197303771973,
+        "dag_index": 0,
+        "dag_period": 1,
+        "moving_average_seconds": 0.0338360071182251,
+        "observed_execution_seconds": 0.03387951850891113,
+        "reassigned_deadlines": {
+          "S4_Stage3_Control_Autopilot_[1]_D0_S2_Bsingle": 0.635000672,
+          "merged_336ee393677f83e6": 0.4194774761606198
+        },
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 40,
+  "offered_task_stream_sha256": "d4b1759b6934d6b3c925db31218de638f73b259d81ea4d294e0ed1e91a797fac",
+  "outcome_counts": {
+    "skip": 35,
+    "success": 5
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.7941204464653008,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx-emergency_obstacle_avoidance-tight-feedback-fine-grained-seed303-cfgd5f5ba03a8a6",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/overall_agx_orin_cuda_v5/formal_v1/agx_tight_emergency_obstacle_avoidance.json",
+  "torch_device": "cuda:0"
+}

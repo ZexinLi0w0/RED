@@ -1,0 +1,107 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.96,
+      "offered_node_count": 50,
+      "outcome_counts": {
+        "failure": 2,
+        "skip": 46,
+        "success": 2
+      },
+      "qoe_score": 0.4345157565533744
+    },
+    "atomic_offered_ratio": 1.0,
+    "partitionable": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.030539274215698242,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.96,
+  "end_to_end_latency_seconds": 9.446170568466187,
+  "execution_task_count": 50,
+  "finished_execution_task_count": 50,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 4,
+    "events": [
+      {
+        "completed_task_id": "S3_Stage1_LaneDetection_[0]_D0_S0_B0",
+        "completion_time_seconds": 0.07857632637023926,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.028933048248291016,
+        "observed_execution_seconds": 0.028933048248291016,
+        "reassigned_deadlines": {
+          "S3_Stage1_Object_Detection_[0]_D0_S0_B1": 0.29141149605242966,
+          "S3_Stage2_Object_Detection_[0]_D0_S1_B1": 0.6679458711653817,
+          "S3_Stage2_Segmentation_[0]_D0_S1_B0": 0.6679458711653817,
+          "S3_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.819947384
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage1_Object_Detection_[0]_D0_S0_B1",
+        "completion_time_seconds": 0.29151034355163574,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.03387117385864258,
+        "observed_execution_seconds": 0.03387117385864258,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[0]_D0_S1_B1": 0.6679742986946411,
+          "S3_Stage2_Segmentation_[0]_D0_S1_B0": 0.6679742986946411,
+          "S3_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.819947384
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage2_Segmentation_[0]_D0_S1_B0",
+        "completion_time_seconds": 0.43141651153564453,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.02577042579650879,
+        "observed_execution_seconds": 0.02577042579650879,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[0]_D0_S1_B1": 0.6580741864088688,
+          "S3_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.819947384
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage2_Object_Detection_[0]_D0_S1_B1",
+        "completion_time_seconds": 0.6672148704528809,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.033582448959350586,
+        "observed_execution_seconds": 0.033582448959350586,
+        "reassigned_deadlines": {
+          "S3_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.819947384
+        },
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 50,
+  "offered_task_stream_sha256": "f348f541ea676e35f961112280eccc18db9a912b342fbbe956a699023d80f6fe",
+  "outcome_counts": {
+    "failure": 2,
+    "skip": 46,
+    "success": 2
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.4327849792481363,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx_orin-nonpartition_100-balanced-feedback-fine-grained-seed505-cfg0b04ba506c3d",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/non_partitionable_agx_orin/formal_v1/agx_orin_balanced_nonpartition_100.json",
+  "torch_device": "cuda:0"
+}

@@ -1,0 +1,96 @@
+{
+  "dag_list": [
+    [
+      {
+        "TaskName": "S4_Stage1_Object_Detection",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          4
+        ],
+        "RunningTime": 33.317769,
+        "WorstRunningTime": 37.762278
+      },
+      [
+        {
+          "TaskName": "S4_Stage2_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            4
+          ],
+          "RunArgs": [
+            1
+          ],
+          "RunningTime": 28.642414,
+          "WorstRunningTime": 32.112678
+        },
+        {
+          "TaskName": "S4_Stage2_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [
+            4
+          ],
+          "RunArgs": [
+            3
+          ],
+          "RunningTime": 25.380104,
+          "WorstRunningTime": 29.04433
+        }
+      ],
+      {
+        "TaskName": "S4_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          1,
+          3
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 23.756031,
+        "WorstRunningTime": 26.968867
+      }
+    ]
+  ],
+  "DeadlineFactor": 10.0,
+  "ArrivalScale": 7.0,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 20,
+  "RuntimeProfile": {
+    "profile_file": "agx_orin_maxn_20260828_v1.json",
+    "profile_sha256": "cc7bc798f1802a8c726e9a444f6c8c8ff5d1f12639b076215bf4e38155e762f5",
+    "torch_device": "cuda:0",
+    "power_mode": "agx-orin-maxn",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1,
+    "cases": [
+      "control_autopilot",
+      "lane_detection",
+      "object_detection",
+      "segmentation"
+    ]
+  },
+  "SourceExperiment": {
+    "device": "agx_orin",
+    "kind": "profiled-overall-performance-source",
+    "scenario": "emergency_obstacle_avoidance",
+    "template_config": "agx_loose_emergency_obstacle_avoidance.json",
+    "runtime_profile": "agx_orin_maxn_20260828_v1.json"
+  },
+  "Calibration": {
+    "device": "agx_orin",
+    "kind": "overall-performance-load-grid",
+    "scenario": "emergency_obstacle_avoidance",
+    "profile": "cal_d1000_a0700",
+    "deadline_factor": 10.0,
+    "arrival_scale": 7.0,
+    "selection_stage": "EDF-only coarse calibration"
+  }
+}

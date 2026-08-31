@@ -1,0 +1,162 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.88,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "failure": 1,
+        "skip": 21,
+        "success": 3
+      },
+      "qoe_score": 0.6789448573930295
+    },
+    "atomic_offered_ratio": 0.5,
+    "partitionable": {
+      "deadline_missing_rate": 0.84,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "skip": 21,
+        "success": 4
+      },
+      "qoe_score": 0.7558539002282756
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.03005397319793701,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.86,
+  "end_to_end_latency_seconds": 7.894787073135376,
+  "execution_task_count": 43,
+  "finished_execution_task_count": 43,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 8,
+    "events": [
+      {
+        "completed_task_id": "S3_Stage1_LaneDetection_[6]_D0_S0_B0",
+        "completion_time_seconds": 5.2036964893341064,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.030271530151367188,
+        "observed_execution_seconds": 0.030271530151367188,
+        "reassigned_deadlines": {
+          "S3_Stage1_Object_Detection_[6]_D0_S0_B1": 5.357554476873294,
+          "S3_Stage2_Object_Detection_[6]_D0_S1_B1": 5.629750191898733,
+          "S3_Stage2_Segmentation_[6]_D0_S1_B0": 5.629750191898733,
+          "S3_Stage3_Control_Autopilot_[6]_D0_S2_Bsingle": 5.739631688000001
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage1_Object_Detection_[6]_D0_S0_B1",
+        "completion_time_seconds": 5.275841474533081,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.034397125244140625,
+        "observed_execution_seconds": 0.034397125244140625,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[6]_D0_S1_B1": 5.606250368599689,
+          "S3_Stage2_Segmentation_[6]_D0_S1_B0": 5.606250368599689,
+          "S3_Stage3_Control_Autopilot_[6]_D0_S2_Bsingle": 5.739631688000001
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage2_Segmentation_[6]_D0_S1_B0",
+        "completion_time_seconds": 5.367591619491577,
+        "dag_index": 0,
+        "dag_period": 6,
+        "moving_average_seconds": 0.026127338409423828,
+        "observed_execution_seconds": 0.026127338409423828,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[6]_D0_S1_B1": 5.584629036242882,
+          "S3_Stage3_Control_Autopilot_[6]_D0_S2_Bsingle": 5.739631688000001
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage1_LaneDetection_[9]_D0_S0_B0",
+        "completion_time_seconds": 7.423393964767456,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.030133605003356934,
+        "observed_execution_seconds": 0.02999567985534668,
+        "reassigned_deadlines": {
+          "S3_Stage1_Object_Detection_[9]_D0_S0_B1": 7.636517488374807,
+          "S3_Stage2_Object_Detection_[9]_D0_S1_B1": 8.032375574608857,
+          "S3_Stage2_Segmentation_[9]_D0_S1_B0": 8.032375574608857,
+          "S3_Stage3_Control_Autopilot_[9]_D0_S2_Bsingle": 8.199473840000005
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage1_Object_Detection_[9]_D0_S0_B1",
+        "completion_time_seconds": 7.463653802871704,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.03429555892944336,
+        "observed_execution_seconds": 0.034193992614746094,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[9]_D0_S1_B1": 7.9810656961195185,
+          "S3_Stage2_Segmentation_[9]_D0_S1_B0": 7.9810656961195185,
+          "S3_Stage3_Control_Autopilot_[9]_D0_S2_Bsingle": 8.199473840000005
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage2_Segmentation_[9]_D0_S1_B0",
+        "completion_time_seconds": 7.587996006011963,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.02632617950439453,
+        "observed_execution_seconds": 0.026525020599365234,
+        "reassigned_deadlines": {
+          "S3_Stage2_Object_Detection_[9]_D0_S1_B1": 7.944714490721206,
+          "S3_Stage3_Control_Autopilot_[9]_D0_S2_Bsingle": 8.199473840000005
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage2_Object_Detection_[9]_D0_S1_B1",
+        "completion_time_seconds": 7.847708225250244,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.03426647186279297,
+        "observed_execution_seconds": 0.03426647186279297,
+        "reassigned_deadlines": {
+          "S3_Stage3_Control_Autopilot_[9]_D0_S2_Bsingle": 8.199473840000005
+        },
+        "window": 8
+      },
+      {
+        "completed_task_id": "S3_Stage3_Control_Autopilot_[9]_D0_S2_Bsingle",
+        "completion_time_seconds": 7.894100189208984,
+        "dag_index": 0,
+        "dag_period": 9,
+        "moving_average_seconds": 0.024654626846313477,
+        "observed_execution_seconds": 0.024654626846313477,
+        "reassigned_deadlines": {},
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 50,
+  "offered_task_stream_sha256": "7fa7a41cb7fbd914c5601df1a662007275fdff6f595d784094868e86de16fba4",
+  "outcome_counts": {
+    "failure": 1,
+    "skip": 42,
+    "success": 7
+  },
+  "overall_deadline_hit": 1.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 1.0,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx_orin-nonpartition_050-balanced-feedback-fine-grained-seed505-cfg1c34a211da6f",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/non_partitionable_agx_orin/formal_v1/agx_orin_balanced_nonpartition_050.json",
+  "torch_device": "cuda:0"
+}

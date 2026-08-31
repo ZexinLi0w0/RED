@@ -1,0 +1,52 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": 0.96,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "failure": 24,
+        "success": 1
+      },
+      "qoe_score": 0.19598032357695977
+    },
+    "atomic_offered_ratio": 0.5,
+    "partitionable": {
+      "deadline_missing_rate": 1.0,
+      "offered_node_count": 25,
+      "outcome_counts": {
+        "failure": 25
+      },
+      "qoe_score": 0.21002515326953702
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.029659323692321778,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.98,
+  "end_to_end_latency_seconds": 16.85432529449463,
+  "execution_task_count": 50,
+  "finished_execution_task_count": 50,
+  "method": "baseline",
+  "moving_average_reassignment": {
+    "enabled": false,
+    "event_count": 0,
+    "events": [],
+    "window": 8
+  },
+  "offered_task_count": 50,
+  "offered_task_stream_sha256": "569f6b12d07d6f888755ad3a8639847a3cfec88d41da23acc1850a69a82794dd",
+  "outcome_counts": {
+    "failure": 49,
+    "success": 1
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.09902367432494481,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx_orin-nonpartition_050-balanced-baseline-seed202-cfg1c34a211da6f",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/non_partitionable_agx_orin/formal_v1/agx_orin_balanced_nonpartition_050.json",
+  "torch_device": "cuda:0"
+}

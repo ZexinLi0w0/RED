@@ -14,7 +14,7 @@ import socket
 import subprocess
 import sys
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 
@@ -61,6 +61,11 @@ DEFAULT_RUN_ORDER_SEED = 20260827
 DEFAULT_GPU_THRESHOLD = 100.0
 DEFAULT_QUEUE_THRESHOLD = 10
 DEFAULT_PERSISTENCE_WINDOW = 3
+DEFAULT_SCHEDULER_TICK_SECONDS = 0.005
+DEFAULT_DEVICE = "mac"
+DEFAULT_PLATFORM_LABEL = "M3 Max"
+DEFAULT_POWER_MODE = "AC power; default macOS policy"
+DEFAULT_TORCH_DEVICE = "mps"
 METHODS = ("baseline", "llf-dag", "feedback-fine-grained")
 METHOD_LABELS = {
     "baseline": "EDF",
@@ -148,6 +153,7 @@ def _burst_config(
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
+    scheduler_tick_seconds=DEFAULT_SCHEDULER_TICK_SECONDS,
 ):
     config = {
         "burst_enabled": True,
@@ -159,7 +165,7 @@ def _burst_config(
         "persistence_window": persistence_window,
         "drop_threshold": 0.5,
         "monitoring_interval": 0.05,
-        "scheduler_tick_seconds": 0.005,
+        "scheduler_tick_seconds": scheduler_tick_seconds,
     }
     if condition.transient_duration_seconds is not None:
         config["transient_duration_seconds"] = condition.transient_duration_seconds
@@ -205,10 +211,18 @@ def generate_study_plan(
     deadline_factor=DEFAULT_DEADLINE_FACTOR_OVERRIDE,
     arrival_scale=DEFAULT_ARRIVAL_SCALE_OVERRIDE,
     burst_start_seconds=DEFAULT_BURST_START_SECONDS,
+    transient_duration_seconds=DEFAULT_TRANSIENT_DURATION_SECONDS,
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
+    scheduler_tick_seconds=None,
+    device=DEFAULT_DEVICE,
+    platform_label=DEFAULT_PLATFORM_LABEL,
+    power_mode=DEFAULT_POWER_MODE,
+    torch_device=DEFAULT_TORCH_DEVICE,
+    require_proactive_drop_for_meris_burst=True,
+    require_no_proactive_drop_for_meris_control=True,
 ):
     base_task_config = Path(base_task_config).resolve()
     output_root = Path(output_root).resolve()
@@ -226,9 +240,27 @@ def generate_study_plan(
         if arrival_scale is None
         else arrival_scale
     )
+    workload_defaults = template.get("BurstStudyWorkload", {})
+    resolved_scheduler_tick_seconds = (
+        float(
+            workload_defaults.get(
+                "scheduler_tick_seconds",
+                DEFAULT_SCHEDULER_TICK_SECONDS,
+            )
+        )
+        if scheduler_tick_seconds is None
+        else float(scheduler_tick_seconds)
+    )
+    if resolved_scheduler_tick_seconds < 0:
+        raise ValueError("scheduler_tick_seconds cannot be negative")
     generated_root = output_root / "generated_configs"
     condition_records = []
     for condition in CONDITIONS:
+        if condition.regime == "transient":
+            condition = replace(
+                condition,
+                transient_duration_seconds=transient_duration_seconds,
+            )
         task_config = json.loads(json.dumps(template))
         task_config.pop("RunningTimeFactor", None)
         task_config.update(
@@ -248,6 +280,7 @@ def generate_study_plan(
             gpu_threshold=gpu_threshold,
             queue_threshold=queue_threshold,
             persistence_window=persistence_window,
+            scheduler_tick_seconds=resolved_scheduler_tick_seconds,
         )
         task_path = generated_root / condition.slug / "task.json"
         burst_path = generated_root / condition.slug / "burst.json"
@@ -269,10 +302,10 @@ def generate_study_plan(
     plan = {
         "schema_version": 1,
         "study": "transient-sustained-burst",
-        "device": "mac",
-        "platform_label": "M3 Max",
-        "power_mode": "AC power; default macOS policy",
-        "torch_device": "mps",
+        "device": device,
+        "platform_label": platform_label,
+        "power_mode": power_mode,
+        "torch_device": torch_device,
         "methods": list(METHODS),
         "method_labels": METHOD_LABELS,
         "seeds": list(seeds),
@@ -294,21 +327,31 @@ def generate_study_plan(
         "gpu_threshold": gpu_threshold,
         "queue_threshold": queue_threshold,
         "persistence_window": persistence_window,
+        "scheduler_tick_seconds": resolved_scheduler_tick_seconds,
         "conditions": condition_records,
         "planned_run_count": len(condition_records) * len(METHODS) * len(seeds),
         "run_order": "fixed pseudo-random permutation of all cases",
         "run_order_seed": DEFAULT_RUN_ORDER_SEED,
         "zero_burst_control_reused_between_regimes": True,
-        "require_proactive_drop_for_meris_burst": True,
-        "require_no_proactive_drop_for_meris_control": True,
+        "require_proactive_drop_for_meris_burst": (
+            require_proactive_drop_for_meris_burst
+        ),
+        "require_no_proactive_drop_for_meris_control": (
+            require_no_proactive_drop_for_meris_control
+        ),
     }
     _write_json_atomic(output_root / "study_plan.json", plan)
     return plan
 
 
-def _run_id(condition, method, seed, task_hash, burst_hash):
+def _run_id(device, condition, method, seed, task_hash, burst_hash):
+    device_slug = "".join(
+        character.lower() if character.isalnum() else "-" for character in device
+    ).strip("-")
+    if not device_slug:
+        raise ValueError("device must contain at least one letter or digit")
     return (
-        f"burst-mac-{condition['slug']}-{method}-seed{seed}-"
+        f"burst-{device_slug}-{condition['slug']}-{method}-seed{seed}-"
         f"task{task_hash[:8]}-burst{burst_hash[:8]}"
     )
 
@@ -334,7 +377,10 @@ def _validate_summary(manifest, summary):
     if summary.get("outcome_counts", {}).get("execution_error", 0):
         problems.append("execution_error outcomes present")
     burst = summary.get("burst_statistics") or {}
-    expected_management = manifest["method"] == "feedback-fine-grained"
+    expected_management = (
+        manifest["method"] == "feedback-fine-grained"
+        and manifest.get("ratio_percent", 0) > 0
+    )
     if burst.get("management_enabled") is not expected_management:
         problems.append("burst management enablement mismatch")
     workload = burst.get("workload") or {}
@@ -367,22 +413,47 @@ def run_study(
     dry_run=False,
     resume=False,
     keep_going=False,
+    selected_conditions=None,
+    selected_methods=None,
 ):
     output_root = Path(output_root).resolve()
     handler_config = Path(handler_config).resolve()
+    requested_torch_device = plan["torch_device"]
     runtime = (
-        {"requested": "mps", "resolved": "mps", "probe": "dry-run"}
+        {
+            "requested": requested_torch_device,
+            "resolved": requested_torch_device,
+            "probe": "dry-run",
+        }
         if dry_run
-        else torch_runtime_info("mps")
+        else torch_runtime_info(requested_torch_device)
     )
     git_commit = _git_output("rev-parse", "HEAD")
     git_status = _git_output("status", "--porcelain", "--", ".")
     failures = 0
+    available_conditions = {condition["slug"] for condition in plan["conditions"]}
+    available_methods = set(plan["methods"])
+    selected_conditions = (
+        available_conditions
+        if selected_conditions is None
+        else set(selected_conditions)
+    )
+    selected_methods = (
+        available_methods if selected_methods is None else set(selected_methods)
+    )
+    unknown_conditions = selected_conditions.difference(available_conditions)
+    unknown_methods = selected_methods.difference(available_methods)
+    if unknown_conditions:
+        raise ValueError(f"unknown Burst conditions: {sorted(unknown_conditions)}")
+    if unknown_methods:
+        raise ValueError(f"unknown Burst methods: {sorted(unknown_methods)}")
     cases = [
         (condition, seed, method)
         for condition in plan["conditions"]
         for seed in plan["seeds"]
         for method in plan["methods"]
+        if condition["slug"] in selected_conditions
+        and method in selected_methods
     ]
     random.Random(plan["run_order_seed"]).shuffle(cases)
     for run_order_index, (condition, seed, method) in enumerate(cases, start=1):
@@ -390,6 +461,7 @@ def run_study(
         burst_path = Path(condition["burst_config_path"])
         offered = _offered_stream(task_path, burst_path, seed)
         run_id = _run_id(
+            plan["device"],
             condition,
             method,
             seed,
@@ -777,6 +849,15 @@ def _csv_ints(value):
     return values
 
 
+def _csv_values(value):
+    values = tuple(item.strip() for item in value.split(",") if item.strip())
+    if not values:
+        raise argparse.ArgumentTypeError("value must contain at least one item")
+    if len(values) != len(set(values)):
+        raise argparse.ArgumentTypeError("items cannot contain duplicates")
+    return values
+
+
 def _positive_int(value):
     try:
         parsed = int(value)
@@ -836,6 +917,11 @@ def _build_parser():
         default=DEFAULT_BURST_START_SECONDS,
     )
     plan_parser.add_argument(
+        "--transient-duration-seconds",
+        type=float,
+        default=DEFAULT_TRANSIENT_DURATION_SECONDS,
+    )
+    plan_parser.add_argument(
         "--release-horizon-seconds",
         type=float,
         default=DEFAULT_RELEASE_HORIZON_SECONDS,
@@ -849,6 +935,29 @@ def _build_parser():
     plan_parser.add_argument(
         "--persistence-window", type=int, default=DEFAULT_PERSISTENCE_WINDOW
     )
+    plan_parser.add_argument(
+        "--scheduler-tick-seconds",
+        type=float,
+        default=None,
+        help=(
+            "controller polling interval; defaults to BurstStudyWorkload in "
+            "the base TaskConfig, then 0.005 seconds"
+        ),
+    )
+    plan_parser.add_argument("--device", default=DEFAULT_DEVICE)
+    plan_parser.add_argument("--platform-label", default=DEFAULT_PLATFORM_LABEL)
+    plan_parser.add_argument("--power-mode", default=DEFAULT_POWER_MODE)
+    plan_parser.add_argument("--torch-device", default=DEFAULT_TORCH_DEVICE)
+    plan_parser.add_argument(
+        "--require-proactive-drop-for-meris-burst",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+    plan_parser.add_argument(
+        "--require-no-proactive-drop-for-meris-control",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
     run_parser = subparsers.add_parser("run")
     run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     run_parser.add_argument(
@@ -859,6 +968,18 @@ def _build_parser():
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--resume", action="store_true")
     run_parser.add_argument("--keep-going", action="store_true")
+    run_parser.add_argument(
+        "--conditions",
+        type=_csv_values,
+        default=None,
+        help="optional comma-separated condition slugs for calibration runs",
+    )
+    run_parser.add_argument(
+        "--methods",
+        type=_csv_values,
+        default=None,
+        help="optional comma-separated methods for calibration runs",
+    )
     summarize_parser = subparsers.add_parser("summarize")
     summarize_parser.add_argument(
         "--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT
@@ -875,16 +996,28 @@ def main():
             else _seeds_for_repetitions(args.repetitions)
         )
         plan = generate_study_plan(
-            args.base_task_config,
-            args.output_root,
-            seeds,
-            args.deadline_factor,
-            args.arrival_scale,
-            args.burst_start_seconds,
-            args.release_horizon_seconds,
-            args.gpu_threshold,
-            args.queue_threshold,
-            args.persistence_window,
+            base_task_config=args.base_task_config,
+            output_root=args.output_root,
+            seeds=seeds,
+            deadline_factor=args.deadline_factor,
+            arrival_scale=args.arrival_scale,
+            burst_start_seconds=args.burst_start_seconds,
+            transient_duration_seconds=args.transient_duration_seconds,
+            release_horizon_seconds=args.release_horizon_seconds,
+            gpu_threshold=args.gpu_threshold,
+            queue_threshold=args.queue_threshold,
+            persistence_window=args.persistence_window,
+            scheduler_tick_seconds=args.scheduler_tick_seconds,
+            device=args.device,
+            platform_label=args.platform_label,
+            power_mode=args.power_mode,
+            torch_device=args.torch_device,
+            require_proactive_drop_for_meris_burst=(
+                args.require_proactive_drop_for_meris_burst
+            ),
+            require_no_proactive_drop_for_meris_control=(
+                args.require_no_proactive_drop_for_meris_control
+            ),
         )
         print(json.dumps(plan, indent=2, sort_keys=True))
         return 0
@@ -899,6 +1032,8 @@ def main():
             args.dry_run,
             args.resume,
             args.keep_going,
+            args.conditions,
+            args.methods,
         )
     report = summarize_study(args.output_root)
     print(json.dumps(report, indent=2, sort_keys=True))
