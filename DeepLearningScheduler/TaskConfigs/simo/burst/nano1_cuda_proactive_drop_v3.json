@@ -74,9 +74,9 @@
   "BurstStudyWorkload": {
     "purpose": "calibrated queue-triggered ProactiveDrop study on Nano1/CUDA",
     "base_dag": "four independent co-released requests without dependency-failure cascades",
-    "nominal_control_ready_queue_bound": 3,
-    "burst_ready_queue_lower_bound": 7,
-    "queue_threshold": 6,
+    "nominal_control_ready_queue_bound": 11,
+    "burst_ready_queue_lower_bound": 12,
+    "queue_threshold": 11,
     "persistence_window": 1,
     "burst_start_seconds": 0.0,
     "transient_duration_seconds": 3.0,
@@ -97,6 +97,13 @@
     },
     "target_sustained_100_deadline_missing_rate": [0.2, 0.3],
     "expected_meris_sustained_100_drop_count": 8,
+    "control_gate_calibration": {
+      "failed_output_root": "taskdata/burst_calibration/nano1_v3_control_gate_seed101_20260831",
+      "observed_maximum_control_queue_length": 11,
+      "previous_queue_threshold": 6,
+      "previous_meris_control_drop_count": 4,
+      "selection_rule": "overload requires Queue > queue_threshold; admit the observed Control maximum and trigger only above it"
+    },
     "drop_policy": "retain lane detection, control, and segmentation; shed object-detection requests when the ready queue exceeds the threshold"
   }
 }

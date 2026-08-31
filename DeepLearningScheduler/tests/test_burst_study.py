@@ -96,7 +96,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         transient_duration_seconds=3.0,
         release_horizon_seconds=10.0,
         gpu_threshold=100.0,
-        queue_threshold=6,
+        queue_threshold=11,
         persistence_window=1,
         device="nano1",
         platform_label="Jetson Orin Nano",
@@ -111,7 +111,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         "deadline_factor": "task-config",
         "arrival_scale": "task-config",
     }
-    assert plan["queue_threshold"] == 6
+    assert plan["queue_threshold"] == 11
     assert plan["persistence_window"] == 1
     assert [
         condition["expected_offered_task_count"]
