@@ -9,7 +9,7 @@ def _write_json(path, value):
 
 
 def test_quality_gate_accepts_complete_distinctive_matrix(tmp_path) -> None:
-    seeds = (101, 202)
+    seeds = (101, 202, 303)
     for condition_index, condition in enumerate(CONDITIONS):
         for method_index, method in enumerate(METHODS):
             for seed in seeds:
@@ -51,8 +51,13 @@ def test_quality_gate_accepts_complete_distinctive_matrix(tmp_path) -> None:
     report = validate_formal_results(tmp_path, seeds)
 
     assert report["quality_gate"]["accepted"] is True
-    assert report["complete_run_count"] == 30
+    assert report["complete_run_count"] == 45
     assert len(report["aggregate_rows"]) == 15
+    assert all(
+        row["representative_run"]["seed"] == 202
+        for row in report["aggregate_rows"]
+    )
+    assert "mean" not in json.dumps(report)
 
 
 def test_quality_gate_rejects_saturated_metrics(tmp_path) -> None:
@@ -60,5 +65,14 @@ def test_quality_gate_rejects_saturated_metrics(tmp_path) -> None:
 
     assert report["quality_gate"]["accepted"] is False
     assert report["quality_gate"]["checks"][
-        "deadline_missing_rate_has_interior_mean"
+        "deadline_missing_rate_has_interior_representative"
     ] is False
+
+
+def test_quality_gate_requires_an_odd_repetition_count(tmp_path) -> None:
+    try:
+        validate_formal_results(tmp_path, (101, 202))
+    except ValueError as exc:
+        assert "must be odd" in str(exc)
+    else:
+        raise AssertionError("an even repetition count was accepted")

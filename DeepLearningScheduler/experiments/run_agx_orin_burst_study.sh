@@ -5,7 +5,7 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPOSITORY_ROOT}"
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
-OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_agx_orin_cuda_v1}"
+OUTPUT_ROOT="${BURST_OUTPUT_ROOT:-taskdata/major_revision_burst_agx_orin_cuda_v3}"
 SEEDS="${BURST_SEEDS:-101,202,303,404,505}"
 
 if [[ "$(basename "${CONDA_PREFIX:-missing}")" != "schedule" ]]; then
@@ -20,15 +20,17 @@ git pull --ff-only
 
 git pull --ff-only
 "${PYTHON_BIN}" experiments/burst_study.py plan \
-  --base-task-config TaskConfigs/simo/burst/agx_orin_cuda_burst_v1.json \
+  --base-task-config TaskConfigs/simo/burst/agx_orin_cuda_burst_v2.json \
   --output-root "${OUTPUT_ROOT}" \
   --seeds "${SEEDS}" \
   --burst-start-seconds 0 \
   --transient-duration-seconds 0.65 \
   --release-horizon-seconds 1.5 \
   --gpu-threshold 100 \
-  --queue-threshold 6 \
-  --persistence-window 1 \
+  --queue-threshold 4 \
+  --queue-recovery-threshold 3 \
+  --persistence-window 3 \
+  --scheduler-tick-seconds 0.005 \
   --device agx_orin \
   --platform-label "AGX Orin" \
   --power-mode MAXN \

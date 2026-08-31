@@ -171,6 +171,52 @@ def test_invalid_task_level_drop_threshold_is_rejected() -> None:
         )
 
 
+def test_explicit_partition_and_drop_roles_are_preserved() -> None:
+    critical = _task("critical", 10)
+    critical.update(
+        {
+            "IsNonPartitionable": False,
+            "Droppable": False,
+            "MergeGroup": "critical",
+        }
+    )
+    redundant = _task("redundant", 10)
+    redundant.update(
+        {
+            "IsNonPartitionable": True,
+            "Droppable": True,
+            "DropThreshold": 0.25,
+            "MergeGroup": "redundant",
+        }
+    )
+
+    generated = generate_tasks_from_dag(
+        [[[critical, redundant]]],
+        deadline_factor=1.0,
+        arrival_scale=1.0,
+        dag_repeated_times=1,
+    )
+
+    assert [task["IsNonPartitionable"] for task in generated] == [False, True]
+    assert [task["Droppable"] for task in generated] == [False, True]
+    assert generated[0]["MergeKey"].endswith("merge=critical")
+    assert generated[1]["MergeKey"].endswith("merge=redundant")
+
+
+def test_explicit_partition_roles_cannot_be_randomized_by_percentage() -> None:
+    task = _task("explicit", 10)
+    task["IsNonPartitionable"] = False
+
+    with pytest.raises(ValueError, match="cannot be combined"):
+        generate_tasks_from_dag(
+            [[task]],
+            deadline_factor=1.0,
+            arrival_scale=1.0,
+            dag_repeated_times=1,
+            non_partitionable_percentage=50,
+        )
+
+
 def test_parallel_release_offsets_create_fixed_predicted_skews() -> None:
     dag = [[[
         {

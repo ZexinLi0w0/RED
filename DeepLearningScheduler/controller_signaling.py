@@ -174,17 +174,9 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
     while True: 
         # avoid to busy loop
         await asyncio.sleep(scheduler_tick_seconds)
-        # when all handlers are ready and tasks are not generated, generate tasks
-        if(not tasksGeneratedReady and all(allReady.values())):
-            task_scheduler.generate_task_list()
-            tasksGeneratedReady = True
-            logger.info(f"[CTRL] Tasks generated, offline scheduler: {task_scheduler.scheduler_name}, start time: {task_scheduler.TaskStartTime}, finished time: {time.time()}")
-        # Distribute the tasks in TaskQueue
-        elif(tasksGeneratedReady):
-            continue_distribution = task_scheduler.distribute_tasks()
-            if(not continue_distribution):
-                break
-        # read signals from queue and handle it
+        # Process controller-directed feedback before scanning the scheduling
+        # queue. In particular, a DELIVERY must release the handler before the
+        # next overload sample and dispatch decision.
         try:
             signal_message = control_queue.get_nowait()
             # logger.debug(f"Received signal: {signal_message}")
@@ -258,4 +250,15 @@ async def controller_signaling_SIMO(control_queue, handlers, tasks_list, approac
                 logger.info(f"[CTRL] Task {args_dict['taskid']} finished, status: {args_dict['output']}, start time: {args_dict['start_time']}, taskover time: {args_dict['end_time']}")
             
         except queue.Empty:
-            continue
+            pass
+
+        # when all handlers are ready and tasks are not generated, generate tasks
+        if(not tasksGeneratedReady and all(allReady.values())):
+            task_scheduler.generate_task_list()
+            tasksGeneratedReady = True
+            logger.info(f"[CTRL] Tasks generated, offline scheduler: {task_scheduler.scheduler_name}, start time: {task_scheduler.TaskStartTime}, finished time: {time.time()}")
+        # Distribute the tasks in TaskQueue
+        elif(tasksGeneratedReady):
+            continue_distribution = task_scheduler.distribute_tasks()
+            if(not continue_distribution):
+                break

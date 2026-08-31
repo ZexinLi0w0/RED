@@ -49,9 +49,15 @@ def _finite_number(value):
 
 
 def _aggregate(values):
+    quartiles = (
+        statistics.quantiles(values, n=4, method="inclusive")
+        if len(values) > 1
+        else (values[0], values[0], values[0])
+    )
     return {
-        "mean": statistics.fmean(values),
-        "standard_deviation": statistics.stdev(values) if len(values) > 1 else 0.0,
+        "median": statistics.median(values),
+        "quartile_1": quartiles[0],
+        "quartile_3": quartiles[2],
         "minimum": min(values),
         "maximum": max(values),
     }
@@ -60,6 +66,11 @@ def _aggregate(values):
 def validate_formal_results(output_root, expected_seeds=DEFAULT_SEEDS):
     output_root = Path(output_root).resolve()
     expected_seeds = tuple(expected_seeds)
+    if len(expected_seeds) % 2 == 0:
+        raise ValueError(
+            "formal AGX Orin Burst repetitions must be odd so the median "
+            "corresponds to one concrete run"
+        )
     expected_cells = {
         (condition, method, seed)
         for condition in CONDITIONS
@@ -133,37 +144,75 @@ def validate_formal_results(output_root, expected_seeds=DEFAULT_SEEDS):
         for condition in CONDITIONS:
             for method in METHODS:
                 cell_records = [
-                    records[(condition, method, seed)]["summary"]
+                    records[(condition, method, seed)]
                     for seed in expected_seeds
                 ]
+                representative = sorted(
+                    cell_records,
+                    key=lambda record: (
+                        float(record["summary"]["end_to_end_latency_seconds"]),
+                        int(record["manifest"]["seed"]),
+                    ),
+                )[len(cell_records) // 2]
                 row = {
                     "condition": condition,
                     "regime": "control" if condition == "control-000" else condition.split("-")[0],
                     "ratio_percent": int(condition.split("-")[1]),
                     "method": method,
                     "sample_count": len(cell_records),
+                    "representative_run": {
+                        "run_id": representative["manifest"].get("run_id"),
+                        "seed": representative["manifest"]["seed"],
+                        "selection_metric": "end_to_end_latency_seconds",
+                        "metrics": {
+                            metric: float(representative["summary"][metric])
+                            for metric in METRICS
+                        },
+                    },
                 }
                 for metric in METRICS:
                     row[metric] = _aggregate(
-                        [float(record[metric]) for record in cell_records]
+                        [
+                            float(record["summary"][metric])
+                            for record in cell_records
+                        ]
                     )
                 rows.append(row)
 
-    deadline_means = [
-        row["deadline_missing_rate"]["mean"] for row in rows
+    representative_deadline_missing_rates = [
+        row["representative_run"]["metrics"]["deadline_missing_rate"]
+        for row in rows
     ]
-    qoe_means = [row["qoe_score"]["mean"] for row in rows]
+    representative_qoe_scores = [
+        row["representative_run"]["metrics"]["qoe_score"] for row in rows
+    ]
     metric_checks = {
-        "deadline_missing_rate_has_interior_mean": bool(deadline_means)
-        and any(0.0 < value < 1.0 for value in deadline_means),
-        "deadline_missing_rate_spread_at_least_0_10": bool(deadline_means)
-        and max(deadline_means) - min(deadline_means) >= 0.10,
-        "qoe_not_all_saturated_high": bool(qoe_means)
-        and not all(value >= 0.995 for value in qoe_means),
-        "qoe_not_all_saturated_low": bool(qoe_means)
-        and not all(value <= 0.005 for value in qoe_means),
-        "qoe_spread_at_least_0_10": bool(qoe_means)
-        and max(qoe_means) - min(qoe_means) >= 0.10,
+        "deadline_missing_rate_has_interior_representative": bool(
+            representative_deadline_missing_rates
+        )
+        and any(
+            0.0 < value < 1.0
+            for value in representative_deadline_missing_rates
+        ),
+        "deadline_missing_rate_spread_at_least_0_10": bool(
+            representative_deadline_missing_rates
+        )
+        and max(representative_deadline_missing_rates)
+        - min(representative_deadline_missing_rates)
+        >= 0.10,
+        "qoe_representatives_not_all_saturated_high": bool(
+            representative_qoe_scores
+        )
+        and not all(value >= 0.995 for value in representative_qoe_scores),
+        "qoe_representatives_not_all_saturated_low": bool(
+            representative_qoe_scores
+        )
+        and not all(value <= 0.005 for value in representative_qoe_scores),
+        "qoe_representative_spread_at_least_0_10": bool(
+            representative_qoe_scores
+        )
+        and max(representative_qoe_scores) - min(representative_qoe_scores)
+        >= 0.10,
     }
     failed_metric_checks = [
         name for name, passed in metric_checks.items() if not passed
@@ -174,7 +223,7 @@ def validate_formal_results(output_root, expected_seeds=DEFAULT_SEEDS):
         )
 
     report = {
-        "schema_version": 1,
+        "schema_version": 2,
         "study": "agx-orin-transient-sustained-burst",
         "output_root": str(output_root),
         "expected_run_count": len(expected_cells),
@@ -209,11 +258,20 @@ def validate_formal_results(output_root, expected_seeds=DEFAULT_SEEDS):
             "ratio_percent",
             "method",
             "sample_count",
+            "representative_run_id",
+            "representative_seed",
             *[
                 f"{metric}_{statistic}"
                 for metric in METRICS
-                for statistic in ("mean", "standard_deviation", "minimum", "maximum")
+                for statistic in (
+                    "median",
+                    "quartile_1",
+                    "quartile_3",
+                    "minimum",
+                    "maximum",
+                )
             ],
+            *[f"representative_{metric}" for metric in METRICS],
         ]
         writer = csv.DictWriter(output_file, fieldnames=fieldnames)
         writer.writeheader()
@@ -228,9 +286,18 @@ def validate_formal_results(output_root, expected_seeds=DEFAULT_SEEDS):
                     "sample_count",
                 )
             }
+            flattened["representative_run_id"] = row[
+                "representative_run"
+            ]["run_id"]
+            flattened["representative_seed"] = row[
+                "representative_run"
+            ]["seed"]
             for metric in METRICS:
                 for statistic, value in row[metric].items():
                     flattened[f"{metric}_{statistic}"] = value
+                flattened[f"representative_{metric}"] = row[
+                    "representative_run"
+                ]["metrics"][metric]
             writer.writerow(flattened)
     return report
 

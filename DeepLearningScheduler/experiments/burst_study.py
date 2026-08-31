@@ -60,6 +60,7 @@ DEFAULT_RELEASE_HORIZON_SECONDS = 2.4
 DEFAULT_RUN_ORDER_SEED = 20260827
 DEFAULT_GPU_THRESHOLD = 100.0
 DEFAULT_QUEUE_THRESHOLD = 10
+DEFAULT_QUEUE_RECOVERY_THRESHOLD = None
 DEFAULT_PERSISTENCE_WINDOW = 3
 DEFAULT_SCHEDULER_TICK_SECONDS = 0.005
 DEFAULT_DEVICE = "mac"
@@ -152,9 +153,12 @@ def _burst_config(
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
+    queue_recovery_threshold=DEFAULT_QUEUE_RECOVERY_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
     scheduler_tick_seconds=DEFAULT_SCHEDULER_TICK_SECONDS,
 ):
+    if queue_recovery_threshold is None:
+        queue_recovery_threshold = max(0, queue_threshold - 1)
     config = {
         "burst_enabled": True,
         "burst_regime": condition.regime,
@@ -162,6 +166,7 @@ def _burst_config(
         "release_horizon_seconds": release_horizon_seconds,
         "gpu_threshold": gpu_threshold,
         "queue_threshold": queue_threshold,
+        "queue_recovery_threshold": queue_recovery_threshold,
         "persistence_window": persistence_window,
         "drop_threshold": 0.5,
         "monitoring_interval": 0.05,
@@ -215,6 +220,7 @@ def generate_study_plan(
     release_horizon_seconds=DEFAULT_RELEASE_HORIZON_SECONDS,
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
+    queue_recovery_threshold=DEFAULT_QUEUE_RECOVERY_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
     scheduler_tick_seconds=None,
     device=DEFAULT_DEVICE,
@@ -251,8 +257,10 @@ def generate_study_plan(
         if scheduler_tick_seconds is None
         else float(scheduler_tick_seconds)
     )
-    if resolved_scheduler_tick_seconds < 0:
-        raise ValueError("scheduler_tick_seconds cannot be negative")
+    if resolved_scheduler_tick_seconds <= 0:
+        raise ValueError("scheduler_tick_seconds must be positive")
+    if queue_recovery_threshold is None:
+        queue_recovery_threshold = max(0, queue_threshold - 1)
     generated_root = output_root / "generated_configs"
     condition_records = []
     for condition in CONDITIONS:
@@ -268,7 +276,9 @@ def generate_study_plan(
                 "DeadlineFactor": resolved_deadline_factor,
                 "ArrivalScale": resolved_arrival_scale,
                 "BurstTaskRatio": condition.ratio_percent,
-                "ReleaseTimeSkewThresholdMs": 100.0,
+                "ReleaseTimeSkewThresholdMs": (
+                    template_timing.release_time_skew_threshold_ms
+                ),
                 "MovingAverageWindow": 8,
                 "QoELambda": 0.05,
             }
@@ -279,6 +289,7 @@ def generate_study_plan(
             release_horizon_seconds=release_horizon_seconds,
             gpu_threshold=gpu_threshold,
             queue_threshold=queue_threshold,
+            queue_recovery_threshold=queue_recovery_threshold,
             persistence_window=persistence_window,
             scheduler_tick_seconds=resolved_scheduler_tick_seconds,
         )
@@ -326,6 +337,7 @@ def generate_study_plan(
         "release_horizon_seconds": release_horizon_seconds,
         "gpu_threshold": gpu_threshold,
         "queue_threshold": queue_threshold,
+        "queue_recovery_threshold": queue_recovery_threshold,
         "persistence_window": persistence_window,
         "scheduler_tick_seconds": resolved_scheduler_tick_seconds,
         "conditions": condition_records,
@@ -401,6 +413,25 @@ def _validate_summary(manifest, summary):
         problems.append(
             "MERIS zero-Burst control unexpectedly activated ProactiveDrop"
         )
+    if manifest.get("require_transient_recovery"):
+        if burst.get("workload_phase") != "normal":
+            problems.append("MERIS transient run did not return to NORMAL")
+        if burst.get("transient_recovery_completed") is not True:
+            problems.append("MERIS transient run did not complete recovery")
+        workload = burst.get("workload") or {}
+        burst_end = workload.get("burst_end_seconds")
+        if burst_end is not None:
+            post_window_baseline_drops = [
+                record
+                for record in drop_records
+                if not record.get("is_burst_task", False)
+                and float(record.get("release_time_seconds", -1.0))
+                >= float(burst_end)
+            ]
+            if post_window_baseline_drops:
+                problems.append(
+                    "MERIS transient recovery dropped post-window baseline work"
+                )
     return problems
 
 
@@ -526,6 +557,11 @@ def run_study(
                 )
                 and method == "feedback-fine-grained"
                 and condition["ratio_percent"] == 0
+            ),
+            "require_transient_recovery": (
+                method == "feedback-fine-grained"
+                and condition["regime"] == "transient"
+                and condition["ratio_percent"] > 0
             ),
             "git_commit": git_commit,
             "git_status_porcelain": git_status,
@@ -783,6 +819,7 @@ def summarize_study(output_root=DEFAULT_OUTPUT_ROOT):
         "release_horizon_seconds",
         "gpu_threshold",
         "queue_threshold",
+        "queue_recovery_threshold",
         "persistence_window",
         "run_order",
         "run_order_seed",
@@ -933,6 +970,11 @@ def _build_parser():
         "--queue-threshold", type=int, default=DEFAULT_QUEUE_THRESHOLD
     )
     plan_parser.add_argument(
+        "--queue-recovery-threshold",
+        type=int,
+        default=DEFAULT_QUEUE_RECOVERY_THRESHOLD,
+    )
+    plan_parser.add_argument(
         "--persistence-window", type=int, default=DEFAULT_PERSISTENCE_WINDOW
     )
     plan_parser.add_argument(
@@ -1006,6 +1048,7 @@ def main():
             release_horizon_seconds=args.release_horizon_seconds,
             gpu_threshold=args.gpu_threshold,
             queue_threshold=args.queue_threshold,
+            queue_recovery_threshold=args.queue_recovery_threshold,
             persistence_window=args.persistence_window,
             scheduler_tick_seconds=args.scheduler_tick_seconds,
             device=args.device,

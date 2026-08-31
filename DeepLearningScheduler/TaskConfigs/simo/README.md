@@ -19,10 +19,13 @@
 - **Priority**: 调度优先级（数值越大越重要，实际含义依据调度策略）。
 - **RunningTime**: 该任务的目标/预算运行时长（毫秒级，可选，用于节奏控制或统计）。
 - **WorstRunningTime**: 最坏情况下的运行时间估计（毫秒），用于超时和鲁棒性控制。
+- **IsNonPartitionable**（任务级可选属性）: 显式指定节点是否保持为独立执行节点。适合 Burst 等需要按任务角色固定 partition policy 的实验；使用该字段时，`NonPartitionablePercentage` 必须为 `0`。
+- **MergeGroup**（任务级可选属性）: 指定同一 DAG release 中允许合并的结构组。只有 group、handler、DAG period 和 release-time skew 均兼容的 partitionable 节点才能合并。
+- **Droppable**（任务级可选属性）: 明确节点是否可被 ProactiveDrop 丢弃。关键节点应设置为 `false`。
+- **DropThreshold**（任务级可选属性）: 可丢弃节点的 criticality 阈值。值为 `0` 的节点不会被丢弃；合并节点继承所有 constituent 中最保守的阈值。
 - 可选全局字段：
   - **RunningTimeFactor**: 全局时间缩放因子，用于模拟不同平台/工况下的执行时延。
   - **NonPartitionablePercentage**: 指定不可切分比例（%），用于评估任务在细粒度切分下的不可并行部分。
-  - **DropThreshold**（任务级可选属性）: 面向突发（burst）场景的任务丢弃阈值；当前实现仅使用该字段。
 
 ### Burst 工作负载配置
 

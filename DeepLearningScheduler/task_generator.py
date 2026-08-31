@@ -457,6 +457,30 @@ def generate_tasks_from_dag(
         or not 0 <= non_partitionable_percentage <= 100
     ):
         raise ValueError("non_partitionable_percentage must be between 0 and 100")
+
+    task_configs = []
+    for dag in dag_config:
+        for stage in dag:
+            task_configs.extend(stage if isinstance(stage, list) else [stage])
+    explicitly_partitioned = [
+        config for config in task_configs if "IsNonPartitionable" in config
+    ]
+    if explicitly_partitioned and non_partitionable_percentage != 0:
+        raise ValueError(
+            "task-level IsNonPartitionable cannot be combined with a non-zero "
+            "NonPartitionablePercentage"
+        )
+    for config in explicitly_partitioned:
+        if not isinstance(config["IsNonPartitionable"], bool):
+            raise ValueError("IsNonPartitionable must be a boolean")
+    for config in task_configs:
+        if "Droppable" in config and not isinstance(config["Droppable"], bool):
+            raise ValueError("Droppable must be a boolean")
+        if "MergeGroup" in config and (
+            not isinstance(config["MergeGroup"], str)
+            or not config["MergeGroup"].strip()
+        ):
+            raise ValueError("MergeGroup must be a non-empty string")
     tasks = []
     start_time_ms = 0.0
 
@@ -475,7 +499,8 @@ def generate_tasks_from_dag(
         task_position = (
             f"dag={dag_idx}/period={period}/stage={stage_idx}/branch={branch_label}"
         )
-        merge_key = f"dag={dag_idx}/period={period}/stage={stage_idx}"
+        merge_group = config.get("MergeGroup", f"stage={stage_idx}")
+        merge_key = f"dag={dag_idx}/period={period}/merge={merge_group}"
         task_id = (
             f"{config['TaskName']}_[{period}]_D{dag_idx}_S{stage_idx}_B"
             f"{branch_label}"
@@ -500,7 +525,12 @@ def generate_tasks_from_dag(
             "Dependencies": config["Dependencies"],
             "RunArgs": str(config["RunArgs"]),
             "EstimatedExecutionTime": worst_running_time_ms / 1000.0,
-            "IsNonPartitionable": is_non_partitionable
+            "IsNonPartitionable": config.get(
+                "IsNonPartitionable", is_non_partitionable
+            ),
+            "Droppable": config.get(
+                "Droppable", float(config.get("DropThreshold", 0.0)) > 0.0
+            ),
         }
         if "DropThreshold" in config:
             drop_threshold = config["DropThreshold"]

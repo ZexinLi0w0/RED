@@ -68,6 +68,8 @@ def test_release_time_skew_threshold_changes_execution_graph() -> None:
 def test_merged_task_uses_the_earliest_deadline_and_preserves_constituents() -> None:
     first = _task("first", 1, 0.10, "same-stage")
     second = _task("second", 2, 0.20, "same-stage")
+    first.update({"DropThreshold": 0.0, "Droppable": False})
+    second.update({"DropThreshold": 0.4, "Droppable": True})
 
     merged = merge_tasks(first, second)
 
@@ -75,6 +77,8 @@ def test_merged_task_uses_the_earliest_deadline_and_preserves_constituents() -> 
     assert merged["RunArgs"] == "1,2"
     assert merged["Dependencies"] == [1, 2]
     assert merged["ConstituentTaskIds"] == ["first", "second"]
+    assert merged["Droppable"] is False
+    assert merged["DropThreshold"] == 0.0
 
 
 def test_merged_execution_reports_outcomes_for_the_original_population() -> None:

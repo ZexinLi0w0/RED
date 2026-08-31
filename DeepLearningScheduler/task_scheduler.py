@@ -69,7 +69,9 @@ def merge_tasks(first, second):
         key=lambda value: int(value),
     )
 
-    return {
+    first_drop_threshold = float(first.get("DropThreshold", 0.0))
+    second_drop_threshold = float(second.get("DropThreshold", 0.0))
+    merged = {
         "TaskId": f"merged_{merged_identity}",
         "TaskPosition": f"merged:{first['MergeKey']}",
         "MergeKey": first["MergeKey"],
@@ -92,7 +94,24 @@ def merge_tasks(first, second):
             float(second.get("EstimatedExecutionTime", 0.0)),
         ),
         "IsNonPartitionable": False,
+        # A merged execution is droppable only when every constituent is
+        # droppable. The lowest threshold preserves the most protective
+        # constituent policy.
+        "Droppable": bool(first.get("Droppable", first_drop_threshold > 0.0))
+        and bool(second.get("Droppable", second_drop_threshold > 0.0)),
+        "DropThreshold": min(first_drop_threshold, second_drop_threshold),
     }
+    if first.get("IsBurstTask", False) and second.get("IsBurstTask", False):
+        merged.update(
+            {
+                "IsBurstTask": True,
+                "BurstRegime": first.get("BurstRegime"),
+                "BurstInstanceIndex": first.get("BurstInstanceIndex"),
+                "BurstSourceDagIndex": first.get("BurstSourceDagIndex"),
+                "BurstSourceDagPeriod": first.get("BurstSourceDagPeriod"),
+            }
+        )
+    return merged
 
 
 def _task_output_types(task):
@@ -244,15 +263,22 @@ class TaskSchedule:
             workload_config = burst_workload_config_from_mapping(burst_config)
             gpu_threshold = burst_config.get('gpu_threshold', 90.0)
             queue_threshold = burst_config.get('queue_threshold', 8)
+            queue_recovery_threshold = burst_config.get(
+                'queue_recovery_threshold', max(0, queue_threshold - 1)
+            )
             persistence_window = burst_config.get('persistence_window', 3)
             default_drop_threshold = burst_config.get('drop_threshold', 0.5)
             monitoring_interval = burst_config.get('monitoring_interval', 0.05)
             self.burst_manager = BurstTaskManager(
                 gpu_threshold=gpu_threshold,
                 queue_threshold=queue_threshold,
+                queue_recovery_threshold=queue_recovery_threshold,
                 persistence_window=persistence_window,
                 default_drop_threshold=default_drop_threshold,
                 monitoring_interval=monitoring_interval,
+                overload_sample_interval_seconds=burst_config.get(
+                    'scheduler_tick_seconds', 0.005
+                ),
                 workload_config=workload_config,
                 management_enabled=self.burst_management_enabled,
                 logger=logger
@@ -432,6 +458,7 @@ class TaskSchedule:
         burst_stats = None
         # Log burst statistics if enabled
         if self.burst_enabled and self.burst_manager:
+            self.burst_manager.finalize_workload(relative_end2end_runtime)
             burst_stats = self.burst_manager.get_burst_statistics()
             if self.burst_management_enabled:
                 self.burst_manager.stop_monitoring()

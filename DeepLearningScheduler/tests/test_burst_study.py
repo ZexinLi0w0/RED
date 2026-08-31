@@ -19,7 +19,7 @@ NANO1_BASE_TASK_CONFIG = (
     DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v1.json"
 )
 AGX_ORIN_BASE_TASK_CONFIG = (
-    DEFAULT_BASE_TASK_CONFIG.parent / "agx_orin_cuda_calibration_v1.json"
+    DEFAULT_BASE_TASK_CONFIG.parent / "agx_orin_cuda_burst_v2.json"
 )
 
 
@@ -144,8 +144,9 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
         transient_duration_seconds=0.65,
         release_horizon_seconds=1.5,
         gpu_threshold=100.0,
-        queue_threshold=6,
-        persistence_window=1,
+        queue_threshold=4,
+        queue_recovery_threshold=3,
+        persistence_window=3,
         device="agx_orin",
         platform_label="AGX Orin",
         power_mode="MAXN",
@@ -153,22 +154,27 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
     )
 
     assert plan["deadline_factor"] == 8.0
-    assert plan["arrival_scale"] == 8.0
-    assert plan["queue_threshold"] == 6
-    assert plan["persistence_window"] == 1
-    assert plan["scheduler_tick_seconds"] == 0.0
+    assert plan["arrival_scale"] == 5.0
+    assert plan["queue_threshold"] == 4
+    assert plan["queue_recovery_threshold"] == 3
+    assert plan["persistence_window"] == 3
+    assert plan["scheduler_tick_seconds"] == 0.005
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
-    ] == [16, 20, 28, 24, 32]
+    ] == [28, 36, 44, 40, 56]
     assert [
         condition["expected_workload"]["added_dag_release_count"]
         for condition in plan["conditions"]
-    ] == [0, 1, 3, 2, 4]
+    ] == [0, 2, 4, 3, 7]
 
     config = json.loads(AGX_ORIN_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
     assert config["RuntimeProfile"]["torch_device"] == "cuda:0"
-    assert config["NonPartitionablePercentage"] == 100
+    assert config["NonPartitionablePercentage"] == 0
+    partition_flags = [
+        task["IsNonPartitionable"] for task in config["dag_list"][0][0]
+    ]
+    assert partition_flags == [False, False, True, True]
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
@@ -178,7 +184,8 @@ def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
             encoding="utf-8"
         )
     )
-    assert burst_config["scheduler_tick_seconds"] == 0.0
+    assert burst_config["scheduler_tick_seconds"] == 0.005
+    assert burst_config["queue_recovery_threshold"] == 3
 
 
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
@@ -257,6 +264,50 @@ def test_meris_control_validation_rejects_proactive_drop() -> None:
     assert _validate_summary(manifest, summary) == [
         "MERIS zero-Burst control unexpectedly activated ProactiveDrop"
     ]
+
+
+def test_transient_validation_requires_recovery_and_protects_new_baseline() -> None:
+    workload = {"burst_end_seconds": 1.0}
+    manifest = {
+        "run_id": "meris-transient",
+        "method": "feedback-fine-grained",
+        "offered_task_count": 2,
+        "offered_task_stream_sha256": "stream",
+        "expected_workload": workload,
+        "ratio_percent": 100,
+        "require_transient_recovery": True,
+    }
+    summary = {
+        "run_id": "meris-transient",
+        "method": "feedback-fine-grained",
+        "offered_task_count": 2,
+        "offered_task_stream_sha256": "stream",
+        "end_to_end_latency_seconds": 1.5,
+        "deadline_missing_rate": 0.5,
+        "qoe_score": 0.7,
+        "outcome_counts": {},
+        "burst_statistics": {
+            "management_enabled": True,
+            "workload": workload,
+            "workload_phase": "recovery",
+            "transient_recovery_completed": False,
+            "drop_records": [
+                {
+                    "task_id": "new-baseline",
+                    "is_burst_task": False,
+                    "release_time_seconds": 1.1,
+                }
+            ],
+        },
+    }
+
+    problems = _validate_summary(manifest, summary)
+
+    assert "MERIS transient run did not return to NORMAL" in problems
+    assert "MERIS transient run did not complete recovery" in problems
+    assert (
+        "MERIS transient recovery dropped post-window baseline work" in problems
+    )
 
 
 def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:

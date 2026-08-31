@@ -1,0 +1,110 @@
+{
+  "DeadlineFactor": 8.0,
+  "ArrivalScale": 5.0,
+  "DagRepeatedTimes": 7,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "ReleaseTimeSkewThresholdMs": 20,
+  "MovingAverageWindow": 8,
+  "NonPartitionablePercentage": 0,
+  "BurstTaskRatio": 100,
+  "QoELambda": 0.05,
+  "dag_list": [
+    [
+      [
+        {
+          "TaskName": "AGX_Burst_Critical_LaneDetection",
+          "HandlerId": 5,
+          "Priority": 3,
+          "Dependencies": [],
+          "RunArgs": [1],
+          "RunningTime": 28.642414,
+          "WorstRunningTime": 32.112678,
+          "DropThreshold": 0.0,
+          "Droppable": false,
+          "IsNonPartitionable": false,
+          "MergeGroup": "critical-shared-encoder"
+        },
+        {
+          "TaskName": "AGX_Burst_Critical_Control",
+          "HandlerId": 5,
+          "Priority": 3,
+          "Dependencies": [],
+          "RunArgs": [2],
+          "RunningTime": 23.756031,
+          "WorstRunningTime": 26.968867,
+          "DropThreshold": 0.0,
+          "Droppable": false,
+          "IsNonPartitionable": false,
+          "MergeGroup": "critical-shared-encoder"
+        },
+        {
+          "TaskName": "AGX_Burst_Redundant_Segmentation",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [3],
+          "RunningTime": 25.380104,
+          "WorstRunningTime": 29.04433,
+          "DropThreshold": 0.4,
+          "Droppable": true,
+          "IsNonPartitionable": true,
+          "MergeGroup": "redundant-segmentation"
+        },
+        {
+          "TaskName": "AGX_Burst_Redundant_ObjectDetection",
+          "HandlerId": 5,
+          "Priority": 1,
+          "Dependencies": [],
+          "RunArgs": [4],
+          "RunningTime": 33.317769,
+          "WorstRunningTime": 37.762278,
+          "DropThreshold": 0.25,
+          "Droppable": true,
+          "IsNonPartitionable": true,
+          "MergeGroup": "redundant-object-detection"
+        }
+      ]
+    ]
+  ],
+  "RuntimeProfile": {
+    "platform": "AGX Orin",
+    "profile_file": "agx_orin_maxn_20260828_v1.json",
+    "profile_sha256": "cc7bc798f1802a8c726e9a444f6c8c8ff5d1f12639b076215bf4e38155e762f5",
+    "torch_device": "cuda:0",
+    "power_mode": "agx-orin-maxn",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1
+  },
+  "BurstStudyWorkload": {
+    "phase": "pilot-candidate",
+    "purpose": "workload-backed ProactiveDrop study on AGX Orin/CUDA",
+    "base_dag": "two partitionable critical requests and two independent droppable redundant requests",
+    "partition_policy": "critical requests are mergeable; redundant requests remain atomic drop candidates",
+    "nominal_control_execution_queue_bound": 3,
+    "nominal_100_percent_burst_execution_queue_bound": 6,
+    "queue_threshold": 4,
+    "queue_recovery_threshold": 3,
+    "persistence_window": 3,
+    "scheduler_tick_seconds": 0.005,
+    "burst_start_seconds": 0.0,
+    "transient_duration_seconds": 0.65,
+    "release_horizon_seconds": 1.5,
+    "estimated_release_interval_seconds": 0.18881139,
+    "profiled_base_demand_seconds": 0.111096318,
+    "estimated_load_ratios": {
+      "control_000": 0.588,
+      "burst_050": 0.882,
+      "burst_100": 1.176
+    },
+    "offered_task_counts": {
+      "control_000": 28,
+      "transient_050": 36,
+      "transient_100": 44,
+      "sustained_050": 40,
+      "sustained_100": 56
+    },
+    "drop_policy": "shed the minimum number of redundant requests required to cross the queue recovery threshold; prefer Burst replicas",
+    "acceptance": "freeze only after a median-run pilot shows interior Deadline Missing Rate and non-saturated QoE values while transient runs return to NORMAL"
+  }
+}
