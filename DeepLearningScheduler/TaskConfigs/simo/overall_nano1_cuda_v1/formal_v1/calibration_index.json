@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "selection_method": "EDF only; proposed-method results must remain hidden",
+  "tight_target": {
+    "center": 0.5,
+    "preferred_interval": [
+      0.3,
+      0.7
+    ]
+  },
+  "loose_target": {
+    "center": 0.1,
+    "preferred_interval": [
+      0.05,
+      0.25
+    ]
+  },
+  "spec": "spec.json",
+  "spec_sha256": "32135dffb095bc6bf371db1d59f207b784e69d50608e367fb6c0dcbb720d1eae",
+  "configs": [
+    {
+      "device": "nano",
+      "scenario": "urban_navigation",
+      "profile": "tight",
+      "deadline_alpha": 2.7,
+      "arrival_scale": 1.55,
+      "source_config": "nano_loose_urban_navigation.json",
+      "config_path": "nano_tight_urban_navigation.json",
+      "config_sha256": "2f4dfe68d82e8b2bc7e29139036a25fa9a826c13de22aced67008d7d40353b95"
+    },
+    {
+      "device": "nano",
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "tight",
+      "deadline_alpha": 2.1,
+      "arrival_scale": 1.25,
+      "source_config": "nano_loose_emergency_obstacle_avoidance.json",
+      "config_path": "nano_tight_emergency_obstacle_avoidance.json",
+      "config_sha256": "c4af1512ec5d5588108adcf720eb223da035a23e2a3a45ed8fc932066872d7b0"
+    },
+    {
+      "device": "nano",
+      "scenario": "night_driving",
+      "profile": "tight",
+      "deadline_alpha": 1.5,
+      "arrival_scale": 1.0005,
+      "source_config": "nano_loose_night_driving.json",
+      "config_path": "nano_tight_night_driving.json",
+      "config_sha256": "d45f6581668682f33d1c88ee165fbab62da82b4a5dad149d5b742b0e4b88c8f1"
+    }
+  ]
+}

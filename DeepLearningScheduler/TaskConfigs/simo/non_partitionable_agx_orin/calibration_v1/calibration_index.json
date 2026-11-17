@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "device": "agx_orin",
+  "phase": "calibration",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "feedback-fine-grained"
+  ],
+  "selection_rule": "prefer interior Deadline Missing Rate across all methods, non-saturated QoE, and method separation; freeze before formal runs",
+  "configs": [
+    {
+      "profile": "cal",
+      "scenario": "d100_a075_p050",
+      "deadline_factor": 1.0,
+      "arrival_scale": 0.75,
+      "config_path": "agx_orin_cal_d100_a075_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d100_a100_p050",
+      "deadline_factor": 1.0,
+      "arrival_scale": 1.0,
+      "config_path": "agx_orin_cal_d100_a100_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d100_a125_p050",
+      "deadline_factor": 1.0,
+      "arrival_scale": 1.25,
+      "config_path": "agx_orin_cal_d100_a125_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d200_a075_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 0.75,
+      "config_path": "agx_orin_cal_d200_a075_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d200_a100_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 1.0,
+      "config_path": "agx_orin_cal_d200_a100_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d200_a125_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 1.25,
+      "config_path": "agx_orin_cal_d200_a125_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a075_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 0.75,
+      "config_path": "agx_orin_cal_d400_a075_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a100_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 1.0,
+      "config_path": "agx_orin_cal_d400_a100_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a125_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 1.25,
+      "config_path": "agx_orin_cal_d400_a125_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a075_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 0.75,
+      "config_path": "agx_orin_cal_d800_a075_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a100_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 1.0,
+      "config_path": "agx_orin_cal_d800_a100_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a125_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 1.25,
+      "config_path": "agx_orin_cal_d800_a125_p050.json"
+    }
+  ]
+}

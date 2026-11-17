@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "device": "agx_orin",
+  "phase": "calibration",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "feedback-fine-grained"
+  ],
+  "selection_rule": "prefer interior Deadline Missing Rate across all methods, non-saturated QoE, and method separation; freeze before formal runs",
+  "configs": [
+    {
+      "profile": "cal",
+      "scenario": "d200_a400_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 4.0,
+      "config_path": "agx_orin_cal_d200_a400_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d200_a800_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 8.0,
+      "config_path": "agx_orin_cal_d200_a800_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d200_a1200_p050",
+      "deadline_factor": 2.0,
+      "arrival_scale": 12.0,
+      "config_path": "agx_orin_cal_d200_a1200_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a400_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 4.0,
+      "config_path": "agx_orin_cal_d400_a400_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a800_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 8.0,
+      "config_path": "agx_orin_cal_d400_a800_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d400_a1200_p050",
+      "deadline_factor": 4.0,
+      "arrival_scale": 12.0,
+      "config_path": "agx_orin_cal_d400_a1200_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a400_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 4.0,
+      "config_path": "agx_orin_cal_d800_a400_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a800_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 8.0,
+      "config_path": "agx_orin_cal_d800_a800_p050.json"
+    },
+    {
+      "profile": "cal",
+      "scenario": "d800_a1200_p050",
+      "deadline_factor": 8.0,
+      "arrival_scale": 12.0,
+      "config_path": "agx_orin_cal_d800_a1200_p050.json"
+    }
+  ]
+}

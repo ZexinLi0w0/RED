@@ -82,6 +82,30 @@ def test_management_disabled_never_drops() -> None:
     assert manager.get_burst_statistics()["drop_records"] == []
 
 
+def test_zero_burst_control_disables_proactive_management(monkeypatch) -> None:
+    starts = []
+    monkeypatch.setattr(
+        BurstTaskManager,
+        "start_monitoring",
+        lambda self: starts.append(True),
+    )
+    scheduler = TaskSchedule(
+        _tasks(),
+        handler_status=defaultdict(int),
+        control_queue=Queue(),
+        scheduler="edf",
+        logger=logging,
+        approach_module="feedback-fine-grained",
+        burst_enabled=True,
+        burst_config=_burst_config(),
+        burst_task_ratio=0,
+    )
+
+    assert scheduler.burst_management_enabled is False
+    assert scheduler.burst_manager.management_enabled is False
+    assert starts == []
+
+
 def test_unreleased_work_is_not_counted_as_active_backlog(monkeypatch) -> None:
     monkeypatch.setattr(BurstTaskManager, "start_monitoring", lambda self: None)
     scheduler = TaskSchedule(

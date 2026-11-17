@@ -24,7 +24,7 @@ from task_generator import (
 )
 from runtime_device import configure_torch_device
 
-def create_subprocess(control_queue, base_time, config=()):
+def create_subprocess(command_queue, reply_queue, base_time, config=()):
     """
     Function to run a single handler.
     This function is in a new process.
@@ -48,7 +48,16 @@ def create_subprocess(control_queue, base_time, config=()):
     # start a coroutine to handle signal from the queue
     loop = asyncio.get_event_loop()
     # config tuple
-    main_task = loop.create_task(handle_signaling_SIMO(control_queue, base_time, config=config, logger=logger, instance=instance))
+    main_task = loop.create_task(
+        handle_signaling_SIMO(
+            command_queue,
+            base_time,
+            config=config,
+            logger=logger,
+            instance=instance,
+            reply_queue=reply_queue,
+        )
+    )
     try:
         loop.run_until_complete(main_task)
     except KeyboardInterrupt:
@@ -63,6 +72,9 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
     """
     # Create a list of processes
     processes = []
+    handler_queues = {
+        int(handler["id"]): Queue() for handler in handlers
+    }
     # base time for all handlers and tasks
     base_time = time.time()        
     for handler in handlers:
@@ -73,7 +85,11 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
 
         # Create a process for each handler
         config = (handler_id, handler_name, handler_description, run_args)        
-        process = Process(target=create_subprocess, name=handler_name, args=(control_queue, base_time, config))
+        process = Process(
+            target=create_subprocess,
+            name=handler_name,
+            args=(handler_queues[handler_id], control_queue, base_time, config),
+        )
         processes.append(process)
     # Start all processes
     for process in processes:
@@ -82,7 +98,7 @@ def run_handlers(handlers, tasks_list, control_queue, logger, approach_module='b
     loop = asyncio.get_event_loop()
     # main process send heartbeat signal to every subprocess per second
     # heartping_handler = loop.create_task(send_heart_ping(control_queue, handlers, base_time=base_time, logger=logger))
-    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio, task_config_path=task_config_path, output_dir=output_dir, run_id=run_id, release_time_skew_threshold_seconds=release_time_skew_threshold_seconds, moving_average_window=moving_average_window))
+    daemon_signaling_handler = loop.create_task(controller_signaling_SIMO(control_queue, handlers, tasks_list, approach_module=approach_module, logger=logger, base_time=base_time, task_filename=task_filename, burst_config=burst_config, burst_task_ratio=burst_task_ratio, task_config_path=task_config_path, output_dir=output_dir, run_id=run_id, release_time_skew_threshold_seconds=release_time_skew_threshold_seconds, moving_average_window=moving_average_window, handler_queues=handler_queues))
     
     try:
         # loop.run_until_complete(heartping_handler)

@@ -1,0 +1,64 @@
+{
+  "atomic_node_statistics": {
+    "atomic": {
+      "deadline_missing_rate": null,
+      "offered_node_count": 0,
+      "outcome_counts": {},
+      "qoe_score": null
+    },
+    "atomic_offered_ratio": 0.0,
+    "partitionable": {
+      "deadline_missing_rate": 0.9666666666666667,
+      "offered_node_count": 30,
+      "outcome_counts": {
+        "skip": 29,
+        "success": 1
+      },
+      "qoe_score": 0.4902472934570667
+    },
+    "semantics": "legacy schema name: tasks configured as non-partitionable remain one scheduling node; this does not assert that a specific model or GPU kernel is physically indivisible"
+  },
+  "average_executed_node_latency_seconds": 0.024609088897705078,
+  "burst_statistics": null,
+  "deadline_missing_rate": 0.9666666666666667,
+  "end_to_end_latency_seconds": 3.610278844833374,
+  "execution_task_count": 30,
+  "finished_execution_task_count": 30,
+  "method": "feedback-fine-grained",
+  "moving_average_reassignment": {
+    "enabled": true,
+    "event_count": 1,
+    "events": [
+      {
+        "completed_task_id": "S5_Stage1_Control_Autopilot_[0]_D0_S0_Bsingle",
+        "completion_time_seconds": 0.09832954406738281,
+        "dag_index": 0,
+        "dag_period": 0,
+        "moving_average_seconds": 0.024609088897705078,
+        "observed_execution_seconds": 0.024609088897705078,
+        "reassigned_deadlines": {
+          "S5_Stage2_Control_Autopilot_[0]_D0_S1_Bsingle": 0.18400910703369142,
+          "S5_Stage3_Control_Autopilot_[0]_D0_S2_Bsingle": 0.26968867
+        },
+        "window": 8
+      }
+    ],
+    "window": 8
+  },
+  "offered_task_count": 30,
+  "offered_task_stream_sha256": "13290a5714844ec5dd320261de42f800e8c247fa317ac10c14a1db567a90a1c7",
+  "outcome_counts": {
+    "skip": 29,
+    "success": 1
+  },
+  "overall_deadline_hit": 0.0,
+  "qoe_lambda": 0.05,
+  "qoe_score": 0.4154962984260185,
+  "qoe_score_definition": "original QoEScore(r) = 1 / (1 + exp(lambda) * max(0, C_r - S_r)); C_r and S_r are in seconds",
+  "qoe_time_unit": "seconds",
+  "release_time_skew_threshold_ms": 20.0,
+  "run_id": "agx-night_driving-tight-feedback-fine-grained-seed505-cfg1ce84465ded4",
+  "schema_version": 1,
+  "task_config_path": "/experiment/zexin/ATC23/DeepLearningScheduler/TaskConfigs/simo/overall_agx_orin_cuda_v5/formal_v1/agx_tight_night_driving.json",
+  "torch_device": "cuda:0"
+}

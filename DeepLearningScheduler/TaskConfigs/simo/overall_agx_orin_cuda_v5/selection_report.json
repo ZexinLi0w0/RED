@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "selection_stage": "EDF-only coarse calibration",
+  "git_commits": [
+    "0af86dc6911627ca7d04b791d051b2f6f2f997e3"
+  ],
+  "seeds": [
+    11,
+    22,
+    33,
+    44,
+    55
+  ],
+  "selected": {
+    "urban_navigation": {
+      "scenario": "urban_navigation",
+      "profile": "cal_d1000_a0700",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0,
+      "config_path": "calibration/agx_cal_d1000_a0700_urban_navigation.json",
+      "config_sha256": "2b2ac2acccd78c688904ea096b8381097566d7dcf7739f2a7be5d3640531e5ed",
+      "sample_count": 5,
+      "mean_deadline_missing_rate": 0.5479999999999999,
+      "mean_qoe_score": 0.8209645713282174,
+      "mean_end_to_end_latency_seconds": 8.684807872772216,
+      "quality_gate": {
+        "accepted": true,
+        "checks": {
+          "deadline_missing_rate_is_interior": true,
+          "qoe_is_not_saturated": true
+        }
+      },
+      "score": 0.15848228566410866
+    },
+    "emergency_obstacle_avoidance": {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "cal_d0500_a0300",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0,
+      "config_path": "calibration/agx_cal_d0500_a0300_emergency_obstacle_avoidance.json",
+      "config_sha256": "e84819b569d6cc8dc3414bd833e61b80d5e53a9d5ec62805a604d931cea4d1c4",
+      "sample_count": 3,
+      "mean_deadline_missing_rate": 0.5750000000000001,
+      "mean_qoe_score": 0.7840411612584752,
+      "mean_end_to_end_latency_seconds": 3.5043800671895347,
+      "quality_gate": {
+        "accepted": true,
+        "checks": {
+          "deadline_missing_rate_is_interior": true,
+          "qoe_is_not_saturated": true
+        }
+      },
+      "score": 0.1670205806292377
+    },
+    "night_driving": {
+      "scenario": "night_driving",
+      "profile": "cal_d0450_a0275",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75,
+      "config_path": "calibration/agx_cal_d0450_a0275_night_driving.json",
+      "config_sha256": "f53a615f4bb7aa90d97997dbbacbcd165fd8c2a0c2fb76ee0fb914d9e3ab8645",
+      "sample_count": 3,
+      "mean_deadline_missing_rate": 0.5444444444444444,
+      "mean_qoe_score": 0.7255117453348845,
+      "mean_end_to_end_latency_seconds": 3.696962912877401,
+      "quality_gate": {
+        "accepted": true,
+        "checks": {
+          "deadline_missing_rate_is_interior": true,
+          "qoe_is_not_saturated": true
+        }
+      },
+      "score": 0.10720031711188666
+    }
+  },
+  "ranked": {
+    "urban_navigation": [
+      {
+        "scenario": "urban_navigation",
+        "profile": "cal_d1000_a0700",
+        "deadline_factor": 10.0,
+        "arrival_scale": 7.0,
+        "config_path": "calibration/agx_cal_d1000_a0700_urban_navigation.json",
+        "config_sha256": "2b2ac2acccd78c688904ea096b8381097566d7dcf7739f2a7be5d3640531e5ed",
+        "sample_count": 5,
+        "mean_deadline_missing_rate": 0.5479999999999999,
+        "mean_qoe_score": 0.8209645713282174,
+        "mean_end_to_end_latency_seconds": 8.684807872772216,
+        "quality_gate": {
+          "accepted": true,
+          "checks": {
+            "deadline_missing_rate_is_interior": true,
+            "qoe_is_not_saturated": true
+          }
+        },
+        "score": 0.15848228566410866
+      }
+    ],
+    "emergency_obstacle_avoidance": [
+      {
+        "scenario": "emergency_obstacle_avoidance",
+        "profile": "cal_d0500_a0300",
+        "deadline_factor": 5.0,
+        "arrival_scale": 3.0,
+        "config_path": "calibration/agx_cal_d0500_a0300_emergency_obstacle_avoidance.json",
+        "config_sha256": "e84819b569d6cc8dc3414bd833e61b80d5e53a9d5ec62805a604d931cea4d1c4",
+        "sample_count": 3,
+        "mean_deadline_missing_rate": 0.5750000000000001,
+        "mean_qoe_score": 0.7840411612584752,
+        "mean_end_to_end_latency_seconds": 3.5043800671895347,
+        "quality_gate": {
+          "accepted": true,
+          "checks": {
+            "deadline_missing_rate_is_interior": true,
+            "qoe_is_not_saturated": true
+          }
+        },
+        "score": 0.1670205806292377
+      }
+    ],
+    "night_driving": [
+      {
+        "scenario": "night_driving",
+        "profile": "cal_d0450_a0275",
+        "deadline_factor": 4.5,
+        "arrival_scale": 2.75,
+        "config_path": "calibration/agx_cal_d0450_a0275_night_driving.json",
+        "config_sha256": "f53a615f4bb7aa90d97997dbbacbcd165fd8c2a0c2fb76ee0fb914d9e3ab8645",
+        "sample_count": 3,
+        "mean_deadline_missing_rate": 0.5444444444444444,
+        "mean_qoe_score": 0.7255117453348845,
+        "mean_end_to_end_latency_seconds": 3.696962912877401,
+        "quality_gate": {
+          "accepted": true,
+          "checks": {
+            "deadline_missing_rate_is_interior": true,
+            "qoe_is_not_saturated": true
+          }
+        },
+        "score": 0.10720031711188666
+      }
+    ]
+  }
+}

@@ -18,6 +18,9 @@ from experiments.burst_study import (
 NANO1_BASE_TASK_CONFIG = (
     DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v3.json"
 )
+AGX_ORIN_BASE_TASK_CONFIG = (
+    DEFAULT_BASE_TASK_CONFIG.parent / "agx_orin_cuda_calibration_v1.json"
+)
 
 
 def _write_json(path, value):
@@ -48,6 +51,7 @@ def test_default_plan_runs_each_cell_once(tmp_path) -> None:
     assert plan["gpu_threshold"] == 100.0
     assert plan["queue_threshold"] == 10
     assert plan["persistence_window"] == 3
+    assert plan["scheduler_tick_seconds"] == 0.005
     assert plan["require_proactive_drop_for_meris_burst"] is True
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
@@ -113,6 +117,7 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     }
     assert plan["queue_threshold"] == 15
     assert plan["persistence_window"] == 1
+    assert plan["scheduler_tick_seconds"] == 0.005
     assert [
         condition["expected_offered_task_count"]
         for condition in plan["conditions"]
@@ -153,6 +158,51 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     ] == [0.2, 0.3]
 
 
+def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
+    plan = generate_study_plan(
+        AGX_ORIN_BASE_TASK_CONFIG,
+        tmp_path / "agx-orin-study",
+        burst_start_seconds=0.0,
+        transient_duration_seconds=0.65,
+        release_horizon_seconds=1.5,
+        gpu_threshold=100.0,
+        queue_threshold=6,
+        persistence_window=1,
+        device="agx_orin",
+        platform_label="AGX Orin",
+        power_mode="MAXN",
+        torch_device="cuda",
+    )
+
+    assert plan["deadline_factor"] == 8.0
+    assert plan["arrival_scale"] == 8.0
+    assert plan["queue_threshold"] == 6
+    assert plan["persistence_window"] == 1
+    assert plan["scheduler_tick_seconds"] == 0.0
+    assert [
+        condition["expected_offered_task_count"]
+        for condition in plan["conditions"]
+    ] == [16, 20, 28, 24, 32]
+    assert [
+        condition["expected_workload"]["added_dag_release_count"]
+        for condition in plan["conditions"]
+    ] == [0, 1, 3, 2, 4]
+
+    config = json.loads(AGX_ORIN_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    assert config["RuntimeProfile"]["torch_device"] == "cuda:0"
+    assert config["NonPartitionablePercentage"] == 100
+    drop_thresholds = [
+        task["DropThreshold"] for task in config["dag_list"][0][0]
+    ]
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+    burst_config = json.loads(
+        (tmp_path / "agx-orin-study/generated_configs/control-000/burst.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert burst_config["scheduler_tick_seconds"] == 0.0
+
+
 def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
     expected_workload = {"added_dag_release_count": 5}
     manifest = {
@@ -161,6 +211,7 @@ def test_meris_burst_validation_requires_activation_and_drop_records() -> None:
         "offered_task_count": 114,
         "offered_task_stream_sha256": "same-stream",
         "expected_workload": expected_workload,
+        "ratio_percent": 100,
         "require_proactive_drop": True,
     }
     summary = {
@@ -204,6 +255,7 @@ def test_meris_control_validation_rejects_proactive_drop() -> None:
         "offered_task_count": 84,
         "offered_task_stream_sha256": "control-stream",
         "expected_workload": expected_workload,
+        "ratio_percent": 0,
         "require_no_proactive_drop": True,
     }
     summary = {
@@ -216,7 +268,7 @@ def test_meris_control_validation_rejects_proactive_drop() -> None:
         "qoe_score": 0.98,
         "outcome_counts": {},
         "burst_statistics": {
-            "management_enabled": True,
+            "management_enabled": False,
             "workload": expected_workload,
             "overload_activation_count": 1,
             "dropped_tasks_count": 1,
@@ -254,7 +306,10 @@ def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:
                     "qoe_score": 1 - seed / 20,
                     "outcome_counts": {"success": condition["expected_offered_task_count"]},
                     "burst_statistics": {
-                        "management_enabled": method == "feedback-fine-grained",
+                        "management_enabled": (
+                            method == "feedback-fine-grained"
+                            and condition["ratio_percent"] > 0
+                        ),
                         "workload": condition["expected_workload"],
                         "drop_records": [],
                     },
@@ -267,8 +322,9 @@ def test_summarizer_selects_complete_runs_and_reuses_control(tmp_path) -> None:
                     {
                         "run_id": run_id,
                         "status": "complete",
-                        "condition_slug": condition["slug"],
-                        "method": method,
+                            "condition_slug": condition["slug"],
+                            "ratio_percent": condition["ratio_percent"],
+                            "method": method,
                         "seed": seed,
                         "offered_task_count": condition[
                             "expected_offered_task_count"

@@ -14,6 +14,11 @@ TIGHT_TARGET = 0.50
 TIGHT_INTERVAL = (0.30, 0.70)
 LOOSE_TARGET = 0.10
 LOOSE_INTERVAL = (0.05, 0.25)
+INTERVAL_EPSILON = 1e-12
+
+
+def _in_interval(value, interval):
+    return interval[0] - INTERVAL_EPSILON <= value <= interval[1] + INTERVAL_EPSILON
 
 
 def select_tight_loose(points):
@@ -31,10 +36,8 @@ def select_tight_loose(points):
     preferred_pairs = [
         pair
         for pair in ordered_pairs
-        if TIGHT_INTERVAL[0] <= pair[0]["mean_deadline_missing_rate"] <= TIGHT_INTERVAL[1]
-        and LOOSE_INTERVAL[0]
-        <= pair[1]["mean_deadline_missing_rate"]
-        <= LOOSE_INTERVAL[1]
+        if _in_interval(pair[0]["mean_deadline_missing_rate"], TIGHT_INTERVAL)
+        and _in_interval(pair[1]["mean_deadline_missing_rate"], LOOSE_INTERVAL)
     ]
     candidates = preferred_pairs or ordered_pairs
 

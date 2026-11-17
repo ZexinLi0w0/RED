@@ -8,6 +8,17 @@ from experiments.select_calibration import (
 )
 
 
+def test_interval_selection_tolerates_floating_point_boundary() -> None:
+    result = select_tight_loose(
+        [
+            {"deadline_alpha": 1.0, "mean_deadline_missing_rate": 0.7000000000000001},
+            {"deadline_alpha": 2.0, "mean_deadline_missing_rate": 0.25},
+        ]
+    )
+
+    assert result["status"] == "ready"
+
+
 def _point(alpha, miss_rate):
     return {
         "deadline_alpha": alpha,

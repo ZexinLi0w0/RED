@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "device": "agx",
+  "phase": "EDF-only coarse calibration",
+  "runtime_profile": "agx_orin_maxn_20260828_v1.json",
+  "selection_rule": "select each scenario using only EDF; prefer interior Deadline Missing Rate and non-saturated QoE before the five-method pilot",
+  "timing_pairs": [
+    [
+      4.5,
+      2.75
+    ],
+    [
+      5.0,
+      3.0
+    ],
+    [
+      10.0,
+      7.0
+    ]
+  ],
+  "configs": [
+    {
+      "scenario": "urban_navigation",
+      "profile": "cal_d0450_a0275",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75,
+      "config_path": "calibration/agx_cal_d0450_a0275_urban_navigation.json",
+      "config_sha256": "7baf66490b70ac8eebfeee9e14b6c8c2b54a53a18b167d46865b632e718c1453"
+    },
+    {
+      "scenario": "urban_navigation",
+      "profile": "cal_d0500_a0300",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0,
+      "config_path": "calibration/agx_cal_d0500_a0300_urban_navigation.json",
+      "config_sha256": "ed872f7df18619ac8336a9305cb4a24737f16b0ee43d2473282533845493f780"
+    },
+    {
+      "scenario": "urban_navigation",
+      "profile": "cal_d1000_a0700",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0,
+      "config_path": "calibration/agx_cal_d1000_a0700_urban_navigation.json",
+      "config_sha256": "2b2ac2acccd78c688904ea096b8381097566d7dcf7739f2a7be5d3640531e5ed"
+    },
+    {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "cal_d0450_a0275",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75,
+      "config_path": "calibration/agx_cal_d0450_a0275_emergency_obstacle_avoidance.json",
+      "config_sha256": "c459a54d7fe052312c84ba2bd678913c58c1b428a33cff2a6cf3614990dbd1c1"
+    },
+    {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "cal_d0500_a0300",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0,
+      "config_path": "calibration/agx_cal_d0500_a0300_emergency_obstacle_avoidance.json",
+      "config_sha256": "e84819b569d6cc8dc3414bd833e61b80d5e53a9d5ec62805a604d931cea4d1c4"
+    },
+    {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "cal_d1000_a0700",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0,
+      "config_path": "calibration/agx_cal_d1000_a0700_emergency_obstacle_avoidance.json",
+      "config_sha256": "73a55664ba0e438bbea352b5cabc33316a5f375b62cbe1c7c8770a1907cf4632"
+    },
+    {
+      "scenario": "night_driving",
+      "profile": "cal_d0450_a0275",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75,
+      "config_path": "calibration/agx_cal_d0450_a0275_night_driving.json",
+      "config_sha256": "f53a615f4bb7aa90d97997dbbacbcd165fd8c2a0c2fb76ee0fb914d9e3ab8645"
+    },
+    {
+      "scenario": "night_driving",
+      "profile": "cal_d0500_a0300",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0,
+      "config_path": "calibration/agx_cal_d0500_a0300_night_driving.json",
+      "config_sha256": "1e646326df4e6879e9f98f478098dd670bae06fd497b11fd1a4aa28811ad409b"
+    },
+    {
+      "scenario": "night_driving",
+      "profile": "cal_d1000_a0700",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0,
+      "config_path": "calibration/agx_cal_d1000_a0700_night_driving.json",
+      "config_sha256": "7668c85b7eb4d66d59fb7914c46961ded7c816f23e220eacf60c0f0b500b5a03"
+    }
+  ]
+}

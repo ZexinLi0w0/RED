@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "device": "agx",
+  "phase": "pilot",
+  "methods": [
+    "baseline",
+    "llf-dag",
+    "fine-grained",
+    "feedback",
+    "feedback-fine-grained"
+  ],
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "configs": [
+    {
+      "scenario": "urban_navigation",
+      "profile": "pilot",
+      "config_path": "agx_pilot_urban_navigation.json",
+      "config_sha256": "4666bef643c52d61a04b9acb937cc4ce3548dc976243f364526d16a8a7759bc8",
+      "deadline_factor": 10.0,
+      "arrival_scale": 7.0
+    },
+    {
+      "scenario": "emergency_obstacle_avoidance",
+      "profile": "pilot",
+      "config_path": "agx_pilot_emergency_obstacle_avoidance.json",
+      "config_sha256": "a73bde5d22768936915970296a72759d55c2c5ecf78d572b9ce76cbe29f01ca7",
+      "deadline_factor": 5.0,
+      "arrival_scale": 3.0
+    },
+    {
+      "scenario": "night_driving",
+      "profile": "pilot",
+      "config_path": "agx_pilot_night_driving.json",
+      "config_sha256": "a7d2095638c12d0abd3bc903587199b6b9174b8d82f73267e47f0f4c71a71406",
+      "deadline_factor": 4.5,
+      "arrival_scale": 2.75
+    }
+  ]
+}

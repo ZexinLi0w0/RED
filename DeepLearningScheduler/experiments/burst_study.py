@@ -61,6 +61,7 @@ DEFAULT_RUN_ORDER_SEED = 20260827
 DEFAULT_GPU_THRESHOLD = 100.0
 DEFAULT_QUEUE_THRESHOLD = 10
 DEFAULT_PERSISTENCE_WINDOW = 3
+DEFAULT_SCHEDULER_TICK_SECONDS = 0.005
 DEFAULT_DEVICE = "mac"
 DEFAULT_PLATFORM_LABEL = "M3 Max"
 DEFAULT_POWER_MODE = "AC power; default macOS policy"
@@ -152,6 +153,7 @@ def _burst_config(
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
+    scheduler_tick_seconds=DEFAULT_SCHEDULER_TICK_SECONDS,
 ):
     config = {
         "burst_enabled": True,
@@ -163,7 +165,7 @@ def _burst_config(
         "persistence_window": persistence_window,
         "drop_threshold": 0.5,
         "monitoring_interval": 0.05,
-        "scheduler_tick_seconds": 0.005,
+        "scheduler_tick_seconds": scheduler_tick_seconds,
     }
     if condition.transient_duration_seconds is not None:
         config["transient_duration_seconds"] = condition.transient_duration_seconds
@@ -214,6 +216,7 @@ def generate_study_plan(
     gpu_threshold=DEFAULT_GPU_THRESHOLD,
     queue_threshold=DEFAULT_QUEUE_THRESHOLD,
     persistence_window=DEFAULT_PERSISTENCE_WINDOW,
+    scheduler_tick_seconds=None,
     device=DEFAULT_DEVICE,
     platform_label=DEFAULT_PLATFORM_LABEL,
     power_mode=DEFAULT_POWER_MODE,
@@ -237,6 +240,19 @@ def generate_study_plan(
         if arrival_scale is None
         else arrival_scale
     )
+    workload_defaults = template.get("BurstStudyWorkload", {})
+    resolved_scheduler_tick_seconds = (
+        float(
+            workload_defaults.get(
+                "scheduler_tick_seconds",
+                DEFAULT_SCHEDULER_TICK_SECONDS,
+            )
+        )
+        if scheduler_tick_seconds is None
+        else float(scheduler_tick_seconds)
+    )
+    if resolved_scheduler_tick_seconds < 0:
+        raise ValueError("scheduler_tick_seconds cannot be negative")
     generated_root = output_root / "generated_configs"
     condition_records = []
     for condition in CONDITIONS:
@@ -264,6 +280,7 @@ def generate_study_plan(
             gpu_threshold=gpu_threshold,
             queue_threshold=queue_threshold,
             persistence_window=persistence_window,
+            scheduler_tick_seconds=resolved_scheduler_tick_seconds,
         )
         task_path = generated_root / condition.slug / "task.json"
         burst_path = generated_root / condition.slug / "burst.json"
@@ -310,6 +327,7 @@ def generate_study_plan(
         "gpu_threshold": gpu_threshold,
         "queue_threshold": queue_threshold,
         "persistence_window": persistence_window,
+        "scheduler_tick_seconds": resolved_scheduler_tick_seconds,
         "conditions": condition_records,
         "planned_run_count": len(condition_records) * len(METHODS) * len(seeds),
         "run_order": "fixed pseudo-random permutation of all cases",
@@ -359,7 +377,10 @@ def _validate_summary(manifest, summary):
     if summary.get("outcome_counts", {}).get("execution_error", 0):
         problems.append("execution_error outcomes present")
     burst = summary.get("burst_statistics") or {}
-    expected_management = manifest["method"] == "feedback-fine-grained"
+    expected_management = (
+        manifest["method"] == "feedback-fine-grained"
+        and manifest.get("ratio_percent", 0) > 0
+    )
     if burst.get("management_enabled") is not expected_management:
         problems.append("burst management enablement mismatch")
     workload = burst.get("workload") or {}
@@ -914,6 +935,15 @@ def _build_parser():
     plan_parser.add_argument(
         "--persistence-window", type=int, default=DEFAULT_PERSISTENCE_WINDOW
     )
+    plan_parser.add_argument(
+        "--scheduler-tick-seconds",
+        type=float,
+        default=None,
+        help=(
+            "controller polling interval; defaults to BurstStudyWorkload in "
+            "the base TaskConfig, then 0.005 seconds"
+        ),
+    )
     plan_parser.add_argument("--device", default=DEFAULT_DEVICE)
     plan_parser.add_argument("--platform-label", default=DEFAULT_PLATFORM_LABEL)
     plan_parser.add_argument("--power-mode", default=DEFAULT_POWER_MODE)
@@ -977,6 +1007,7 @@ def main():
             gpu_threshold=args.gpu_threshold,
             queue_threshold=args.queue_threshold,
             persistence_window=args.persistence_window,
+            scheduler_tick_seconds=args.scheduler_tick_seconds,
             device=args.device,
             platform_label=args.platform_label,
             power_mode=args.power_mode,

@@ -1,0 +1,77 @@
+{
+  "dag_list": [
+    [
+      {
+        "TaskName": "S5_Stage1_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 23.756031,
+        "WorstRunningTime": 26.968867
+      },
+      {
+        "TaskName": "S5_Stage2_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 23.756031,
+        "WorstRunningTime": 26.968867
+      },
+      {
+        "TaskName": "S5_Stage3_Control_Autopilot",
+        "HandlerId": 5,
+        "Priority": 1,
+        "Dependencies": [
+          2
+        ],
+        "RunArgs": [
+          2
+        ],
+        "RunningTime": 23.756031,
+        "WorstRunningTime": 26.968867
+      }
+    ]
+  ],
+  "DeadlineFactor": 5.5,
+  "ArrivalScale": 3.5,
+  "DagRepeatedTimes": 10,
+  "ParallelStagePolicy": "max",
+  "TaskSeed": 0,
+  "QoELambda": 0.05,
+  "ReleaseTimeSkewThresholdMs": 20,
+  "RuntimeProfile": {
+    "profile_file": "agx_orin_maxn_20260828_v1.json",
+    "profile_sha256": "cc7bc798f1802a8c726e9a444f6c8c8ff5d1f12639b076215bf4e38155e762f5",
+    "torch_device": "cuda:0",
+    "power_mode": "agx-orin-maxn",
+    "bound_policy": "observed maximum times (1 + fixed margin)",
+    "bound_margin_fraction": 0.1,
+    "cases": [
+      "control_autopilot"
+    ]
+  },
+  "SourceExperiment": {
+    "device": "agx_orin",
+    "kind": "profiled-overall-performance-source",
+    "scenario": "night_driving",
+    "template_config": "agx_loose_night_driving.json",
+    "runtime_profile": "agx_orin_maxn_20260828_v1.json"
+  },
+  "Calibration": {
+    "device": "agx_orin",
+    "kind": "overall-performance-load-grid",
+    "scenario": "night_driving",
+    "profile": "cal_d0550_a0350",
+    "deadline_factor": 5.5,
+    "arrival_scale": 3.5,
+    "selection_stage": "EDF-only coarse calibration"
+  }
+}
