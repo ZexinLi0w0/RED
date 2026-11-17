@@ -16,7 +16,7 @@ from experiments.burst_study import (
 
 
 NANO1_BASE_TASK_CONFIG = (
-    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v1.json"
+    DEFAULT_BASE_TASK_CONFIG.parent / "nano1_cuda_proactive_drop_v3.json"
 )
 AGX_ORIN_BASE_TASK_CONFIG = (
     DEFAULT_BASE_TASK_CONFIG.parent / "agx_orin_cuda_calibration_v1.json"
@@ -97,10 +97,10 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         NANO1_BASE_TASK_CONFIG,
         tmp_path / "nano1-study",
         burst_start_seconds=0.0,
-        transient_duration_seconds=30.0,
-        release_horizon_seconds=100.0,
+        transient_duration_seconds=3.0,
+        release_horizon_seconds=10.0,
         gpu_threshold=100.0,
-        queue_threshold=6,
+        queue_threshold=15,
         persistence_window=1,
         device="nano1",
         platform_label="Jetson Orin Nano",
@@ -109,13 +109,13 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
         require_proactive_drop_for_meris_burst=False,
     )
 
-    assert plan["deadline_factor"] == 120.0
+    assert plan["deadline_factor"] == 5000.0
     assert plan["arrival_scale"] == 40.0
     assert plan["timing_source"] == {
         "deadline_factor": "task-config",
         "arrival_scale": "task-config",
     }
-    assert plan["queue_threshold"] == 6
+    assert plan["queue_threshold"] == 15
     assert plan["persistence_window"] == 1
     assert plan["scheduler_tick_seconds"] == 0.005
     assert [
@@ -130,10 +130,32 @@ def test_nano1_plan_uses_calibrated_queue_boundary(tmp_path) -> None:
     assert plan["require_no_proactive_drop_for_meris_control"] is True
 
     config = json.loads(NANO1_BASE_TASK_CONFIG.read_text(encoding="utf-8"))
+    running_times = {
+        task["TaskName"]: task["RunningTime"]
+        for task in config["dag_list"][0][0]
+    }
+    assert running_times == {
+        "Nano1_Burst_Critical_LaneDetection": 44.382938,
+        "Nano1_Burst_Critical_Control": 37.229989,
+        "Nano1_Burst_Redundant_Segmentation": 40.925567,
+        "Nano1_Burst_Redundant_ObjectDetection": 51.641363,
+    }
+    assert config["RuntimeProfile"]["sample_counts"] == {
+        "lane_detection": 69,
+        "control": 73,
+        "segmentation": 48,
+        "object_detection": 52,
+    }
     drop_thresholds = [
         task["DropThreshold"] for task in config["dag_list"][0][0]
     ]
-    assert sum(threshold > 0 for threshold in drop_thresholds) == 2
+    assert sum(threshold > 0 for threshold in drop_thresholds) == 1
+    assert config["BurstStudyWorkload"][
+        "expected_meris_sustained_100_drop_count"
+    ] == 8
+    assert config["BurstStudyWorkload"][
+        "target_sustained_100_deadline_missing_rate"
+    ] == [0.2, 0.3]
 
 
 def test_agx_orin_plan_uses_profiled_queue_boundary(tmp_path) -> None:
