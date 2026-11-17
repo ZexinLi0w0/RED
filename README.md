@@ -270,15 +270,3 @@ experiments you use. RED is the original RTSS 2023 paper; MERIS is its extended 
   url           = {https://arxiv.org/abs/2605.24044}
 }
 ```
-
-## Repository history
-
-Existing checkouts can use the renamed remote without moving their local directories:
-
-```bash
-git remote set-url origin git@github.com:ZexinLi0w0/RED.git
-```
-
-Historical logs, manifests, and machine-specific deployment paths may still contain `ATC23`; they record
-the original execution environment. The repository retains the RTSS 2023 project identity alongside the
-later MERIS experiments. Use the commit and manifest associated with a result when reproducing it.
