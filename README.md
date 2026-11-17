@@ -11,7 +11,8 @@ runners, and archived results.
 The repository was previously named **ATC23**. The current branch also contains later extensions and
 revision experiments, whose scripts and result labels use **MERIS**. Those experiments include LLF-DAG,
 burst management, non-partitionable tasks, and calibrated CUDA/MPS workloads; they should not all be
-interpreted as the original RTSS 2023 artifact.
+interpreted as the original RTSS 2023 artifact. See [References and citation](#references-and-citation)
+for both papers and BibTeX entries.
 
 ## What it does
 
@@ -228,6 +229,47 @@ Further documentation:
 - [Reproducible runs and calibration](DeepLearningScheduler/experiments/REPRODUCIBLE_RUNS.md)
 - [Burst task implementation](DeepLearningScheduler/BURST_TASK_IMPLEMENTATION.md)
 - [Parameter sensitivity](DeepLearningScheduler/experiments/PARAMETER_SENSITIVITY.md)
+
+## References and citation
+
+If you use this repository in your research, please cite the paper corresponding to the methods and
+experiments you use. RED is the original RTSS 2023 paper; MERIS is its extended work, available as a
+2026 arXiv preprint. Please cite both when your work builds on both versions.
+
+1. **RED.** Zexin Li, Tao Ren, Xiaoxi He, and Cong Liu.
+   “RED: A Systematic Real-Time Scheduling Approach for Robotic Environmental Dynamics.”
+   In *2023 IEEE Real-Time Systems Symposium (RTSS)*, pp. 210–223, 2023.
+   [Published paper / DOI](https://doi.org/10.1109/RTSS59052.2023.00027) ·
+   [arXiv](https://arxiv.org/abs/2308.15368).
+2. **MERIS.** Zexin Li, Tao Ren, Johnathan Liu, Xiaoxi He, and Cong Liu.
+   “MERIS: Adaptive Real-Time Scheduling of Refined Inference DAGs in Dynamic Robotic Environments.”
+   *arXiv preprint arXiv:2605.24044*, 2026. Extension of the RTSS 2023 paper.
+   [Paper](https://arxiv.org/abs/2605.24044) ·
+   [DOI](https://doi.org/10.48550/arXiv.2605.24044).
+
+```bibtex
+@inproceedings{li2023red,
+  author    = {Zexin Li and Tao Ren and Xiaoxi He and Cong Liu},
+  title     = {{RED}: A Systematic Real-Time Scheduling Approach for Robotic Environmental Dynamics},
+  booktitle = {2023 IEEE Real-Time Systems Symposium (RTSS)},
+  year      = {2023},
+  pages     = {210--223},
+  publisher = {IEEE},
+  doi       = {10.1109/RTSS59052.2023.00027},
+  url       = {https://doi.org/10.1109/RTSS59052.2023.00027}
+}
+
+@misc{li2026meris,
+  author        = {Zexin Li and Tao Ren and Johnathan Liu and Xiaoxi He and Cong Liu},
+  title         = {{MERIS}: Adaptive Real-Time Scheduling of Refined Inference {DAGs} in Dynamic Robotic Environments},
+  year          = {2026},
+  eprint        = {2605.24044},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  doi           = {10.48550/arXiv.2605.24044},
+  url           = {https://arxiv.org/abs/2605.24044}
+}
+```
 
 ## Repository history
 
