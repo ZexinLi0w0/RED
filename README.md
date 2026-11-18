@@ -8,7 +8,7 @@ tracks execution progress, and adjusts task release and execution granularity to
 The repository contains the scheduler, neural-network handlers, workload configurations, experiment
 runners, and archived results.
 
-The repository was previously named **ATC23**. The current branch also contains later extensions and
+The current branch also contains later extensions and
 revision experiments, whose scripts and result labels use **MERIS**. Those experiments include LLF-DAG,
 burst management, non-partitionable tasks, and calibrated CUDA/MPS workloads; they should not all be
 interpreted as the original RTSS 2023 artifact. See [References and citation](#references-and-citation)
